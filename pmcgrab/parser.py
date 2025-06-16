@@ -23,7 +23,14 @@ from .model import TextSection, TextParagraph, TextTable
 from .fetch import get_xml
 
 def gather_title(root: ET.Element) -> Optional[str]:
-    """Return the article title if present."""
+    """Extract the article title from the XML.
+
+    Args:
+        root: ``<article>`` root element of the paper.
+
+    Returns:
+        The title text if found, otherwise ``None``.
+    """
     matches = root.xpath("//article-title/text()")
     if len(matches) > 1:
         warnings.warn(
@@ -64,7 +71,16 @@ def extract_contributor_info(root: ET.Element, contributors: List[ET.Element]) -
     return result
 
 def gather_authors(root: ET.Element) -> Optional[pd.DataFrame]:
-    """Return a DataFrame describing each author in the article."""
+    """Collect information on article authors.
+
+    Args:
+        root: ``<article>`` root element.
+
+    Returns:
+        ``pandas.DataFrame`` with columns ``Contributor_Type``, ``First_Name``,
+        ``Last_Name``, ``Email_Address`` and ``Affiliations``. ``None`` is
+        returned when no authors are present.
+    """
     authors = root.xpath(".//contrib[@contrib-type='author']")
     if not authors:
         warnings.warn("No authors found.", UnexpectedZeroMatchWarning)
@@ -82,7 +98,15 @@ def gather_authors(root: ET.Element) -> Optional[pd.DataFrame]:
     )
 
 def gather_non_author_contributors(root: ET.Element) -> Union[str, pd.DataFrame]:
-    """Return a DataFrame of non-author contributors or a message if none."""
+    """Get contributor metadata for non-author roles.
+
+    Args:
+        root: ``<article>`` root element.
+
+    Returns:
+        ``pandas.DataFrame`` containing non-author contributor information,
+        or a message string when no such contributors exist.
+    """
     non_auth = root.xpath(".//contrib[not(@contrib-type='author')]")
     if non_auth:
         data = extract_contributor_info(root, non_auth)
@@ -139,7 +163,16 @@ def _gather_sections(
 def gather_abstract(
     root: ET.Element, ref_map: BasicBiMap
 ) -> Optional[List[Union[TextSection, TextParagraph]]]:
-    """Parse the abstract element into structured text objects."""
+    """Parse the abstract into structured sections.
+
+    Args:
+        root: ``<article>`` root element.
+        ref_map: Shared reference map for resolving citations and tables.
+
+    Returns:
+        List of :class:`TextSection` and :class:`TextParagraph` objects or
+        ``None`` if no abstract is present.
+    """
     return _gather_sections(
         root,
         "//abstract",
@@ -151,7 +184,15 @@ def gather_abstract(
 def gather_body(
     root: ET.Element, ref_map: BasicBiMap
 ) -> Optional[List[Union[TextSection, TextParagraph]]]:
-    """Parse the article body into structured text objects."""
+    """Parse the article body into structured sections.
+
+    Args:
+        root: ``<article>`` root element.
+        ref_map: Shared reference map for citations and tables.
+
+    Returns:
+        List of text elements representing the body, or ``None`` if absent.
+    """
     return _gather_sections(
         root,
         "//body",

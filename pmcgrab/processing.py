@@ -9,11 +9,19 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 from tqdm import tqdm
 
 from . import constants
+from .constants import TimeoutException
 from .model import Paper
 from .utils import normalize_value
 
 def process_single_pmc(pmc_id: str) -> Optional[Dict[str, Union[str, dict, list]]]:
-    """Download, parse, and normalize a single PMC article."""
+    """Download and parse one PMC article.
+
+    Args:
+        pmc_id: String representation of the PMCID.
+
+    Returns:
+        Dictionary of normalized article metadata, or ``None`` on failure.
+    """
     gc.collect()
     paper_info: Dict[str, Union[str, dict, list]] = {}
     body_info: Dict[str, str] = {}
@@ -82,8 +90,16 @@ def process_single_pmc(pmc_id: str) -> Optional[Dict[str, Union[str, dict, list]
         gc.collect()
     return None
 
-def process_pmc_ids_in_batches(pmc_ids: List[str], base_directory: str, batch_size: int = 16):
-    """Process PMCIDs concurrently in batches and write JSON results."""
+def process_pmc_ids_in_batches(
+    pmc_ids: List[str], base_directory: str, batch_size: int = 16
+):
+    """Process PMCIDs concurrently and write results to disk.
+
+    Args:
+        pmc_ids: List of PMCIDs to process.
+        base_directory: Directory to write JSON outputs.
+        batch_size: Number of worker threads to spawn.
+    """
 
     def process_single_pmc_wrapper(pmc_id: str):
         info = process_single_pmc(pmc_id)
@@ -121,8 +137,20 @@ def process_pmc_ids_in_batches(pmc_ids: List[str], base_directory: str, batch_si
                 })
                 pbar.update(1)
 
-def process_in_batches(pmc_ids, base_directory, chunk_size=100, parallel_workers=16):
-    """Process PMCIDs in sequential chunks calling ``process_pmc_ids_in_batches``."""
+def process_in_batches(
+    pmc_ids, base_directory, chunk_size=100, parallel_workers=16
+):
+    """Process PMCIDs in sequential chunks.
+
+    This is a thin wrapper around :func:`process_pmc_ids_in_batches` that breaks
+    the ID list into smaller chunks.
+
+    Args:
+        pmc_ids: Iterable of PMCIDs to process.
+        base_directory: Output directory for JSON files.
+        chunk_size: Number of IDs per batch.
+        parallel_workers: Number of threads per batch.
+    """
     total_chunks = (len(pmc_ids) + chunk_size - 1) // chunk_size
     for chunk_index in range(total_chunks):
         chunk = pmc_ids[chunk_index * chunk_size : (chunk_index + 1) * chunk_size]
@@ -131,8 +159,18 @@ def process_in_batches(pmc_ids, base_directory, chunk_size=100, parallel_workers
         process_pmc_ids_in_batches(chunk, base_directory, batch_size=parallel_workers)
         print(f"Batch {chunk_index+1} complete!")
 
-def process_in_batches_with_retry(pmc_ids, base_directory, chunk_size=100, parallel_workers=16, max_retries=3):
-    """Retry batch processing for failed PMCIDs up to ``max_retries`` times."""
+def process_in_batches_with_retry(
+    pmc_ids, base_directory, chunk_size=100, parallel_workers=16, max_retries=3
+):
+    """Attempt batch processing with automatic retries.
+
+    Args:
+        pmc_ids: Iterable of PMCIDs to process.
+        base_directory: Directory to write JSON files into.
+        chunk_size: Number of IDs per processing batch.
+        parallel_workers: Worker threads used for each batch.
+        max_retries: Maximum number of retry rounds.
+    """
     print("\n=== Initial Processing ===")
     print(f"Total papers to process: {len(pmc_ids)}")
     process_in_batches(pmc_ids, base_directory, chunk_size, parallel_workers)

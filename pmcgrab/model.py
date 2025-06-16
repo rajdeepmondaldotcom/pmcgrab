@@ -71,7 +71,20 @@ class Paper:
         self.vector_collection = None
     @classmethod
     def from_pmc(cls, pmcid: int, email: str, download: bool = False, validate: bool = True, verbose: bool = False, suppress_warnings: bool = False, suppress_errors: bool = False) -> Optional["Paper"]:
-        """Download article metadata from PMC and construct a ``Paper``."""
+        """Create a :class:`Paper` by fetching a PMC article.
+
+        Args:
+            pmcid: PMCID of the article.
+            email: Contact email address used for Entrez.
+            download: Whether to cache the raw XML.
+            validate: Perform DTD validation when ``True``.
+            verbose: Output progress information when ``True``.
+            suppress_warnings: If ``True`` ignore parser warnings.
+            suppress_errors: If ``True`` return ``None`` instead of raising errors.
+
+        Returns:
+            A new :class:`Paper` instance or ``None`` if retrieval failed.
+        """
         attempts = 3
         d = None
         from .parser import paper_dict_from_pmc

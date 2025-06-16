@@ -77,7 +77,17 @@ def stringify_children(node: ET.Element, encoding: str = "utf-8") -> str:
 
 
 def remove_html_tags(text: str, removals: List[str], replaces: Dict[str, str], verbose: bool = False) -> str:
-    """Strip unwanted HTML tags and optionally replace others."""
+    """Remove or replace specific HTML tags in ``text``.
+
+    Args:
+        text: Input HTML string.
+        removals: Tags to remove entirely.
+        replaces: Mapping of tags to replacement text.
+        verbose: Log actions when ``True``.
+
+    Returns:
+        Sanitised string with specified tags removed or replaced.
+    """
     to_remove = removals + [f"</{tag[1:]}" for tag in removals] + [f"</{tag[1:]}" for tag in replaces.keys()]
     to_remove = [tag[:-1] + r"\b[^>]*" + tag[-1] for tag in to_remove]
     to_replace = {tag[:-1] + r"\b[^>]*" + tag[-1]: rep for tag, rep in replaces.items()}
@@ -92,14 +102,33 @@ def remove_html_tags(text: str, removals: List[str], replaces: Dict[str, str], v
 
 
 def strip_html_text_styling(text: str, verbose: bool = False) -> str:
-    """Simplify emphasis tags and remove styling from HTML text."""
+    """Simplify emphasis tags and remove styling from HTML text.
+
+    Args:
+        text: HTML text to clean.
+        verbose: Log removed and replaced tags when ``True``.
+
+    Returns:
+        Sanitised text with simplified styling.
+    """
     removes = ["<italic>", "<i>", "<bold>", "<b>", "<underline>", "<u>"]
     reps = {"<sub>": "_", "<sup>": "^", "<ext-link>": "[External URI:]"}
     return remove_html_tags(text, removes, reps, verbose)
 
 
 def split_text_and_refs(tree_text: str, ref_map: BasicBiMap, id: Optional[str] = None, on_unknown: str = "keep") -> str:
-    """Replace allowed tags with placeholders and build reference map."""
+    """Replace reference tags with placeholders and build a mapping.
+
+    Args:
+        tree_text: Raw HTML/XML string containing reference tags.
+        ref_map: ``BasicBiMap`` for storing original tag text.
+        id: Optional identifier for debugging purposes.
+        on_unknown: Behaviour when encountering an unexpected tag;
+            ``"keep"`` retains the tag contents.
+
+    Returns:
+        String with reference placeholders substituted.
+    """
     allowed_tags = ["xref", "fig", "table-wrap"]
     pattern = r"<([a-zA-Z][\w-]*)\b[^>]*>(.*?)</\1>|<([a-zA-Z][\w-]*)\b[^/>]*/?>"
     tag_r = re.compile(pattern, re.DOTALL)
