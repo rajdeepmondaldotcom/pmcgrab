@@ -1,0 +1,5 @@
+lxml
+pandas
+requests
+biopython
+tqdm
