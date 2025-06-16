@@ -6,16 +6,42 @@ build-backend = "setuptools.build_meta"
 name = "pmcgrab"
 version = "0.1.0"
 description = "Utilities for fetching and processing PubMed Central articles"
-readme = "README.md"
-license = {text = "MIT"}
-authors = [{name = "Your Name"}]
+readme = {file = "README.md", content-type = "text/markdown"}
+license = {text = "Apache-2.0"}
+authors = [{name = "Rajdeep Mondal"}]
+requires-python = ">=3.8"
 dependencies = [
-    "lxml",
-    "pandas",
-    "requests",
-    "biopython",
-    "tqdm"
+    "biopython==1.85",
+    "certifi==2025.6.15",
+    "charset-normalizer==3.4.2",
+    "idna==3.10",
+    "lxml==5.4.0",
+    "numpy==2.3.0",
+    "pandas==2.3.0",
+    "python-dateutil==2.9.0.post0",
+    "pytz==2025.2",
+    "requests==2.32.4",
+    "six==1.17.0",
+    "tqdm==4.67.1",
+    "tzdata==2025.2",
+    "urllib3==2.4.0"
+]
+keywords = ["pubmed", "pmc", "text mining", "rag", "bioinformatics"]
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3 :: Only",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "License :: OSI Approved :: Apache Software License",
+    "Operating System :: OS Independent",
 ]
 
+[tool.setuptools]
+packages = ["pmcgrab"]
+
 [project.urls]
-Homepage = "https://example.com"
+Homepage = "https://github.com/rajdeepmondal/pmcgrab"
+Documentation = "https://github.com/rajdeepmondal/pmcgrab#readme"
+Issues = "https://github.com/rajdeepmondal/pmcgrab/issues"
+Source = "https://github.com/rajdeepmondal/pmcgrab"
