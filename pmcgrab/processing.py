@@ -13,6 +13,7 @@ from .model import Paper
 from .utils import normalize_value
 
 def process_single_pmc(pmc_id: str) -> Optional[Dict[str, Union[str, dict, list]]]:
+    """Download, parse, and normalize a single PMC article."""
     gc.collect()
     paper_info: Dict[str, Union[str, dict, list]] = {}
     body_info: Dict[str, str] = {}
@@ -82,6 +83,8 @@ def process_single_pmc(pmc_id: str) -> Optional[Dict[str, Union[str, dict, list]
     return None
 
 def process_pmc_ids_in_batches(pmc_ids: List[str], base_directory: str, batch_size: int = 16):
+    """Process PMCIDs concurrently in batches and write JSON results."""
+
     def process_single_pmc_wrapper(pmc_id: str):
         info = process_single_pmc(pmc_id)
         if info:
@@ -119,6 +122,7 @@ def process_pmc_ids_in_batches(pmc_ids: List[str], base_directory: str, batch_si
                 pbar.update(1)
 
 def process_in_batches(pmc_ids, base_directory, chunk_size=100, parallel_workers=16):
+    """Process PMCIDs in sequential chunks calling ``process_pmc_ids_in_batches``."""
     total_chunks = (len(pmc_ids) + chunk_size - 1) // chunk_size
     for chunk_index in range(total_chunks):
         chunk = pmc_ids[chunk_index * chunk_size : (chunk_index + 1) * chunk_size]
@@ -128,6 +132,7 @@ def process_in_batches(pmc_ids, base_directory, chunk_size=100, parallel_workers
         print(f"Batch {chunk_index+1} complete!")
 
 def process_in_batches_with_retry(pmc_ids, base_directory, chunk_size=100, parallel_workers=16, max_retries=3):
+    """Retry batch processing for failed PMCIDs up to ``max_retries`` times."""
     print("\n=== Initial Processing ===")
     print(f"Total papers to process: {len(pmc_ids)}")
     process_in_batches(pmc_ids, base_directory, chunk_size, parallel_workers)
