@@ -1,0 +1,21 @@
+[build-system]
+requires = ["setuptools>=42", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "pmcgrab"
+version = "0.1.0"
+description = "Utilities for fetching and processing PubMed Central articles"
+readme = "README.md"
+license = {text = "MIT"}
+authors = [{name = "Your Name"}]
+dependencies = [
+    "lxml",
+    "pandas",
+    "requests",
+    "biopython",
+    "tqdm"
+]
+
+[project.urls]
+Homepage = "https://example.com"

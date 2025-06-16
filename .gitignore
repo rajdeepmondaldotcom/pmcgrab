@@ -1,0 +1,493 @@
+# =============================================================================
+# BIOMEDICAL ENTITY NORMALIZATION PROJECT - .gitignore
+# =============================================================================
+# This file follows industry best practices and covers all common patterns
+# for Python ML/AI projects with data science components
+# =============================================================================
+
+# =============================================================================
+# PROJECT-SPECIFIC EXCLUSIONS
+# =============================================================================
+
+# Local development and deployment scripts
+run_mapping_inference.sh
+*.sh
+!setup.sh
+!install.sh
+
+# Processing outputs and generated data
+results/
+processing_logs/
+output/
+outputs/
+normalisation_input/
+exports/
+generate_gt_results_normalize/
+mapping_results/
+notebooks/
+results/
+normalization.log
+CHANGELOG.md
+
+# Example and test data (keep structure but ignore contents)
+sample_data/
+test_data/
+demo_data/
+
+# Runtime logs and temporary files
+*.log
+*.tmp
+*.temp
+normalization.log
+inference.log
+processing.log
+
+# Generated result files
+results_*.csv
+results_*.json
+results_*.xlsx
+*_results.csv
+*_results.json
+*_results.xlsx
+output_*.csv
+normalized_*.csv
+
+# Large data files and caches
+cached_dicts/
+cached_embeddings/
+model_cache/
+temp_cache/
+*.pkl
+*.pickle
+*.joblib
+
+# Configuration files with sensitive data
+.env
+.env.local
+.env.*.local
+config.local.py
+secrets.json
+api_keys.txt
+
+# =============================================================================
+# PYTHON LANGUAGE SPECIFIC
+# =============================================================================
+
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+
+# C extensions
+*.so
+
+# Distribution / packaging
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+pip-wheel-metadata/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# PyInstaller
+*.manifest
+*.spec
+
+# Installer logs
+pip-log.txt
+pip-delete-this-directory.txt
+
+# Unit test / coverage reports
+htmlcov/
+.tox/
+.nox/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+*.py,cover
+.hypothesis/
+.pytest_cache/
+cover/
+
+# Translations
+*.mo
+*.pot
+
+# Django stuff (if applicable)
+*.log
+local_settings.py
+db.sqlite3
+db.sqlite3-journal
+
+# Flask stuff (if applicable)
+instance/
+.webassets-cache
+
+# Scrapy stuff (if applicable)
+.scrapy
+
+# Sphinx documentation
+docs/_build/
+
+# PyBuilder
+target/
+
+# Jupyter Notebook
+.ipynb_checkpoints
+notebooks/
+*.ipynb
+!example.ipynb
+!tutorial.ipynb
+
+# IPython
+profile_default/
+ipython_config.py
+
+# pyenv
+.python-version
+
+# pipenv
+Pipfile.lock
+
+# PEP 582
+__pypackages__/
+
+# Celery stuff
+celerybeat-schedule
+celerybeat.pid
+
+# SageMath parsed files
+*.sage.py
+
+# Environments
+.env
+.venv
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+.conda/
+conda-env/
+
+# Spyder project settings
+.spyderproject
+.spyproject
+
+# Rope project settings
+.ropeproject
+
+# mkdocs documentation
+/site
+
+# mypy
+.mypy_cache/
+.dmypy.json
+dmypy.json
+
+# Pyre type checker
+.pyre/
+
+# pytype static type analyzer
+.pytype/
+
+# Cython debug symbols
+cython_debug/
+
+# =============================================================================
+# DATA SCIENCE & MACHINE LEARNING
+# =============================================================================
+
+# Large model files (use Git LFS for these)
+*.h5
+*.hdf5
+*.model
+*.bin
+*.pt
+*.pth
+*.ckpt
+*.safetensors
+
+# TensorFlow
+*.pb
+saved_model/
+checkpoint
+*.ckpt.*
+*.meta
+*.index
+
+# PyTorch
+*.pth
+*.pt
+
+# Weights & Biases
+wandb/
+
+# MLflow
+mlruns/
+mlartifacts/
+
+# DVC
+.dvc/
+*.dvc
+
+# Datasets (large files)
+data/raw/
+data/processed/
+data/external/
+data/interim/
+*.csv
+*.tsv
+*.xlsx
+*.xls
+*.parquet
+*.feather
+*.hdf
+*.h5
+
+# Compressed files
+*.zip
+*.tar.gz
+*.tar.bz2
+*.rar
+*.7z
+
+# =============================================================================
+# DEVELOPMENT TOOLS & EDITORS
+# =============================================================================
+
+# PyCharm
+../.idea/
+*.iws
+*.iml
+*.ipr
+
+# Visual Studio Code
+.vscode/
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+*.code-workspace
+
+# Sublime Text
+*.sublime-workspace
+*.sublime-project
+
+# Vim
+*~
+*.swp
+*.swo
+*~
+.*.sw?
+
+# Emacs
+*~
+\#*\#
+/.emacs.desktop
+/.emacs.desktop.lock
+*.elc
+auto-save-list
+tramp
+.\#*
+
+# =============================================================================
+# OPERATING SYSTEM FILES
+# =============================================================================
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+Icon?
+._*
+.DocumentRevisions-V100
+.fseventsd
+.Spotlight-V100
+.TemporaryItems
+.Trashes
+.VolumeIcon.icns
+.com.apple.timemachine.donotpresent
+.AppleDB
+.AppleDesktop
+Network Trash Folder
+Temporary Items
+.apdisk
+
+# Windows
+Thumbs.db
+Thumbs.db:encryptable
+ehthumbs.db
+ehthumbs_vista.db
+*.tmp
+*.temp
+Desktop.ini
+$RECYCLE.BIN/
+*.cab
+*.msi
+*.msix
+*.msm
+*.msp
+*.lnk
+
+# Linux
+*~
+.directory
+.Trash-*
+.nfs*
+
+# =============================================================================
+# VERSION CONTROL & CI/CD
+# =============================================================================
+
+# Git
+*.orig
+*.rej
+.git/
+.gitattributes.bak
+
+# SVN
+.svn/
+
+# Mercurial
+.hg/
+.hgignore
+.hgsub
+.hgsubstate
+
+# Bazaar
+.bzr/
+.bzrignore
+
+# GitHub
+.github/workflows/local-*
+
+# =============================================================================
+# CLOUD & DEPLOYMENT
+# =============================================================================
+
+# Docker
+Dockerfile.local
+docker-compose.override.yml
+.dockerignore.local
+
+# Kubernetes
+*.kubeconfig
+kustomization.local.yaml
+
+# Terraform
+*.tfstate
+*.tfstate.backup
+*.tfvars
+.terraform/
+
+# AWS
+.aws/
+
+# =============================================================================
+# MISCELLANEOUS
+# =============================================================================
+
+# Backup files
+*.bak
+*.backup
+*.old
+*~
+
+# Archive files
+*.zip
+*.tar
+*.tar.gz
+*.tgz
+*.rar
+*.7z
+
+# Logs
+logs/
+*.log
+*.log.*
+
+# Runtime data
+pids/
+*.pid
+*.seed
+*.pid.lock
+
+# Coverage directory used by tools like istanbul
+coverage/
+
+# nyc test coverage
+.nyc_output
+
+# Optional npm cache directory
+.npm
+
+# Optional eslint cache
+.eslintcache
+
+# Microbundle cache
+.rpt2_cache/
+.rts2_cache_cjs/
+.rts2_cache_es/
+.rts2_cache_umd/
+
+# Optional REPL history
+.node_repl_history
+
+# Output of 'npm pack'
+*.tgz
+
+# Yarn Integrity file
+.yarn-integrity
+
+# dotenv environment variables file
+.env.test
+
+# parcel-bundler cache (https://parceljs.org/)
+.cache
+.parcel-cache
+
+# Next.js build output
+.next
+
+# Nuxt.js build / generate output
+.nuxt
+dist
+
+# Gatsby files
+.cache/
+public
+
+# Storybook build outputs
+.out
+.storybook-out
+
+# Temporary folders
+tmp/
+temp/
+
+# =============================================================================
+# CUSTOM PROJECT PATTERNS
+# =============================================================================
+
+# Add any project-specific patterns here
+# Example:
+# my_custom_folder/
+# *.my_extension
