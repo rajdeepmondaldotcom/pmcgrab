@@ -21,6 +21,7 @@ class TimeoutException(Exception):
     pass
 
 def timeout_handler(signum, frame):
+    """Raise a ``TimeoutException`` when a signal alarm is triggered."""
     raise TimeoutException("Operation timed out")
 signal.signal(signal.SIGALRM, timeout_handler)
 

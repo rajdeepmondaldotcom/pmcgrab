@@ -25,8 +25,11 @@ from .constants import (
 
 
 class Paper:
+    """Container for all parsed information about a PMC article."""
+
     __tablename__ = "Papers"
     def __init__(self, d: Dict) -> None:
+        """Initialize a ``Paper`` from a dictionary of parsed values."""
         if not d:
             self.has_data = False
             return
@@ -68,6 +71,7 @@ class Paper:
         self.vector_collection = None
     @classmethod
     def from_pmc(cls, pmcid: int, email: str, download: bool = False, validate: bool = True, verbose: bool = False, suppress_warnings: bool = False, suppress_errors: bool = False) -> Optional["Paper"]:
+        """Download article metadata from PMC and construct a ``Paper``."""
         attempts = 3
         d = None
         from .parser import paper_dict_from_pmc
@@ -82,22 +86,29 @@ class Paper:
             return None
         return cls(d)
     def abstract_as_str(self) -> str:
+        """Return the abstract as plain text."""
         return "\n".join(str(sec) for sec in self.abstract) if self.abstract else ""
 
 class TextElement:
+    """Base class for text elements that reference a shared ``BasicBiMap``."""
+
     def __init__(self, root: ET.Element, parent: Optional["TextElement"] = None, ref_map: Optional[BasicBiMap] = None) -> None:
         self.root = root
         self.parent = parent
         self.ref_map = ref_map if ref_map is not None else BasicBiMap()
     def get_ref_map(self) -> BasicBiMap:
+        """Return the ``BasicBiMap`` associated with this element."""
         return self.parent.get_ref_map() if self.parent else self.ref_map
     def set_ref_map(self, ref_map: BasicBiMap) -> None:
+        """Propagate ``ref_map`` to this element or its root parent."""
         if self.parent:
             self.parent.set_ref_map(ref_map)
         else:
             self.ref_map = ref_map
 
 class TextParagraph(TextElement):
+    """Paragraph of text possibly containing references."""
+
     def __init__(self, p_root: ET.Element, parent: Optional[TextElement] = None, ref_map: Optional[BasicBiMap] = None) -> None:
         super().__init__(p_root, parent, ref_map)
         self.id = p_root.get("id")
@@ -105,11 +116,15 @@ class TextParagraph(TextElement):
         self.text_with_refs = split_text_and_refs(p_subtree, self.get_ref_map(), id=self.id, on_unknown="keep")
         self.text = remove_mhtml_tags(self.text_with_refs)
     def __str__(self) -> str:
+        """Return paragraph text without reference tags."""
         return self.text
     def __eq__(self, other: object) -> bool:
+        """Equality based on underlying text with references."""
         return isinstance(other, TextParagraph) and self.text_with_refs == other.text_with_refs
 
 class TextSection(TextElement):
+    """Hierarchical section of text that can contain nested sections."""
+
     def __init__(self, sec_root: ET.Element, parent: Optional[TextElement] = None, ref_map: Optional[BasicBiMap] = None) -> None:
         super().__init__(sec_root, parent, ref_map)
         self.title: Optional[str] = None
@@ -131,13 +146,16 @@ class TextSection(TextElement):
         self.text = self.get_section_text()
         self.text_with_refs = self.get_section_text_with_refs()
     def __str__(self) -> str:
+        """Return a human-readable representation of the section."""
         res = f"SECTION: {self.title}:\n" if self.title else ""
         for child in self.children:
             res += "\n" + textwrap.indent(str(child), " " * 4) + "\n"
         return res
     def get_section_text(self) -> str:
+        """Return text for this section without reference markers."""
         return str(self)
     def get_section_text_with_refs(self) -> str:
+        """Return text for this section including reference markers."""
         res = f"SECTION: {self.title}:\n" if self.title else ""
         for child in self.children:
             if isinstance(child, TextSection):
@@ -146,9 +164,12 @@ class TextSection(TextElement):
                 res += "\n" + child.text_with_refs + "\n"
         return res
     def __eq__(self, other: object) -> bool:
+        """Sections are equal if titles and children match."""
         return isinstance(other, TextSection) and self.title == other.title and self.children == other.children
 
 class TextTable(TextElement):
+    """Wrapper for a table element and any parsed ``pandas`` representation."""
+
     def __init__(self, table_root: ET.Element, parent: Optional[TextElement] = None, ref_map: Optional[BasicBiMap] = None) -> None:
         super().__init__(table_root, parent, ref_map)
         label = table_root.xpath("label/text()")
@@ -168,7 +189,9 @@ class TextTable(TextElement):
         except (ValueError, AttributeError) as e:
             warnings.warn(f"Table parsing failed (label: {label}, caption: {caption}): {e}", ReadHTMLFailure)
     def __str__(self) -> str:
+        """Return a string representation of the parsed table."""
         return str(self.df) if self.df is not None else "Table could not be parsed"
     def __repr__(self) -> str:
+        """Return the ``repr`` of the parsed table."""
         return repr(self.df) if self.df is not None else "Table could not be parsed"
 

@@ -13,10 +13,12 @@ from .constants import ReversedBiMapComparisonWarning, UnexpectedTagWarning, log
 
 
 def clean_doc(s: str) -> str:
+    """Collapse indentation and remove newlines from ``s``."""
     return cleandoc(s).replace("\n", "")
 
 
 def make_hashable(value):
+    """Convert nested lists/dicts to tuples so they can be hashed."""
     if isinstance(value, dict):
         return tuple(sorted((k, make_hashable(v)) for k, v in value.items()))
     if isinstance(value, list):
@@ -25,6 +27,7 @@ def make_hashable(value):
 
 
 def normalize_value(val):
+    """Convert complex objects to serializable representations."""
     if isinstance(val, (datetime.date, datetime.datetime)):
         return val.isoformat()
     if isinstance(val, pd.DataFrame):
@@ -59,6 +62,7 @@ class BasicBiMap(dict):
 
 
 def stringify_children(node: ET.Element, encoding: str = "utf-8") -> str:
+    """Return the XML text for ``node`` including all children."""
     chunks = [
         c
         for c in chain(
@@ -73,6 +77,7 @@ def stringify_children(node: ET.Element, encoding: str = "utf-8") -> str:
 
 
 def remove_html_tags(text: str, removals: List[str], replaces: Dict[str, str], verbose: bool = False) -> str:
+    """Strip unwanted HTML tags and optionally replace others."""
     to_remove = removals + [f"</{tag[1:]}" for tag in removals] + [f"</{tag[1:]}" for tag in replaces.keys()]
     to_remove = [tag[:-1] + r"\b[^>]*" + tag[-1] for tag in to_remove]
     to_replace = {tag[:-1] + r"\b[^>]*" + tag[-1]: rep for tag, rep in replaces.items()}
@@ -87,12 +92,14 @@ def remove_html_tags(text: str, removals: List[str], replaces: Dict[str, str], v
 
 
 def strip_html_text_styling(text: str, verbose: bool = False) -> str:
+    """Simplify emphasis tags and remove styling from HTML text."""
     removes = ["<italic>", "<i>", "<bold>", "<b>", "<underline>", "<u>"]
     reps = {"<sub>": "_", "<sup>": "^", "<ext-link>": "[External URI:]"}
     return remove_html_tags(text, removes, reps, verbose)
 
 
 def split_text_and_refs(tree_text: str, ref_map: BasicBiMap, id: Optional[str] = None, on_unknown: str = "keep") -> str:
+    """Replace allowed tags with placeholders and build reference map."""
     allowed_tags = ["xref", "fig", "table-wrap"]
     pattern = r"<([a-zA-Z][\w-]*)\b[^>]*>(.*?)</\1>|<([a-zA-Z][\w-]*)\b[^/>]*/?>"
     tag_r = re.compile(pattern, re.DOTALL)
@@ -132,15 +139,18 @@ def split_text_and_refs(tree_text: str, ref_map: BasicBiMap, id: Optional[str] =
 
 
 def generate_typed_mhtml_tag(tag_type: str, s: str) -> str:
+    """Create a marker string used to reference text elements."""
     return f"[MHTML::{tag_type}::{s}]"
 
 
 def remove_mhtml_tags(text: str) -> str:
+    """Remove MHTML placeholder tags from ``text``."""
     pat = r"\[MHTML::([^:\[\]]+)::([^:\[\]]+)\]|\[MHTML::([^:\[\]]+)\]"
     return re.sub(pat, "", text)
 
 
 def define_data_dict() -> Dict[str, str]:
+    """Return documentation strings for Paper fields."""
     return {
         "PMCID": "PMCID of the PMC article. Unique.",
         "Title": "Title of the PMC article.",
