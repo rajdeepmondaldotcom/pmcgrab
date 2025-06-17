@@ -117,7 +117,6 @@ def process_pmc_ids_in_batches(
         with ThreadPoolExecutor(max_workers=batch_size) as executor:
             futures = {executor.submit(process_single_pmc_wrapper, pmc_id): pmc_id for pmc_id in pmc_ids}
             for future in as_completed(futures):
-                pmc_id = futures[future]
                 try:
                     _, success = future.result()
                     if success:

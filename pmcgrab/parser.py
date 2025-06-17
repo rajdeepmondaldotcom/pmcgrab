@@ -2,6 +2,7 @@ import copy
 import datetime
 import uuid
 import warnings
+import textwrap
 from typing import Dict, List, Optional, Tuple, Union
 
 import lxml.etree as ET
@@ -10,12 +11,9 @@ import pandas as pd
 from .constants import (
     UnexpectedMultipleMatchWarning,
     UnexpectedZeroMatchWarning,
-    MultipleTitleWarning,
     UnhandledTextTagWarning,
-    ReadHTMLFailure,
     UnmatchedCitationWarning,
     UnmatchedTableWarning,
-    ValidationWarning,
     logger,
 )
 from .utils import BasicBiMap
