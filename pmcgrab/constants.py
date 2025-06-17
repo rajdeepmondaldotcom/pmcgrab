@@ -38,16 +38,51 @@ EMAILS = sorted(set([
 ]))
 email_counter = 0
 
-class ReversedBiMapComparisonWarning(Warning): pass
-class ValidationWarning(Warning): pass
-class MultipleTitleWarning(Warning): pass
-class UnhandledTextTagWarning(Warning): pass
-class ReadHTMLFailure(Warning): pass
-class UnexpectedMultipleMatchWarning(Warning): pass
-class UnexpectedZeroMatchWarning(Warning): pass
-class UnmatchedCitationWarning(Warning): pass
-class UnmatchedTableWarning(Warning): pass
-class UnexpectedTagWarning(Warning): pass
-class EmptyTextWarning(Warning): pass
-class PubmedHTTPError(Warning): pass
+
+class ReversedBiMapComparisonWarning(Warning):
+    pass
+
+
+class ValidationWarning(Warning):
+    pass
+
+
+class MultipleTitleWarning(Warning):
+    pass
+
+
+class UnhandledTextTagWarning(Warning):
+    pass
+
+
+class ReadHTMLFailure(Warning):
+    pass
+
+
+class UnexpectedMultipleMatchWarning(Warning):
+    pass
+
+
+class UnexpectedZeroMatchWarning(Warning):
+    pass
+
+
+class UnmatchedCitationWarning(Warning):
+    pass
+
+
+class UnmatchedTableWarning(Warning):
+    pass
+
+
+class UnexpectedTagWarning(Warning):
+    pass
+
+
+class EmptyTextWarning(Warning):
+    pass
+
+
+class PubmedHTTPError(Warning):
+    pass
 
