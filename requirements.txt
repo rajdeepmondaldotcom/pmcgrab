@@ -12,3 +12,4 @@ six==1.17.0
 tqdm==4.67.1
 tzdata==2025.2
 urllib3==2.4.0
+pytest==8.2.0
