@@ -72,6 +72,21 @@ process_in_batches_with_retry(
 
 Each article is written to `output_papers/PMC.json`.
 
+## Logging
+
+`pmcgrab` uses Python's built-in `logging` module. The library does not
+configure logging for you, so to see informational or debugging output
+you should set up logging in your application before calling `pmcgrab`:
+
+```python
+import logging
+
+logging.basicConfig(level=logging.INFO)  # use DEBUG for more detail
+```
+
+Once configured, log messages from the `pmcgrab` logger will be emitted
+according to your chosen logging level.
+
 ## The AI-Ready Output Structure
 
 The output JSON is designed for easy parsing and direct ingestion into AI pipelines. It separates key metadata from the core content and, most importantly, structures the body of the paper into its constituent parts.

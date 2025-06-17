@@ -3,7 +3,6 @@ import warnings
 import re
 import signal
 
-logging.basicConfig(level=logging.CRITICAL)
 logger = logging.getLogger(__name__)
 warnings.formatwarning = lambda msg, cat, *args, **kwargs: f"{cat.__name__}: {msg}\n\n"
 warnings.filterwarnings("ignore")
