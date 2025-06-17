@@ -7,7 +7,7 @@ name = "pmcgrab"
 version = "0.1.0"
 description = "Utilities for fetching and processing PubMed Central articles"
 readme = {file = "README.md", content-type = "text/markdown"}
-license = {text = "Apache-2.0"}
+license = "Apache-2.0"
 authors = [{name = "Rajdeep Mondal"}]
 requires-python = ">=3.8"
 dependencies = [
@@ -33,7 +33,6 @@ classifiers = [
     "Programming Language :: Python :: 3.8",
     "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
-    "License :: OSI Approved :: Apache Software License",
     "Operating System :: OS Independent",
 ]
 
