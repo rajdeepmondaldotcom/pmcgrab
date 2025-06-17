@@ -38,7 +38,9 @@ classifiers = [
 ]
 
 [tool.setuptools]
-packages = ["pmcgrab"]
+packages = ["pmcgrab", "pmcgrab.data", "pmcgrab.data.DTDs"]
+[tool.setuptools.package-data]
+"pmcgrab.data.DTDs" = ["*.dtd"]
 
 [project.urls]
 Homepage = "https://github.com/rajdeepmondal/pmcgrab"

@@ -17,6 +17,7 @@ import warnings
 from collections.abc import Hashable
 from inspect import cleandoc
 from io import StringIO
+import importlib.resources
 from itertools import chain
 from pathlib import Path
 from typing import Dict, List, Optional, Tuple, Union
@@ -164,7 +165,7 @@ def validate_xml(tree: ET.ElementTree) -> bool:
         raise NoDTDFoundError(clean_doc("A DTD must be specified for validation."))
     match = END_OF_URL_PATTERN.search(url)
     filename = match.group(0)
-    dtd_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "data", "DTDs", filename)
+    dtd_path = importlib.resources.files("pmcgrab.data.DTDs").joinpath(filename)
     with open(dtd_path, "r", encoding="utf-8") as f:
         dtd_doc = f.read()
     if not dtd_doc:
