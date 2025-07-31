@@ -1,0 +1,64 @@
+/* Custom styles for PMCGrab documentation */
+
+/* Grid cards for the home page */
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 1rem;
+  margin: 1rem 0;
+}
+
+.grid.cards {
+  gap: 0.5rem;
+}
+
+.grid.cards > .card {
+  border: 1px solid var(--md-default-fg-color--lightest);
+  border-radius: 0.2rem;
+  padding: 1rem;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.grid.cards > .card:hover {
+  border-color: var(--md-accent-fg-color);
+  box-shadow: 0 0.2rem 0.5rem rgba(0, 0, 0, 0.1);
+}
+
+/* API reference styling */
+.doc-heading {
+  border-bottom: 1px solid var(--md-default-fg-color--lightest);
+  padding-bottom: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+/* Code block improvements */
+.highlight {
+  margin: 1rem 0;
+}
+
+/* Admonition styling improvements */
+.admonition {
+  margin: 1.5rem 0;
+}
+
+/* Table styling */
+table {
+  margin: 1rem 0;
+}
+
+/* Navigation improvements */
+.md-nav__item {
+  padding: 0.1rem 0;
+}
+
+/* Footer styling */
+.md-footer {
+  margin-top: 2rem;
+}
+
+/* Responsive improvements */
+@media (max-width: 768px) {
+  .grid {
+    grid-template-columns: 1fr;
+  }
+}
