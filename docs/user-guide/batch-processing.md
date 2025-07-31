@@ -128,9 +128,9 @@ def process_with_progress(pmcids, output_dir="results"):
             with output_file.open('w', encoding='utf-8') as f:
                 json.dump(data, f, indent=2, ensure_ascii=False)
             successful += 1
-            tqdm.write(f"✓ PMC{pmcid}: {data['title'][:40]}...")
+            tqdm.write(f"Success PMC{pmcid}: {data['title'][:40]}...")
         else:
-            tqdm.write(f"✗ PMC{pmcid}: Failed to process")
+            tqdm.write(f"Error PMC{pmcid}: Failed to process")
 
     print(f"\nCompleted: {successful}/{len(pmcids)} papers processed successfully")
 

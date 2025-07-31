@@ -7,7 +7,7 @@ We welcome contributions to PMCGrab! This guide will help you get started.
 1. **Fork the repository** on GitHub
 2. **Clone your fork** locally:
    ```bash
-   git clone https://github.com/yourusername/pmcgrab.git
+   git clone https://github.com/rajdeepmondaldotcom/pmcgrab.git
    cd pmcgrab
    ```
 3. **Set up development environment**:

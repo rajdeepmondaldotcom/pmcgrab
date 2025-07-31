@@ -129,21 +129,21 @@ def robust_processing(pmcids, max_retries=3, delay=2):
                         json.dump(data, f, indent=2, ensure_ascii=False)
 
                     successful.append(pmcid)
-                    print(f"  ✓ Successfully processed PMC{pmcid}")
+                    print(f"  Success Successfully processed PMC{pmcid}")
                     success = True
                     break
                 else:
                     print(f"  ⚠ No data returned for PMC{pmcid}")
 
             except Exception as e:
-                print(f"  ✗ Error processing PMC{pmcid}: {str(e)}")
+                print(f"  Error Error processing PMC{pmcid}: {str(e)}")
                 if attempt < max_retries - 1:
                     print(f"    Retrying in {delay} seconds...")
                     time.sleep(delay)
 
         if not success:
             failed.append(pmcid)
-            print(f"  ✗ Failed to process PMC{pmcid} after {max_retries} attempts")
+            print(f"  Error Failed to process PMC{pmcid} after {max_retries} attempts")
 
     print(f"\nResults: {len(successful)} successful, {len(failed)} failed")
     return successful, failed

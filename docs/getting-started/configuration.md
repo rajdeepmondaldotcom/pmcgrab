@@ -94,13 +94,13 @@ def robust_processing(pmcids):
             data = process_single_pmc(pmcid)
             if data is not None:
                 successful.append((pmcid, data))
-                print(f"✓ PMC{pmcid}: {data['title'][:50]}...")
+                print(f"Success PMC{pmcid}: {data['title'][:50]}...")
             else:
                 failed.append(pmcid)
-                print(f"✗ PMC{pmcid}: No data returned")
+                print(f"Error PMC{pmcid}: No data returned")
         except Exception as e:
             failed.append(pmcid)
-            print(f"✗ PMC{pmcid}: {str(e)}")
+            print(f"Error PMC{pmcid}: {str(e)}")
 
     return successful, failed
 
@@ -179,9 +179,9 @@ def process_with_progress(pmcids, output_dir="results"):
                 json.dump(data, f, indent=2, ensure_ascii=False)
 
             successful += 1
-            tqdm.write(f"✓ {data['title'][:40]}...")
+            tqdm.write(f"Success {data['title'][:40]}...")
         else:
-            tqdm.write(f"✗ PMC{pmcid}: Failed")
+            tqdm.write(f"Error PMC{pmcid}: Failed")
 
     print(f"Completed: {successful}/{len(pmcids)} papers")
 
