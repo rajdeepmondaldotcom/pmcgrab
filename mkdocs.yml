@@ -10,27 +10,24 @@ copyright: Copyright &copy; 2025 Rajdeep Mondal
 
 theme:
   name: material
+  custom_dir: overrides
 
-  # Color scheme
+  # Color scheme - matching Material demo
   palette:
     - media: "(prefers-color-scheme: light)"
       scheme: default
-      primary: blue
-      accent: "#006778"
+      primary: indigo
+      accent: indigo
       toggle:
         icon: material/brightness-7
         name: Switch to dark mode
     - media: "(prefers-color-scheme: dark)"
       scheme: slate
-      primary: blue
-      accent: "#006778"
+      primary: indigo
+      accent: indigo
       toggle:
         icon: material/brightness-4
         name: Switch to light mode
-
-  announcement:
-    type: info
-    text: "🚀 v0.3.4 released — try the new three-paper demo!"
 
   # Features
   features:
@@ -144,12 +141,8 @@ nav:
       - Advanced Usage: examples/advanced-usage.md
   - API Reference:
       - Core API: api/core.md
-      - Paper Model: api/paper.md
       - Processing: api/processing.md
-      - Parsing: api/parsing.md
       - CLI: api/cli.md
-      - External Services: api/external-services.md
-      - Utilities: api/utilities.md
   - Development:
       - Contributing: development/contributing.md
       - Development Setup: development/setup.md
