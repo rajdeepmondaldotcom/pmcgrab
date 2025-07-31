@@ -19,9 +19,8 @@ class TestTextFigure:
         
         figure = TextFigure(element)
         
-        assert figure.label == "Figure 1"
-        assert "Test figure caption" in figure.caption
-        assert figure.figure_id == "fig1"
+        assert figure.fig_dict["Label"] == "Figure 1"
+        assert "Test figure caption" in figure.fig_dict["Caption"]
 
     def test_text_figure_without_label(self):
         """Test TextFigure without label."""
@@ -32,8 +31,8 @@ class TestTextFigure:
         
         figure = TextFigure(element)
         
-        assert figure.label == ""
-        assert "Caption without label" in figure.caption
+        assert figure.fig_dict["Label"] is None
+        assert "Caption without label" in figure.fig_dict["Caption"]
 
     def test_text_figure_without_caption(self):
         """Test TextFigure without caption."""
@@ -44,8 +43,8 @@ class TestTextFigure:
         
         figure = TextFigure(element)
         
-        assert figure.label == "Figure 1"
-        assert figure.caption == ""
+        assert figure.fig_dict["Label"] == "Figure 1"
+        assert figure.fig_dict["Caption"] is None
 
     def test_text_figure_without_id(self):
         """Test TextFigure without ID."""
@@ -57,7 +56,8 @@ class TestTextFigure:
         
         figure = TextFigure(element)
         
-        assert figure.figure_id == ""
+        # TextFigure doesn't store figure ID separately, just test it was created
+        assert isinstance(figure, TextFigure)
 
     def test_text_figure_with_graphic(self):
         """Test TextFigure with graphic element."""
@@ -70,8 +70,9 @@ class TestTextFigure:
         
         figure = TextFigure(element)
         
-        assert figure.label == "Figure 1"
-        assert "Figure with graphic" in figure.caption
+        assert figure.fig_dict["Label"] == "Figure 1"
+        assert "Figure with graphic" in figure.fig_dict["Caption"]
+        assert figure.fig_dict["Link"] == "figure1.jpg"
 
     def test_text_figure_complex_caption(self):
         """Test TextFigure with complex caption."""
@@ -87,10 +88,10 @@ class TestTextFigure:
         
         figure = TextFigure(element)
         
-        assert figure.label == "Figure 1"
-        assert "Complex Caption" in figure.caption
-        assert "First paragraph" in figure.caption
-        assert "Second paragraph" in figure.caption
+        assert figure.fig_dict["Label"] == "Figure 1"
+        assert "Complex Caption" in figure.fig_dict["Caption"]
+        assert "First paragraph" in figure.fig_dict["Caption"]
+        assert "Second paragraph" in figure.fig_dict["Caption"]
 
     def test_text_figure_fig_dict_property(self):
         """Test fig_dict property."""
@@ -106,7 +107,7 @@ class TestTextFigure:
         assert isinstance(fig_dict, dict)
         assert fig_dict["Label"] == "Figure 1"
         assert "Test caption" in fig_dict["Caption"]
-        assert fig_dict["Figure_ID"] == "fig1"
+        # TextFigure doesn't store figure ID in fig_dict
 
     def test_text_figure_fig_dict_empty_values(self):
         """Test fig_dict property with empty values."""
@@ -117,9 +118,9 @@ class TestTextFigure:
         fig_dict = figure.fig_dict
         
         assert isinstance(fig_dict, dict)
-        assert fig_dict["Label"] == ""
-        assert fig_dict["Caption"] == ""
-        assert fig_dict["Figure_ID"] == ""
+        assert fig_dict["Label"] is None
+        assert fig_dict["Caption"] is None
+        assert fig_dict["Link"] is None
 
     def test_text_figure_string_representation(self):
         """Test string representation of TextFigure."""
@@ -143,9 +144,9 @@ class TestTextFigure:
         
         figure = TextFigure(element)
         
-        assert figure.label == ""
-        assert figure.caption == ""
-        assert figure.figure_id == ""
+        assert figure.fig_dict["Label"] is None
+        assert figure.fig_dict["Caption"] is None
+        assert figure.fig_dict["Link"] is None
         
         # Should still be able to create fig_dict
         fig_dict = figure.fig_dict
@@ -164,8 +165,8 @@ class TestTextFigure:
         
         figure = TextFigure(element)
         
-        assert figure.label == "Figure 1"
+        assert figure.fig_dict["Label"] == "Figure 1"
         # Caption should contain the text content, possibly with formatting removed
-        assert "bold" in figure.caption
-        assert "italic" in figure.caption
-        assert "reference" in figure.caption
+        assert "bold" in figure.fig_dict["Caption"]
+        assert "italic" in figure.fig_dict["Caption"]
+        assert "reference" in figure.fig_dict["Caption"]
