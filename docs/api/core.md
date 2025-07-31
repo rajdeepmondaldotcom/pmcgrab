@@ -1,17 +1,47 @@
 # Core API
 
-The core API provides the main entry points for PMCGrab functionality.
+The core API provides the main functions for processing PMC articles.
 
-## Main Functions
+## Primary Processing Function
 
-### paper_dict_from_pmc
+### process_single_pmc
 
-::: pmcgrab.parser.paper_dict_from_pmc
+::: pmcgrab.application.processing.process_single_pmc
+options:
+show_source: true
+show_root_heading: true
+show_root_toc_entry: false
+show_object_full_path: false
+show_category_heading: false
+show_signature_annotations: true
+heading_level: 3
 
-### build_complete_paper_dict
+## Email Management
 
-::: pmcgrab.parser.build_complete_paper_dict
+### next_email
 
-### get_xml
+::: pmcgrab.infrastructure.settings.next_email
+options:
+show_source: true
+show_root_heading: true
+show_root_toc_entry: false
+show_object_full_path: false
+show_category_heading: false
+show_signature_annotations: true
+heading_level: 3
 
-::: pmcgrab.fetch.get_xml
+## Example Usage
+
+```python
+from pmcgrab.application.processing import process_single_pmc
+from pmcgrab.infrastructure.settings import next_email
+
+# Process a single PMC article
+email = next_email()
+data = process_single_pmc("7114487")
+
+if data:
+    print(f"Title: {data['title']}")
+    print(f"Authors: {len(data['authors'])}")
+    print(f"Sections: {list(data['body'].keys())}")
+```

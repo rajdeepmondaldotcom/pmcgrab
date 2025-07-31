@@ -7,9 +7,9 @@
   margin: 4rem 0;
   padding: 4rem 3rem;
   border-radius: 20px;
-  background: linear-gradient(135deg, #3f51b5 0%, #5c6bc0 50%, #7986cb 100%);
+  background: linear-gradient(135deg, #1a237e 0%, #283593 50%, #3949ab 100%);
   color: white;
-  box-shadow: 0 8px 32px rgba(63, 81, 181, 0.3);
+  box-shadow: 0 8px 32px rgba(26, 35, 126, 0.4);
   position: relative;
   overflow: hidden;
 }
@@ -82,9 +82,9 @@
 
 .mdx-hero__buttons .md-button--primary {
   background-color: white;
-  color: #3f51b5;
+  color: #1a237e;
   border-color: white;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
 }
 
 .mdx-hero__buttons .md-button--primary:hover {
@@ -119,7 +119,7 @@
 .grid.cards > .card:hover {
   transform: translateY(-4px);
   box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
-  border-color: rgba(63, 81, 181, 0.2);
+  border-color: rgba(26, 35, 126, 0.3);
 }
 
 /* Responsive adjustments */
@@ -129,20 +129,20 @@
     padding: 3rem 2rem;
     gap: 2rem;
   }
-  
+
   .mdx-hero__title {
     font-size: 2.5rem;
   }
-  
+
   .mdx-hero__subtitle {
     font-size: 1.1rem;
   }
-  
+
   .mdx-hero__buttons {
     flex-direction: column;
     align-items: stretch;
   }
-  
+
   .mdx-hero__buttons .md-button {
     text-align: center;
   }

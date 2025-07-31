@@ -1,254 +1,229 @@
 # PMCGrab
 
-From PMCID to structured JSON - bridge PubMed Central and your AI pipeline.
+**Transform PubMed Central articles into AI-ready JSON for your research pipelines.**
 
-[![PyPI](https://img.shields.io/pypi/v/PMCGrab.svg)](https://pypi.org/project/PMCGrab/)
-[![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE)
+[![PyPI](https://img.shields.io/pypi/v/pmcgrab.svg)](https://pypi.org/project/pmcgrab/)
+[![Python](https://img.shields.io/pypi/pyversions/pmcgrab.svg)](https://pypi.org/project/pmcgrab/)
+[![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://github.com/rajdeepmondaldotcom/pmcgrab/blob/main/LICENSE)
+[![Documentation](https://img.shields.io/badge/docs-mkdocs-blue.svg)](https://rajdeepmondaldotcom.github.io/pmcgrab/)
 
-`PMCGrab` is a specialised Python toolkit for **retrieving, validating and restructuring PubMed Central (PMC) articles into clean, section-aware JSON** that large-language-model (LLM) pipelines can ingest directly for Retrieval-Augmented Generation (RAG), question-answering, summarisation and other downstream tasks.
-
----
-
-## Table of Contents
-
-1. [Key Features](#key-features)
-2. [Why PMCGrab?](#why-PMCGrab)
-3. [Installation](#installation)
-4. [Quick Start (Python)](#quick-start-python)
-5. [Command-Line Interface](#command-line-interface)
-6. [Batch Processing & Scaling](#batch-processing--scaling)
-7. [Output Schema](#output-schema)
-8. [Configuration](#configuration)
-9. [Logging](#logging)
-10. [Development](#development)
-11. [Contributing](#contributing)
-12. [License](#license)
-13. [Citation](#citation)
-14. [Acknowledgements](#acknowledgements)
-
----
-
-## Key Features
-
-- **Effortless Retrieval** – Fetch full-text articles with a single PMCID using NCBI Entrez.
-- **AI-Optimised JSON** – Output is pre-segmented into `Introduction`, `Methods`, `Results`, `Discussion`, etc., dramatically improving context relevance in RAG pipelines.
-- **Highly Concurrent** – Multithreaded batch downloader with configurable worker count, retries and timeouts.
-- **HTML & Reference Cleaning** – Utilities to strip or normalise embedded HTML, citations and footnotes.
-
----
+PMCGrab converts PubMed Central articles into clean, section-aware JSON optimized for large language models, RAG systems, and data analysis workflows.
 
 ## Why PMCGrab?
 
-While the NCBI Entrez API already provides raw XML, consuming it directly is burdensome:
+**From this complexity:**
 
-|                                       | Entrez XML | PMCGrab JSON |
-| ------------------------------------- | ---------: | -----------: |
-| Section delineation                   |         ❌ |           ✅ |
-| Straightforward to embed in vector DB |         ❌ |           ✅ |
-| Ready for LLM chunking                |         ❌ |           ✅ |
-| Batch parallelism                     |    Limited |    Automatic |
+- Raw XML with nested tags and references
+- Inconsistent section structure
+- Manual parsing and cleaning required
 
-Put simply, `PMCGrab` turns _pubmed central_ papers into _AI-centric_ assets.
+**To this simplicity:**
 
----
+```json
+{
+  "pmc_id": "7114487",
+  "title": "Machine learning approaches in cancer research",
+  "abstract": "Recent advances in machine learning...",
+  "body": {
+    "Introduction": "Cancer research has evolved...",
+    "Methods": "We implemented a deep learning...",
+    "Results": "Our model achieved 94% accuracy...",
+    "Discussion": "These findings demonstrate..."
+  },
+  "authors": [...],
+  "journal": "Nature Medicine"
+}
+```
 
-## Installation
+## Quick Start
 
-### Requirements
-
-- Python ≥ 3.9
-- GCC or compatible compiler for `lxml` wheels on some platforms
-
-### From PyPI
+### Installation
 
 ```bash
 pip install pmcgrab
 ```
 
-### From Source
+### Basic Usage
 
-```bash
-git clone https://github.com/rajdeepmondaldotcom/pmcgrab.git
-cd pmcgrab
-pip install .
+```python
+from pmcgrab.application.processing import process_single_pmc
+
+# Get structured data from any PMC article
+data = process_single_pmc("7114487")
+print(f"Title: {data['title']}")
+print(f"Sections: {list(data['body'].keys())}")
 ```
 
-For optional development utilities:
+### Batch Processing Example
 
-```bash
-pip install .[dev,test,docs]
+Process multiple research papers efficiently:
+
+```python
+# ─── examples/run_three_pmcs.py ──────────────────────────────────────────────
+import json
+from pathlib import Path
+
+from pmcgrab.application.processing import process_single_pmc
+from pmcgrab.infrastructure.settings import next_email
+
+# The PMC IDs we want to process
+PMC_IDS = ["7114487", "3084273", "7690653", "5707528", "7979870"]
+
+OUT_DIR = Path("pmc_output")
+OUT_DIR.mkdir(exist_ok=True)
+
+for pmcid in PMC_IDS:
+    email = next_email()
+    print(f"• Fetching PMC{pmcid} using email {email} …")
+    data = process_single_pmc(pmcid)
+    if data is None:
+        print(f"  ↳ FAILED to parse PMC{pmcid}")
+        continue
+
+    # Pretty-print a few key fields
+    print(
+        f"  Title   : {data['title'][:80]}{'…' if len(data['title']) > 80 else ''}\n"
+        f"  Abstract: {data['abstract'][:120]}{'…' if len(data['abstract']) > 120 else ''}\n"
+        f"  Authors : {len(data['authors']) if data['authors'] else 0}"
+    )
+
+    # Persist full JSON
+    dest = OUT_DIR / f"PMC{pmcid}.json"
+    with dest.open("w", encoding="utf-8") as fh:
+        json.dump(data, fh, indent=2, ensure_ascii=False)
+    print(f"  ↳ JSON saved to {dest}\n")
 ```
 
----
-
-### Example: Process three PMC articles
-
-Run the helper script located in `examples/run_three_pmcs.py`:
+Run this example:
 
 ```bash
 python examples/run_three_pmcs.py
 ```
 
-The script will:
+## Key Features
 
-1. Download three predefined PMCIDs (see the source). (Please Replace with your choice of PMC IDs)
-2. Print a brief summary for each article (title, abstract snippet, author count).
-3. Persist the full JSON output into `pmc_output/PMC<id>.json` for further inspection.
+- **Section-Aware Parsing**: Automatically extracts Introduction, Methods, Results, Discussion, and other sections
+- **Clean JSON Output**: Structured data ready for vector databases and LLM pipelines
+- **Robust Processing**: Built-in error handling and retry logic
+- **Fast & Efficient**: Optimized for batch processing with email rotation
+- **Research-Ready**: Perfect for systematic reviews, meta-analyses, and literature mining
 
----
+## Command Line Interface
 
-## Command-Line Interface
-
-Batch-process multiple PMCIDs directly from the shell:
+Process articles directly from the command line:
 
 ```bash
-python -m pmcgrab.cli.pmcgrab_cli \
-  --pmcids 7181753 3539614 5454911 \
-  --output-dir ./pmc_output \
-  --batch-size 8
+# Single article
+python -m pmcgrab PMC7114487
+
+# Multiple articles
+python -m pmcgrab PMC7114487 PMC3084273 PMC7690653
+
+# From file
+python -m pmcgrab --input-file pmcids.txt --output-dir results/
 ```
 
-After completion you will find:
+## Use Cases
 
-```
-pmc_output/
-├── PMC7181753.json
-├── PMC3539614.json
-└── PMC5454911.json
-```
+- **Literature Reviews**: Systematically process hundreds of research papers
+- **RAG Systems**: Feed structured content to your AI applications
+- **Research Analysis**: Extract and analyze research methodologies and findings
+- **Academic Workflows**: Automate paper processing for systematic reviews
+- **Data Mining**: Build datasets from biomedical literature
 
-A `summary.json` file captures success/failure for each ID.
+## JSON Output Structure
 
----
-
-## Batch Processing & Scaling
-
-Programmatic interface for large experiments:
-
-```python
-from PMCGrab.application.processing import process_pmc_ids
-
-pmc_ids = ["7181753", "3539614", "5454911", ...]
-stats = process_pmc_ids(pmc_ids, workers=32)
-
-success_rate = sum(stats.values()) / len(stats)
-print(f"{success_rate:%} downloaded successfully")
-```
-
-Internally, downloads are sharded across a thread pool and guarded by per-article timeouts.
-
----
-
-## Output Schema
-
-Below is an abridged view of the generated JSON (actual output contains >30 fields):
+Each processed article returns a comprehensive JSON structure:
 
 ```json
 {
-  "pmc_id": "7181753",
-  "title": "...",
-  "abstract": "...",
+  "pmc_id": "7114487",
+  "title": "Article title",
+  "abstract": "Article abstract",
+  "body": {
+    "Introduction": "Section content...",
+    "Methods": "Section content...",
+    "Results": "Section content...",
+    "Discussion": "Section content..."
+  },
   "authors": [
     {
-      "Contributor_Type": "Author",
-      "First_Name": "Llorenç",
-      "Last_Name": "Solé-Boldo"
+      "First_Name": "John",
+      "Last_Name": "Doe",
+      "Affiliation": "University Name"
     }
   ],
-  "body": {
-    "Introduction": "The skin is the outermost protective barrier...",
-    "Methods": "Clinical samples were obtained...",
-    "Results": "...",
-    "Discussion": "..."
-  },
-  "published_date": { "epub": "2020-04-23" },
-  "journal_title": "Communications Biology"
+  "journal": "Journal Name",
+  "pub_date": "2023-01-15",
+  "doi": "10.1038/example",
+  "figures": [...],
+  "tables": [...],
+  "references": [...]
 }
 ```
 
-This shape maps cleanly to embeddings or vector stores where section titles become metadata tags for context-aware retrieval.
+## Documentation
 
----
+- **[Complete Documentation](https://rajdeepmondaldotcom.github.io/pmcgrab/)** - Full API reference and guides
+- **[Installation Guide](https://rajdeepmondaldotcom.github.io/pmcgrab/getting-started/installation/)** - Detailed setup instructions
+- **[User Guide](https://rajdeepmondaldotcom.github.io/pmcgrab/user-guide/basic-usage/)** - Comprehensive usage examples
+- **[Python Examples](https://rajdeepmondaldotcom.github.io/pmcgrab/examples/python-examples/)** - Code examples and patterns
+- **[CLI Reference](https://rajdeepmondaldotcom.github.io/pmcgrab/user-guide/cli/)** - Command-line usage guide
 
-## Configuration
+## Requirements
 
-`PMCGrab` follows the 12-factor methodology: **environment variables override defaults**.
-
-| Variable          | Purpose                                                                 | Default              |
-| ----------------- | ----------------------------------------------------------------------- | -------------------- |
-| `PMCGrab_EMAILS`  | Comma-separated pool of email addresses rotated for API                 | Internal sample list |
-| `PMCGrab_WORKERS` | Default worker count for batch processing (if not set programmatically) | `16`                 |
-
-Set them in your shell or orchestrator:
-
-```bash
-export PMCGrab_EMAILS="you@org.com,lab@org.com"
-export PMCGrab_WORKERS=32
-```
-
----
-
-## Logging
-
-`PMCGrab` uses the standard Python `logging` library and leaves configuration to the host application:
-
-```python
-import logging
-logging.basicConfig(level=logging.INFO, format="%(levelname)s %(name)s: %(message)s")
-```
-
-Switch to `DEBUG` for verbose network and parsing diagnostics.
-
----
+- Python ≥ 3.9
+- Internet connection for PMC API access
 
 ## Development
 
-1. Clone the repository and install the dev extras:
-   `pip install -e .[dev,test,docs]`
-2. Run the test-suite (100 % coverage):
-   `pytest -n auto --cov=pmcgrab`
-3. Lint & type-check:
-   `ruff check . && mypy src/pmcgrab`
-4. Build documentation (MkDocs):
-   `mkdocs serve`
+```bash
+# Clone and setup
+git clone https://github.com/rajdeepmondaldotcom/pmcgrab.git
+cd pmcgrab
+pip install -e ".[dev,test,docs]"
 
-Continuous Integration replicates the above on every pull request.
+# Run tests
+pytest
 
----
+# Build documentation
+mkdocs serve
+```
+
+## Links
+
+- **[PyPI Package](https://pypi.org/project/pmcgrab/)** - Install via pip
+- **[GitHub Repository](https://github.com/rajdeepmondaldotcom/pmcgrab)** - Source code and issues
+- **[Documentation](https://rajdeepmondaldotcom.github.io/pmcgrab/)** - Complete user guide
+- **[License](https://github.com/rajdeepmondaldotcom/pmcgrab/blob/main/LICENSE)** - Apache 2.0
 
 ## Contributing
 
-Contributions are welcome! Please read the [CONTRIBUTING.md](.github/CONTRIBUTING.md) for details on:
+Contributions are welcome! Please see our [contributing guide](https://github.com/rajdeepmondaldotcom/pmcgrab/blob/main/CONTRIBUTING.md) for details on:
 
-- Code style and commit guidelines
-- Branching and release process
-- Reporting bugs or suggesting enhancements
-- Security disclosures (please email the maintainer directly)
-
----
+- Submitting bug reports and feature requests
+- Setting up your development environment
+- Code style and testing requirements
+- Pull request process
 
 ## License
 
-`PMCGrab` is licensed under the [Apache 2.0](LICENSE) License.
-
----
+PMCGrab is licensed under the [Apache 2.0 License](https://github.com/rajdeepmondaldotcom/pmcgrab/blob/main/LICENSE).
 
 ## Citation
 
-If this project contributes to your research, please consider citing it:
+If PMCGrab helps your research, please cite it:
 
 ```bibtex
-@software{PMCGrab,
-  author       = {Rajdeep Mondal},
-  title        = {PMCGrab: AI-ready retrieval of PubMed Central articles},
-  year         = {2025},
-  url          = {https://github.com/rajdeepmondaldotcom/pmcgrab},
+@software{pmcgrab,
+  author = {Rajdeep Mondal},
+  title = {PMCGrab: AI-ready retrieval and parsing of PubMed Central articles},
+  url = {https://github.com/rajdeepmondaldotcom/pmcgrab},
+  version = {0.3.4},
+  year = {2025}
 }
 ```
 
 ---
 
-## Acknowledgements
-
-- The National Center for Biotechnology Information (NCBI) for maintaining PubMed Central.
-- The open-source community behind **Biopython**, **BeautifulSoup**, **lxml** and other dependencies that make this project possible.
+**Ready to transform biomedical literature into structured data?** [Install PMCGrab](https://pypi.org/project/pmcgrab/) and start processing papers in minutes.

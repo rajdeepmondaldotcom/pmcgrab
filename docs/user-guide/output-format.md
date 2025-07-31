@@ -1,129 +1,146 @@
 # Output Format
 
-PMCGrab produces structured JSON output that's optimized for AI and machine learning applications.
+PMCGrab produces structured JSON output optimized for AI and machine learning applications.
 
 ## JSON Structure Overview
 
-Each processed PMC article is saved as a JSON file with the following structure:
+Each processed PMC article returns a comprehensive dictionary with the following structure:
 
 ```json
 {
-  "PMCID": "PMC7181753",
-  "Title": "Article Title",
-  "Authors": [...],
-  "Abstract": {...},
-  "Body": {...},
-  "Citations": [...],
-  "Tables": [...],
-  "Figures": [...],
-  "Journal": "Journal Name",
-  "PubDate": "2024-01-15",
-  "DOI": "10.1000/example",
-  "Keywords": [...],
-  "MeshTerms": [...],
-  "Funding": [...],
-  "Ethics": {...}
+  "pmc_id": "7114487",
+  "title": "Machine learning approaches in cancer research",
+  "abstract": "Recent advances in machine learning have revolutionized...",
+  "authors": [...],
+  "body": {...},
+  "journal": "Nature Medicine",
+  "pub_date": "2023-05-15",
+  "doi": "10.1038/s41591-023-02345-6",
+  "figures": [...],
+  "tables": [...],
+  "references": [...]
 }
 ```
 
-## Detailed Field Descriptions
+## Complete Example
 
-### Basic Metadata
-
-```json
-{
-  "PMCID": "PMC7181753", // PubMed Central ID
-  "Title": "Article Title", // Full article title
-  "DOI": "10.1000/example", // Digital Object Identifier
-  "Journal": "Nature", // Journal name
-  "PubDate": "2024-01-15", // Publication date (ISO format)
-  "Volume": "595", // Journal volume
-  "Issue": "7866", // Journal issue
-  "Pages": "123-130" // Page numbers
-}
-```
-
-### Authors Array
+Here's a real example of the JSON structure returned by `process_single_pmc`:
 
 ```json
 {
-  "Authors": [
+  "pmc_id": "7114487",
+  "title": "Machine learning approaches in cancer research: A systematic review",
+  "abstract": "Recent advances in machine learning have revolutionized the field of cancer research, enabling more accurate diagnosis, prognosis, and treatment selection. This systematic review examines current applications and future prospects.",
+  "authors": [
     {
-      "FirstName": "John",
-      "LastName": "Doe",
-      "Initials": "J.D.",
-      "Affiliation": "University of Example, Department of Biology",
-      "ORCID": "0000-0000-0000-0000",
-      "Email": "john.doe@example.com"
+      "First_Name": "John",
+      "Last_Name": "Doe",
+      "Affiliation": "Cancer Research Institute, University of Science"
     },
     {
-      "FirstName": "Jane",
-      "LastName": "Smith",
-      "Initials": "J.S.",
-      "Affiliation": "Research Institute Example"
+      "First_Name": "Jane",
+      "Last_Name": "Smith",
+      "Affiliation": "Department of Oncology, Medical Center"
+    }
+  ],
+  "body": {
+    "Introduction": "Cancer remains one of the leading causes of death worldwide...",
+    "Methods": "We conducted a systematic review following PRISMA guidelines...",
+    "Results": "Our analysis identified 127 studies that met inclusion criteria...",
+    "Discussion": "The findings demonstrate significant potential for ML in cancer care...",
+    "Conclusion": "Machine learning represents a transformative technology..."
+  },
+  "journal": "Nature Medicine",
+  "pub_date": "2023-05-15",
+  "doi": "10.1038/s41591-023-02345-6",
+  "figures": [
+    {
+      "id": "fig1",
+      "caption": "Overview of machine learning applications in cancer research",
+      "url": "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC7114487/bin/fig1.jpg"
+    }
+  ],
+  "tables": [
+    {
+      "id": "table1",
+      "caption": "Summary of studies included in systematic review",
+      "content": "..."
+    }
+  ],
+  "references": [
+    {
+      "id": "ref1",
+      "citation": "Smith J, et al. Deep learning for cancer diagnosis. Nature. 2022;123:456-789."
     }
   ]
 }
 ```
 
-### Abstract Structure
+## Field Descriptions
 
-The abstract is broken down by section:
+### Core Metadata
 
-```json
-{
-  "Abstract": {
-    "Background": "Background text...",
-    "Objective": "Objective text...",
-    "Methods": "Methods text...",
-    "Results": "Results text...",
-    "Conclusions": "Conclusions text..."
-  }
-}
-```
+| Field      | Type   | Description                                      |
+| ---------- | ------ | ------------------------------------------------ |
+| `pmc_id`   | string | PubMed Central identifier (without "PMC" prefix) |
+| `title`    | string | Complete article title                           |
+| `abstract` | string | Article abstract text                            |
+| `journal`  | string | Journal name                                     |
+| `pub_date` | string | Publication date (ISO format)                    |
+| `doi`      | string | Digital Object Identifier                        |
 
-Common abstract sections include:
-
-- Background
-- Objective/Purpose
-- Methods/Methodology
-- Results/Findings
-- Conclusions/Discussion
-- Keywords
-
-### Body Content
-
-The main article content is organized by section:
+### Authors Array
 
 ```json
 {
-  "Body": {
-    "Introduction": "Introduction text with proper paragraph breaks...",
-    "Methods": "Detailed methodology...",
-    "Results": "Results and findings...",
-    "Discussion": "Discussion of results...",
-    "Conclusion": "Final conclusions...",
-    "Acknowledgments": "Acknowledgments text...",
-    "References": "Reference list..."
-  }
-}
-```
-
-### Citations Array
-
-```json
-{
-  "Citations": [
+  "authors": [
     {
-      "id": "ref1",
-      "Authors": "Smith J, Doe J",
-      "Title": "Referenced Article Title",
-      "Journal": "Science",
-      "Year": "2023",
-      "Volume": "380",
-      "Pages": "123-125",
-      "DOI": "10.1126/science.example",
-      "PMID": "12345678"
+      "First_Name": "John",
+      "Last_Name": "Doe",
+      "Affiliation": "University Name"
+    }
+  ]
+}
+```
+
+Each author object contains:
+
+- `First_Name`: Author's first name
+- `Last_Name`: Author's last name
+- `Affiliation`: Institutional affiliation (when available)
+
+### Body Sections
+
+```json
+{
+  "body": {
+    "Introduction": "The introduction section content...",
+    "Methods": "The methods section content...",
+    "Results": "The results section content...",
+    "Discussion": "The discussion section content...",
+    "Conclusion": "The conclusion section content..."
+  }
+}
+```
+
+Common section names include:
+
+- Introduction / Background
+- Methods / Materials and Methods
+- Results
+- Discussion
+- Conclusion
+- References (when included in body)
+
+### Figures Array
+
+```json
+{
+  "figures": [
+    {
+      "id": "fig1",
+      "caption": "Description of the figure",
+      "url": "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC7114487/bin/fig1.jpg"
     }
   ]
 }
@@ -131,318 +148,224 @@ The main article content is organized by section:
 
 ### Tables Array
 
-Tables are converted to structured data:
-
 ```json
 {
-  "Tables": [
+  "tables": [
     {
-      "Label": "Table 1",
-      "Caption": "Demographic characteristics of study participants",
-      "Data": [
-        ["Characteristic", "Group A (n=50)", "Group B (n=48)", "P-value"],
-        ["Age (years)", "65.2 ± 12.1", "67.8 ± 10.9", "0.23"],
-        ["Gender (M/F)", "28/22", "26/22", "0.85"]
-      ],
-      "Footer": "Data presented as mean ± SD or n. P-values from t-test."
+      "id": "table1",
+      "caption": "Table description",
+      "content": "Table content when extractable"
     }
   ]
 }
 ```
 
-### Figures Array
+### References Array
 
 ```json
 {
-  "Figures": [
+  "references": [
     {
-      "Label": "Figure 1",
-      "Caption": "Experimental setup and workflow",
-      "Description": "Detailed figure description...",
-      "URL": "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC7181753/bin/figure1.jpg"
+      "id": "ref1",
+      "citation": "Complete citation text"
     }
   ]
-}
-```
-
-### Keywords and Mesh Terms
-
-```json
-{
-  "Keywords": [
-    "machine learning",
-    "bioinformatics",
-    "genomics",
-    "artificial intelligence"
-  ],
-  "MeshTerms": [
-    {
-      "Term": "Machine Learning",
-      "MajorTopic": true,
-      "Qualifiers": ["methods", "statistics & numerical data"]
-    }
-  ]
-}
-```
-
-### Funding Information
-
-```json
-{
-  "Funding": [
-    {
-      "Agency": "National Institutes of Health",
-      "GrantNumber": "R01GM123456",
-      "Country": "United States"
-    },
-    {
-      "Agency": "European Research Council",
-      "GrantNumber": "ERC-2020-STG-123456",
-      "Country": "European Union"
-    }
-  ]
-}
-```
-
-### Ethics and Compliance
-
-```json
-{
-  "Ethics": {
-    "IRB_Approval": "Study approved by University IRB (Protocol #2023-001)",
-    "Ethics_Statement": "All procedures performed in accordance with ethical standards...",
-    "Consent": "Written informed consent obtained from all participants",
-    "Animal_Welfare": "Animal studies conducted according to institutional guidelines"
-  }
-}
-```
-
-## Special Formatting
-
-### HTML Cleaning
-
-PMCGrab automatically cleans HTML tags and formatting:
-
-**Input (XML):**
-
-```xml
-<p>The results show that <italic>p</italic> &lt; 0.05 for <bold>significant</bold> findings.</p>
-```
-
-**Output (JSON):**
-
-```json
-{
-  "text": "The results show that p < 0.05 for significant findings."
-}
-```
-
-### Reference Cleaning
-
-Citations and cross-references are cleaned:
-
-**Input:**
-
-```
-"As shown in previous studies [1,2,3], the method..."
-```
-
-**Output:**
-
-```json
-{
-  "text": "As shown in previous studies, the method...",
-  "references": ["ref1", "ref2", "ref3"]
-}
-```
-
-### Section Normalization
-
-Section headings are normalized to standard names:
-
-| Input Variations                                  | Normalized Output |
-| ------------------------------------------------- | ----------------- |
-| "INTRODUCTION", "Introduction", "1. Introduction" | "Introduction"    |
-| "METHODS", "Materials and Methods", "Methodology" | "Methods"         |
-| "RESULTS", "Results and Discussion"               | "Results"         |
-| "DISCUSSION", "Discussion and Conclusions"        | "Discussion"      |
-
-## File Organization
-
-### Individual Files
-
-Each article is saved as a separate JSON file:
-
-```
-output_directory/
-├── PMC7181753.json
-├── PMC3539614.json
-├── PMC5454911.json
-└── ...
-```
-
-### Batch Processing Output
-
-Batch processing creates additional files:
-
-```
-output_directory/
-├── PMC7181753.json
-├── PMC3539614.json
-├── processing_summary.json    # Processing statistics
-├── failed_pmcids.txt         # Failed PMC IDs
-└── batch_metadata.json       # Batch processing info
-```
-
-### Processing Summary
-
-```json
-{
-  "batch_id": "batch_20241215_143022",
-  "start_time": "2024-12-15T14:30:22Z",
-  "end_time": "2024-12-15T14:45:18Z",
-  "total_requested": 100,
-  "successfully_processed": 95,
-  "failed": 5,
-  "success_rate": 0.95,
-  "processing_time_seconds": 896,
-  "articles_per_second": 0.106,
-  "settings": {
-    "batch_size": 20,
-    "max_workers": 8,
-    "timeout": 60,
-    "max_retries": 3
-  },
-  "failed_pmcids": ["1234567", "2345678", "3456789", "4567890", "5678901"]
-}
-```
-
-## Data Types and Formats
-
-### Date Formats
-
-All dates use ISO 8601 format:
-
-```json
-{
-  "PubDate": "2024-01-15", // Publication date
-  "ReceivedDate": "2023-10-20", // Manuscript received
-  "AcceptedDate": "2023-12-08", // Manuscript accepted
-  "EpubDate": "2024-01-10" // Electronic publication
-}
-```
-
-### Numeric Data
-
-Numbers are preserved as appropriate types:
-
-```json
-{
-  "Volume": 595, // Integer
-  "Impact_Factor": 42.778, // Float
-  "Page_Count": 8, // Integer
-  "Word_Count": 4750 // Integer
-}
-```
-
-### Text Encoding
-
-All text is UTF-8 encoded and handles special characters:
-
-```json
-{
-  "Title": "α-Synuclein aggregation in β-cells: implications for diabetes",
-  "Abstract": "...temperature was 37°C ± 0.5°C..."
 }
 ```
 
 ## Usage Examples
 
-### Loading JSON Data
+### Accessing Article Data
 
 ```python
-import json
+from pmcgrab.application.processing import process_single_pmc
 
-# Load single article
-with open('PMC7181753.json', 'r', encoding='utf-8') as f:
-    article = json.load(f)
+data = process_single_pmc("7114487")
 
-print(f"Title: {article['Title']}")
-print(f"Authors: {len(article['Authors'])}")
+if data:
+    # Basic information
+    print(f"Title: {data['title']}")
+    print(f"Journal: {data['journal']}")
+    print(f"Authors: {len(data['authors'])}")
+
+    # Content sections
+    print(f"Available sections: {list(data['body'].keys())}")
+
+    # Access specific sections
+    if 'Introduction' in data['body']:
+        intro = data['body']['Introduction']
+        print(f"Introduction (first 200 chars): {intro[:200]}...")
+
+    # Additional content
+    print(f"Figures: {len(data.get('figures', []))}")
+    print(f"Tables: {len(data.get('tables', []))}")
+    print(f"References: {len(data.get('references', []))}")
 ```
 
 ### Processing Multiple Articles
 
 ```python
+# ─── Process Multiple Articles ───────────────────────────────────────────────
 import json
-import glob
+from pathlib import Path
+from pmcgrab.application.processing import process_single_pmc
+from pmcgrab.infrastructure.settings import next_email
 
-# Load all articles in directory
-articles = []
-for filename in glob.glob('./output/*.json'):
-    if filename.endswith('.json') and 'PMC' in filename:
-        with open(filename, 'r', encoding='utf-8') as f:
-            articles.append(json.load(f))
+PMC_IDS = ["7114487", "3084273", "7690653"]
+OUTPUT_DIR = Path("articles")
+OUTPUT_DIR.mkdir(exist_ok=True)
 
-print(f"Loaded {len(articles)} articles")
+for pmcid in PMC_IDS:
+    email = next_email()
+    data = process_single_pmc(pmcid)
+
+    if data:
+        # Save complete JSON
+        output_file = OUTPUT_DIR / f"PMC{pmcid}.json"
+        with output_file.open('w', encoding='utf-8') as f:
+            json.dump(data, f, indent=2, ensure_ascii=False)
+
+        print(f"Saved PMC{pmcid}: {data['title'][:50]}...")
+    else:
+        print(f"Failed to process PMC{pmcid}")
 ```
 
-### Extracting Specific Data
+## AI/ML Integration
+
+### Vector Database Preparation
 
 ```python
-# Extract abstracts for analysis
-abstracts = []
-for article in articles:
-    abstract_text = " ".join(article['Abstract'].values())
-    abstracts.append({
-        'pmcid': article['PMCID'],
-        'title': article['Title'],
-        'abstract': abstract_text
+def prepare_for_vector_db(data):
+    """Prepare article data for vector database ingestion."""
+    chunks = []
+
+    # Add title and abstract as separate chunks
+    chunks.append({
+        'content': data['title'],
+        'metadata': {
+            'pmc_id': data['pmc_id'],
+            'type': 'title',
+            'journal': data['journal']
+        }
     })
-```
 
-## Integration with Other Tools
+    chunks.append({
+        'content': data['abstract'],
+        'metadata': {
+            'pmc_id': data['pmc_id'],
+            'type': 'abstract',
+            'journal': data['journal']
+        }
+    })
 
-### Pandas DataFrame
-
-```python
-import pandas as pd
-import json
-
-# Convert to DataFrame
-records = []
-for filename in glob.glob('./output/PMC*.json'):
-    with open(filename, 'r') as f:
-        article = json.load(f)
-        records.append({
-            'pmcid': article['PMCID'],
-            'title': article['Title'],
-            'journal': article['Journal'],
-            'pub_date': article['PubDate'],
-            'num_authors': len(article['Authors']),
-            'num_citations': len(article['Citations']),
-            'word_count': len(' '.join(article['Body'].values()).split())
+    # Add each body section as a chunk
+    for section_name, content in data['body'].items():
+        chunks.append({
+            'content': content,
+            'metadata': {
+                'pmc_id': data['pmc_id'],
+                'type': 'section',
+                'section': section_name,
+                'journal': data['journal']
+            }
         })
 
-df = pd.DataFrame(records)
-print(df.head())
+    return chunks
+
+# Usage
+data = process_single_pmc("7114487")
+if data:
+    vector_chunks = prepare_for_vector_db(data)
+    print(f"Created {len(vector_chunks)} chunks for vector database")
 ```
 
-### Database Storage
+### RAG System Integration
 
-```sql
--- Example table schema for PostgreSQL
-CREATE TABLE articles (
-    pmcid VARCHAR(20) PRIMARY KEY,
-    title TEXT NOT NULL,
-    journal VARCHAR(255),
-    pub_date DATE,
-    authors JSONB,
-    abstract JSONB,
-    body JSONB,
-    citations JSONB,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
+```python
+def create_rag_documents(pmcids):
+    """Create documents for RAG system."""
+    documents = []
+
+    for pmcid in pmcids:
+        data = process_single_pmc(pmcid)
+        if data:
+            # Combine sections into full text
+            full_text = f"{data['title']}\n\n{data['abstract']}\n\n"
+            full_text += "\n\n".join([
+                f"{section}: {content}"
+                for section, content in data['body'].items()
+            ])
+
+            documents.append({
+                'id': f"PMC{pmcid}",
+                'text': full_text,
+                'metadata': {
+                    'title': data['title'],
+                    'journal': data['journal'],
+                    'authors': [f"{a['First_Name']} {a['Last_Name']}" for a in data['authors']],
+                    'pub_date': data.get('pub_date'),
+                    'doi': data.get('doi')
+                }
+            })
+
+    return documents
+
+# Usage
+pmcids = ["7114487", "3084273", "7690653"]
+rag_docs = create_rag_documents(pmcids)
 ```
 
-This structured output format makes PMCGrab data immediately usable for downstream AI/ML applications, research analysis, and database storage.
+## File Output
+
+### Individual JSON Files
+
+When using the standard processing pattern, each article is saved as a separate JSON file:
+
+```
+pmc_output/
+├── PMC7114487.json
+├── PMC3084273.json
+├── PMC7690653.json
+├── PMC5707528.json
+└── PMC7979870.json
+```
+
+### Batch Summary
+
+You can also create summary files for batch processing:
+
+```python
+import json
+from pathlib import Path
+
+def save_batch_summary(results, output_dir):
+    """Save a summary of batch processing results."""
+    summary = {
+        'total_processed': len(results),
+        'articles': []
+    }
+
+    for pmcid, data in results:
+        if data:
+            summary['articles'].append({
+                'pmc_id': pmcid,
+                'title': data['title'],
+                'journal': data['journal'],
+                'authors_count': len(data['authors']),
+                'sections': list(data['body'].keys()),
+                'word_count': sum(len(content.split()) for content in data['body'].values())
+            })
+
+    summary_file = Path(output_dir) / "batch_summary.json"
+    with summary_file.open('w', encoding='utf-8') as f:
+        json.dump(summary, f, indent=2, ensure_ascii=False)
+
+    return summary
+
+# Usage with processing results
+results = [(pmcid, process_single_pmc(pmcid)) for pmcid in PMC_IDS]
+valid_results = [(pmcid, data) for pmcid, data in results if data is not None]
+summary = save_batch_summary(valid_results, "pmc_output")
+```
+
+This structured JSON format provides everything needed for modern AI/ML workflows while maintaining human readability and programmatic access.

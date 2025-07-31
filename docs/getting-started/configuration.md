@@ -1,352 +1,322 @@
 # Configuration
 
-PMCGrab provides several configuration options to customize its behavior.
+PMCGrab provides simple configuration options optimized for the `process_single_pmc` workflow.
 
-## Environment Variables
+## Email Management
 
-You can set configuration via environment variables:
-
-```bash
-export PMCGRAB_EMAIL="your-email@example.com"
-export PMCGRAB_MAX_WORKERS=8
-export PMCGRAB_TIMEOUT=30
-export PMCGRAB_CACHE_DIR="./pmcgrab_cache"
-```
-
-## Email Configuration
-
-NCBI requires an email address for API access:
+PMCGrab automatically manages email rotation for NCBI API compliance:
 
 ```python
-from pmcgrab import Paper
+from pmcgrab.infrastructure.settings import next_email
 
-# Method 1: Pass email directly
-paper = Paper.from_pmc("7181753", email="your-email@example.com")
-
-# Method 2: Set environment variable
-import os
-os.environ['PMCGRAB_EMAIL'] = 'your-email@example.com'
-paper = Paper.from_pmc("7181753")  # Email from environment
+# Get the next email in rotation
+email = next_email()
+print(f"Using email: {email}")
 ```
 
-## Batch Processing Settings
+The system automatically rotates through available email addresses to ensure proper rate limiting and compliance with NCBI guidelines.
 
-### Worker Configuration
+## Basic Usage Pattern
+
+The recommended configuration-free approach:
 
 ```python
-from pmcgrab import process_pmc_ids_in_batches
+from pmcgrab.application.processing import process_single_pmc
+from pmcgrab.infrastructure.settings import next_email
 
-process_pmc_ids_in_batches(
-    pmc_ids=["7181753", "3539614"],
-    output_dir="./output",
-    max_workers=8,      # Number of parallel workers
-    batch_size=10,      # Articles per batch
-    timeout=30,         # Request timeout in seconds
-    max_retries=3       # Retry failed downloads
-)
+# Process a single article
+email = next_email()  # Automatic email rotation
+data = process_single_pmc("7114487")
+
+if data:
+    print(f"Successfully processed: {data['title']}")
+else:
+    print("Processing failed")
 ```
 
-### Performance Tuning
+## Batch Processing Configuration
+
+For processing multiple articles, use the standard pattern:
 
 ```python
-# For high-throughput processing
-process_pmc_ids_in_batches(
-    pmc_ids=large_id_list,
-    output_dir="./output",
-    max_workers=16,     # More workers for I/O bound tasks
-    batch_size=50,      # Larger batches
-    timeout=60,         # Longer timeout for reliability
-    max_retries=5       # More retries for unreliable networks
-)
+# ─── Recommended Batch Processing Pattern ────────────────────────────────────
+import json
+from pathlib import Path
 
-# For memory-constrained environments
-process_pmc_ids_in_batches(
-    pmc_ids=large_id_list,
-    output_dir="./output",
-    max_workers=2,      # Fewer workers
-    batch_size=5,       # Smaller batches
-    timeout=30,
-    max_retries=3
-)
-```
+from pmcgrab.application.processing import process_single_pmc
+from pmcgrab.infrastructure.settings import next_email
 
-## Caching Configuration
+# The PMC IDs we want to process
+PMC_IDS = ["7114487", "3084273", "7690653", "5707528", "7979870"]
 
-Enable local caching to avoid re-downloading articles:
+OUT_DIR = Path("pmc_output")
+OUT_DIR.mkdir(exist_ok=True)
 
-```python
-from pmcgrab import Paper
+for pmcid in PMC_IDS:
+    email = next_email()
+    print(f"• Fetching PMC{pmcid} using email {email} …")
+    data = process_single_pmc(pmcid)
+    if data is None:
+        print(f"  ↳ FAILED to parse PMC{pmcid}")
+        continue
 
-# Enable caching
-paper = Paper.from_pmc(
-    "7181753",
-    email="your-email@example.com",
-    download=True,      # Cache XML files locally
-    cache_dir="./cache" # Custom cache directory
-)
-```
+    # Pretty-print a few key fields
+    print(
+        f"  Title   : {data['title'][:80]}{'…' if len(data['title']) > 80 else ''}\n"
+        f"  Abstract: {data['abstract'][:120]}{'…' if len(data['abstract']) > 120 else ''}\n"
+        f"  Authors : {len(data['authors']) if data['authors'] else 0}"
+    )
 
-## Validation Settings
-
-Control XML validation behavior:
-
-```python
-# Strict validation (default)
-paper = Paper.from_pmc(
-    "7181753",
-    email="your-email@example.com",
-    validate=True      # Perform DTD validation
-)
-
-# Skip validation for speed
-paper = Paper.from_pmc(
-    "7181753",
-    email="your-email@example.com",
-    validate=False     # Skip validation
-)
+    # Persist full JSON
+    dest = OUT_DIR / f"PMC{pmcid}.json"
+    with dest.open("w", encoding="utf-8") as fh:
+        json.dump(data, fh, indent=2, ensure_ascii=False)
+    print(f"  ↳ JSON saved to {dest}\n")
 ```
 
 ## Error Handling Configuration
 
-### Suppressing Warnings
+Built-in error handling with graceful degradation:
 
 ```python
-import warnings
-from pmcgrab import Paper
+from pmcgrab.application.processing import process_single_pmc
+from pmcgrab.infrastructure.settings import next_email
 
-# Method 1: PMCGrab-specific suppression
-paper = Paper.from_pmc(
-    "7181753",
-    email="your-email@example.com",
-    suppress_warnings=True
-)
+def robust_processing(pmcids):
+    """Process PMC IDs with robust error handling."""
+    successful = []
+    failed = []
 
-# Method 2: Global warning suppression
-warnings.filterwarnings('ignore')
-paper = Paper.from_pmc("7181753", email="your-email@example.com")
+    for pmcid in pmcids:
+        email = next_email()
+
+        try:
+            data = process_single_pmc(pmcid)
+            if data is not None:
+                successful.append((pmcid, data))
+                print(f"✓ PMC{pmcid}: {data['title'][:50]}...")
+            else:
+                failed.append(pmcid)
+                print(f"✗ PMC{pmcid}: No data returned")
+        except Exception as e:
+            failed.append(pmcid)
+            print(f"✗ PMC{pmcid}: {str(e)}")
+
+    return successful, failed
+
+# Usage
+pmcids = ["7114487", "3084273", "invalid_id", "7690653"]
+successful, failed = robust_processing(pmcids)
+print(f"Processed: {len(successful)}, Failed: {len(failed)}")
 ```
 
-### Error Recovery
+## Performance Configuration
 
-```python
-# Return None instead of raising exceptions
-paper = Paper.from_pmc(
-    "invalid_id",
-    email="your-email@example.com",
-    suppress_errors=True
-)
+### Memory-Efficient Processing
 
-if paper is None:
-    print("Failed to process article")
-else:
-    print(f"Successfully processed: {paper.title}")
-```
-
-## Logging Configuration
-
-Set up detailed logging:
-
-```python
-import logging
-from pmcgrab import Paper
-
-# Configure logging
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
-)
-
-# Enable verbose output
-paper = Paper.from_pmc(
-    "7181753",
-    email="your-email@example.com",
-    verbose=True
-)
-```
-
-### Custom Logger
-
-```python
-import logging
-from pmcgrab import process_pmc_ids_in_batches
-
-# Create custom logger
-logger = logging.getLogger('pmcgrab.custom')
-logger.setLevel(logging.DEBUG)
-
-# Add file handler
-handler = logging.FileHandler('pmcgrab.log')
-formatter = logging.Formatter(
-    '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
-)
-handler.setFormatter(formatter)
-logger.addHandler(handler)
-
-# Process with logging
-process_pmc_ids_in_batches(
-    pmc_ids=["7181753", "3539614"],
-    output_dir="./output",
-    verbose=True
-)
-```
-
-## Configuration Files
-
-### JSON Configuration
-
-Create `pmcgrab_config.json`:
-
-```json
-{
-  "email": "your-email@example.com",
-  "max_workers": 8,
-  "batch_size": 20,
-  "timeout": 45,
-  "max_retries": 3,
-  "cache_dir": "./pmcgrab_cache",
-  "validate": true,
-  "verbose": false
-}
-```
-
-Load configuration:
+For large datasets, process in chunks to manage memory:
 
 ```python
 import json
-from pmcgrab import process_pmc_ids_in_batches
+import gc
+from pathlib import Path
+from pmcgrab.application.processing import process_single_pmc
+from pmcgrab.infrastructure.settings import next_email
 
-# Load config
-with open('pmcgrab_config.json') as f:
-    config = json.load(f)
+def memory_efficient_processing(pmcids, output_dir="results", batch_size=10):
+    """Process large datasets with memory management."""
+    output_path = Path(output_dir)
+    output_path.mkdir(exist_ok=True)
 
-# Use config
-process_pmc_ids_in_batches(
-    pmc_ids=["7181753", "3539614"],
-    output_dir="./output",
-    **config
-)
+    for i in range(0, len(pmcids), batch_size):
+        batch = pmcids[i:i + batch_size]
+        print(f"Processing batch {i//batch_size + 1}: {len(batch)} articles")
+
+        for pmcid in batch:
+            email = next_email()
+            data = process_single_pmc(pmcid)
+
+            if data is not None:
+                output_file = output_path / f"PMC{pmcid}.json"
+                with output_file.open('w', encoding='utf-8') as f:
+                    json.dump(data, f, indent=2, ensure_ascii=False)
+                print(f"  Saved PMC{pmcid}")
+                del data  # Clear from memory
+            else:
+                print(f"  Failed PMC{pmcid}")
+
+        # Force garbage collection after each batch
+        gc.collect()
+
+# Usage for large datasets
+large_pmcid_list = [str(i) for i in range(7000000, 7000100)]
+memory_efficient_processing(large_pmcid_list, batch_size=20)
 ```
 
-### YAML Configuration
+### Progress Tracking Configuration
 
-Create `pmcgrab_config.yaml`:
-
-```yaml
-email: your-email@example.com
-max_workers: 8
-batch_size: 20
-timeout: 45
-max_retries: 3
-cache_dir: ./pmcgrab_cache
-validate: true
-verbose: false
-```
-
-Load with PyYAML:
+Add progress tracking for long-running processes:
 
 ```python
-import yaml
-from pmcgrab import process_pmc_ids_in_batches
+from tqdm import tqdm
+from pmcgrab.application.processing import process_single_pmc
+from pmcgrab.infrastructure.settings import next_email
 
-# Load config
-with open('pmcgrab_config.yaml') as f:
-    config = yaml.safe_load(f)
+def process_with_progress(pmcids, output_dir="results"):
+    """Process with progress tracking."""
+    successful = 0
 
-# Use config
-process_pmc_ids_in_batches(
-    pmc_ids=["7181753", "3539614"],
-    output_dir="./output",
-    **config
-)
+    for pmcid in tqdm(pmcids, desc="Processing papers"):
+        email = next_email()
+        data = process_single_pmc(pmcid)
+
+        if data is not None:
+            # Save and count success
+            output_file = Path(output_dir) / f"PMC{pmcid}.json"
+            output_file.parent.mkdir(exist_ok=True)
+
+            with output_file.open('w', encoding='utf-8') as f:
+                json.dump(data, f, indent=2, ensure_ascii=False)
+
+            successful += 1
+            tqdm.write(f"✓ {data['title'][:40]}...")
+        else:
+            tqdm.write(f"✗ PMC{pmcid}: Failed")
+
+    print(f"Completed: {successful}/{len(pmcids)} papers")
+
+# Usage
+pmcids = ["7114487", "3084273", "7690653", "5707528"]
+process_with_progress(pmcids)
+```
+
+## Output Configuration
+
+### Custom Output Directories
+
+Organize output with custom directory structures:
+
+```python
+from datetime import datetime
+from pathlib import Path
+
+# Create timestamped directories
+timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+output_dir = Path(f"pmc_batch_{timestamp}")
+
+# Or organize by topic
+topic_dir = Path("cancer_research_papers")
+topic_dir.mkdir(exist_ok=True)
+```
+
+### JSON Formatting Options
+
+Control JSON output formatting:
+
+```python
+import json
+from pmcgrab.application.processing import process_single_pmc
+
+data = process_single_pmc("7114487")
+
+if data:
+    # Compact JSON (smaller files)
+    with open("compact.json", "w") as f:
+        json.dump(data, f, separators=(',', ':'), ensure_ascii=False)
+
+    # Pretty JSON (human readable)
+    with open("pretty.json", "w") as f:
+        json.dump(data, f, indent=2, ensure_ascii=False)
+
+    # With Unicode preservation
+    with open("unicode.json", "w", encoding='utf-8') as f:
+        json.dump(data, f, indent=2, ensure_ascii=False)
 ```
 
 ## Command Line Configuration
 
-Override settings via command line:
+For command-line usage, PMCGrab provides several configuration options:
 
 ```bash
-# Set environment variables
-export PMCGRAB_EMAIL="your-email@example.com"
-export PMCGRAB_MAX_WORKERS=8
+# Basic usage
+python -m pmcgrab PMC7114487
 
-# Use in command
-python -m pmcgrab PMC7181753 PMC3539614
-
-# Or pass directly
+# With custom settings
 python -m pmcgrab \
-    --email your-email@example.com \
-    --workers 8 \
-    --batch-size 20 \
-    --timeout 45 \
-    --max-retries 3 \
     --output-dir ./results \
-    PMC7181753 PMC3539614
+    --workers 4 \
+    --batch-size 10 \
+    --email researcher@university.edu \
+    PMC7114487 PMC3084273
+
+# From file
+python -m pmcgrab --input-file pmcids.txt --output-dir results/
 ```
 
 ## Best Practices
 
-### Production Settings
+### Production Configuration
 
 ```python
-# Recommended production configuration
-production_config = {
-    'max_workers': 8,           # Balance speed and server load
-    'batch_size': 25,           # Efficient batching
-    'timeout': 60,              # Generous timeout
-    'max_retries': 5,           # Robust retry logic
-    'validate': True,           # Ensure data quality
-    'download': True,           # Cache for reprocessing
-    'suppress_warnings': False, # Log all issues
-    'verbose': True             # Detailed logging
-}
+import logging
+from datetime import datetime
+from pathlib import Path
+from pmcgrab.application.processing import process_single_pmc
+from pmcgrab.infrastructure.settings import next_email
+
+def production_processing(pmcids, base_output_dir="production"):
+    """Production-ready processing with logging and organization."""
+
+    # Set up logging
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    log_file = f"pmcgrab_{timestamp}.log"
+
+    logging.basicConfig(
+        level=logging.INFO,
+        format='%(asctime)s - %(levelname)s - %(message)s',
+        handlers=[
+            logging.FileHandler(log_file),
+            logging.StreamHandler()
+        ]
+    )
+
+    logger = logging.getLogger(__name__)
+    logger.info(f"Starting processing of {len(pmcids)} articles")
+
+    # Create organized output structure
+    output_dir = Path(base_output_dir) / f"batch_{timestamp}"
+    output_dir.mkdir(parents=True, exist_ok=True)
+
+    stats = {'successful': 0, 'failed': 0, 'failed_ids': []}
+
+    for pmcid in pmcids:
+        email = next_email()
+        logger.info(f"Processing PMC{pmcid}")
+
+        data = process_single_pmc(pmcid)
+        if data is not None:
+            output_file = output_dir / f"PMC{pmcid}.json"
+            with output_file.open('w', encoding='utf-8') as f:
+                json.dump(data, f, indent=2, ensure_ascii=False)
+
+            stats['successful'] += 1
+            logger.info(f"Success: {data['title'][:50]}...")
+        else:
+            stats['failed'] += 1
+            stats['failed_ids'].append(pmcid)
+            logger.warning(f"Failed: PMC{pmcid}")
+
+    # Save summary
+    summary_file = output_dir / "summary.json"
+    with summary_file.open('w', encoding='utf-8') as f:
+        json.dump(stats, f, indent=2)
+
+    logger.info(f"Processing complete: {stats['successful']}/{len(pmcids)} successful")
+    return stats
+
+# Usage
+pmcids = ["7114487", "3084273", "7690653"]
+results = production_processing(pmcids)
 ```
 
-### Development Settings
-
-```python
-# Recommended development configuration
-dev_config = {
-    'max_workers': 2,           # Don't overwhelm during testing
-    'batch_size': 5,            # Small batches for quick feedback
-    'timeout': 30,              # Faster feedback on failures
-    'max_retries': 2,           # Quick failure detection
-    'validate': False,          # Speed up development
-    'download': False,          # Don't clutter filesystem
-    'suppress_warnings': False, # See all issues
-    'verbose': True             # Detailed output
-}
-```
-
-## Performance Optimization
-
-### Network Optimization
-
-```python
-# For unreliable networks
-slow_network_config = {
-    'max_workers': 4,      # Fewer concurrent requests
-    'timeout': 120,        # Longer timeout
-    'max_retries': 10,     # More retries
-    'batch_size': 10       # Smaller batches
-}
-
-# For fast, reliable networks
-fast_network_config = {
-    'max_workers': 16,     # More concurrency
-    'timeout': 30,         # Shorter timeout
-    'max_retries': 3,      # Fewer retries needed
-    'batch_size': 50       # Larger batches
-}
-```
-
-### Memory Optimization
-
-```python
-# For memory-constrained environments
-memory_optimized_config = {
-    'max_workers': 2,      # Limit concurrent processing
-    'batch_size': 5,       # Process fewer at once
-    'download': False,     # Don't cache XML
-    'validate': False      # Skip validation overhead
-}
-```
+This configuration approach provides robust, scalable processing while maintaining simplicity and reliability.
