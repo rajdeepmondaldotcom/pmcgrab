@@ -7,6 +7,14 @@ import pandas as pd
 import pytest
 
 from pmcgrab.common.html_cleaning import remove_html_tags as common_remove_html_tags
+from pmcgrab.common.serialization import clean_doc
+from pmcgrab.common.serialization import normalize_value as utils_normalize_value
+from pmcgrab.common.xml_processing import (
+    generate_typed_mhtml_tag,
+    remove_mhtml_tags,
+    split_text_and_refs,
+    stringify_children,
+)
 from pmcgrab.common.xml_processing import (
     generate_typed_mhtml_tag as common_generate_typed_mhtml_tag,
 )
@@ -19,6 +27,7 @@ from pmcgrab.common.xml_processing import (
 from pmcgrab.common.xml_processing import (
     stringify_children as common_stringify_children,
 )
+from pmcgrab.domain.value_objects import BasicBiMap
 from pmcgrab.fetch import fetch_pmc_xml_string, get_xml
 from pmcgrab.oa_service import fetch as oa_fetch
 from pmcgrab.oai import list_records, list_sets
@@ -36,15 +45,6 @@ from pmcgrab.processing import (
     _legacy_process_single_pmc,
     process_pmc_ids_in_batches,
 )
-from pmcgrab.common.serialization import clean_doc
-from pmcgrab.common.xml_processing import (
-    generate_typed_mhtml_tag,
-    remove_mhtml_tags,
-    split_text_and_refs,
-    stringify_children,
-)
-from pmcgrab.domain.value_objects import BasicBiMap
-from pmcgrab.common.serialization import normalize_value as utils_normalize_value
 
 
 class TestProcessingLegacyModule:

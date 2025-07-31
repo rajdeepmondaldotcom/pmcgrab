@@ -292,7 +292,10 @@ class TestUtilsModuleFixes:
 
     def test_remove_mhtml_tags_basic(self):
         """Test remove_mhtml_tags with basic tags."""
-        from pmcgrab.common.xml_processing import generate_typed_mhtml_tag, remove_mhtml_tags
+        from pmcgrab.common.xml_processing import (
+            generate_typed_mhtml_tag,
+            remove_mhtml_tags,
+        )
 
         # Generate some MHTML tags
         citation_tag = generate_typed_mhtml_tag("citation", 1)
@@ -310,7 +313,10 @@ class TestUtilsModuleFixes:
 
     def test_remove_mhtml_tags_multiple_same_type(self):
         """Test remove_mhtml_tags with multiple tags of same type."""
-        from pmcgrab.common.xml_processing import generate_typed_mhtml_tag, remove_mhtml_tags
+        from pmcgrab.common.xml_processing import (
+            generate_typed_mhtml_tag,
+            remove_mhtml_tags,
+        )
 
         # Generate multiple citation tags
         citation1 = generate_typed_mhtml_tag("citation", 1)
@@ -329,7 +335,10 @@ class TestUtilsModuleFixes:
 
     def test_remove_mhtml_tags_mixed_content(self):
         """Test remove_mhtml_tags with mixed content types."""
-        from pmcgrab.common.xml_processing import generate_typed_mhtml_tag, remove_mhtml_tags
+        from pmcgrab.common.xml_processing import (
+            generate_typed_mhtml_tag,
+            remove_mhtml_tags,
+        )
 
         # Generate different types of tags
         citation_tag = generate_typed_mhtml_tag("citation", 1)

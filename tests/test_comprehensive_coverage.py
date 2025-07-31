@@ -9,6 +9,7 @@ import pytest
 
 from pmcgrab.application.paper_builder import build_paper_from_pmc
 from pmcgrab.application.parsing import content, contributors, metadata, sections
+from pmcgrab.common.html_cleaning import remove_html_tags, strip_html_text_styling
 from pmcgrab.common.serialization import normalize_value
 from pmcgrab.common.xml_processing import (
     generate_typed_mhtml_tag,
@@ -19,6 +20,7 @@ from pmcgrab.common.xml_processing import (
 # Import modules that need better coverage
 from pmcgrab.constants import TimeoutException, timeout_handler
 from pmcgrab.domain.value_objects import BasicBiMap, make_hashable
+from pmcgrab.domain.value_objects import BasicBiMap as UtilsBiMap
 from pmcgrab.fetch import (
     clean_xml_string,
     fetch_pmc_xml_string,
@@ -26,8 +28,6 @@ from pmcgrab.fetch import (
 )
 from pmcgrab.http_utils import _backoff_sleep, cached_get
 from pmcgrab.model import Paper, TextSection, TextTable
-from pmcgrab.common.html_cleaning import remove_html_tags, strip_html_text_styling
-from pmcgrab.domain.value_objects import BasicBiMap as UtilsBiMap
 
 
 class TestConstantsModule:

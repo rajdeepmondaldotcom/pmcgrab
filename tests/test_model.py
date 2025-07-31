@@ -3,9 +3,9 @@
 import lxml.etree as ET
 import pandas as pd
 
+from pmcgrab.domain.value_objects import BasicBiMap
 from pmcgrab.figure import TextFigure
 from pmcgrab.model import Paper, TextParagraph, TextSection, TextTable
-from pmcgrab.domain.value_objects import BasicBiMap
 
 
 class TestPaper:

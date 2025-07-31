@@ -1,6 +1,6 @@
 # ─── examples/run_three_pmcs.py ──────────────────────────────────────────────
-from pathlib import Path
 import json
+from pathlib import Path
 
 from pmcgrab.application.processing import process_single_pmc
 from pmcgrab.infrastructure.settings import next_email

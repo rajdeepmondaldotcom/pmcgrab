@@ -12,6 +12,14 @@ import pytest
 
 from pmcgrab.application.paper_builder import build_paper_from_pmc
 from pmcgrab.application.processing import process_single_pmc
+from pmcgrab.common.html_cleaning import strip_html_text_styling
+from pmcgrab.common.serialization import clean_doc, normalize_value
+from pmcgrab.common.xml_processing import (
+    generate_typed_mhtml_tag,
+    remove_mhtml_tags,
+    split_text_and_refs,
+    stringify_children,
+)
 from pmcgrab.constants import (
     MultipleTitleWarning,
     ReadHTMLFailure,
@@ -22,6 +30,7 @@ from pmcgrab.constants import (
     UnmatchedTableWarning,
     timeout_handler,
 )
+from pmcgrab.domain.value_objects import BasicBiMap, make_hashable
 from pmcgrab.infrastructure.settings import next_email
 
 # Import all modules for final coverage push
@@ -41,15 +50,6 @@ from pmcgrab.processing import (
     process_in_batches,
     process_in_batches_with_retry,
     process_pmc_ids_in_batches,
-)
-from pmcgrab.common.serialization import clean_doc, normalize_value
-from pmcgrab.common.xml_processing import generate_typed_mhtml_tag
-from pmcgrab.domain.value_objects import BasicBiMap, make_hashable
-from pmcgrab.common.html_cleaning import strip_html_text_styling
-from pmcgrab.common.xml_processing import (
-    remove_mhtml_tags,
-    split_text_and_refs,
-    stringify_children,
 )
 
 
