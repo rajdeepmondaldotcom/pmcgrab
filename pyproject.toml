@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "pmcgrab"
-version = "0.2.1"
+version = "0.2.2"
 description = "AI-ready retrieval and parsing of PubMed Central articles for RAG applications"
 readme = "README.md"
 license = "Apache-2.0"
@@ -27,15 +27,15 @@ dependencies = [
     "tqdm>=4.64.0",
 ]
 keywords = [
-    "pubmed", 
-    "pmc", 
-    "text mining", 
-    "rag", 
-    "bioinformatics", 
-    "scientific literature", 
-    "xml parsing", 
-    "research papers", 
-    "llm", 
+    "pubmed",
+    "pmc",
+    "text mining",
+    "rag",
+    "bioinformatics",
+    "scientific literature",
+    "xml parsing",
+    "research papers",
+    "llm",
     "ai",
     "retrieval augmented generation",
     "ncbi",

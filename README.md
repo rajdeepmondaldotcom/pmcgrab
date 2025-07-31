@@ -235,7 +235,7 @@ If this project contributes to your research, please consider citing it:
   title        = {PMCGrab: AI-ready retrieval of PubMed Central articles},
   year         = {2025},
   url          = {https://github.com/rajdeepmondaldotcom/PMCGrab},
-  version      = {0.2.1},
+  version      = {0.2.2},
 }
 ```
 
