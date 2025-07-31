@@ -1,0 +1,177 @@
+site_name: PMCGrab
+site_description: AI-ready retrieval and parsing of PubMed Central articles for RAG applications
+site_url: https://rajdeepmondaldotcom.github.io/pmcgrab/
+repo_url: https://github.com/rajdeepmondaldotcom/pmcgrab
+repo_name: rajdeepmondaldotcom/pmcgrab
+edit_uri: edit/main/docs/
+
+# Copyright
+copyright: Copyright &copy; 2025 Rajdeep Mondal
+
+theme:
+  name: material
+
+  # Color scheme
+  palette:
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      primary: blue
+      accent: blue
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      primary: blue
+      accent: blue
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+
+  # Features
+  features:
+    - announce.dismiss
+    - content.action.edit
+    - content.action.view
+    - content.code.annotate
+    - content.code.copy
+    - content.tooltips
+    - navigation.expand
+    - navigation.footer
+    - navigation.indexes
+    - navigation.sections
+    - navigation.tabs
+    - navigation.tabs.sticky
+    - navigation.top
+    - navigation.tracking
+    - search.highlight
+    - search.share
+    - search.suggest
+    - toc.follow
+
+# Extensions
+markdown_extensions:
+  - abbr
+  - admonition
+  - attr_list
+  - def_list
+  - footnotes
+  - md_in_html
+  - toc:
+      permalink: true
+      title: Page contents
+  - pymdownx.arithmatex:
+      generic: true
+  - pymdownx.betterem:
+      smart_enable: all
+  - pymdownx.caret
+  - pymdownx.details
+  - pymdownx.emoji
+  - pymdownx.highlight:
+      anchor_linenums: true
+      line_spans: __span
+      pygments_lang_class: true
+  - pymdownx.inlinehilite
+  - pymdownx.keys
+  - pymdownx.magiclink:
+      normalize_issue_symbols: true
+      repo_url_shorthand: true
+      user: rajdeepmondaldotcom
+      repo: pmcgrab
+  - pymdownx.mark
+  - pymdownx.smartsymbols
+  - pymdownx.snippets:
+      auto_append:
+        - includes/mkdocs.md
+  - pymdownx.superfences
+  - pymdownx.tabbed:
+      alternate_style: true
+      combine_header_slug: true
+  - pymdownx.tasklist:
+      custom_checkbox: true
+  - pymdownx.tilde
+
+# Plugins
+plugins:
+  - search:
+      separator: '[\s\u200b\-_,:!=\[\]()"`/]+|\.(?!\d)|&[lg]t;|(?!\b)(?=[A-Z][a-z])'
+  - mkdocstrings:
+      default_handler: python
+      handlers:
+        python:
+          paths: [src]
+          options:
+            show_source: true
+            show_root_heading: true
+            show_root_toc_entry: false
+            show_object_full_path: false
+            show_category_heading: true
+            show_if_no_docstring: true
+            show_signature_annotations: true
+            show_bases: true
+            show_inheritance_diagram: false
+            members_order: source
+            filters: ["!^_"]
+            heading_level: 2
+            parameter_headings: true
+            separate_signature: true
+            unwrap_annotated: true
+            merge_init_into_class: true
+            docstring_style: google
+            docstring_options:
+              ignore_init_summary: true
+            signature_crossrefs: true
+
+# Navigation
+nav:
+  - Home: index.md
+  - Getting Started:
+      - Installation: getting-started/installation.md
+      - Quick Start: getting-started/quick-start.md
+      - Configuration: getting-started/configuration.md
+  - User Guide:
+      - Basic Usage: user-guide/basic-usage.md
+      - Batch Processing: user-guide/batch-processing.md
+      - Command Line Interface: user-guide/cli.md
+      - Output Format: user-guide/output-format.md
+  - Examples:
+      - Python Examples: examples/python-examples.md
+      - CLI Examples: examples/cli-examples.md
+      - Advanced Usage: examples/advanced-usage.md
+  - API Reference:
+      - Core API: api/core.md
+      - Paper Model: api/paper.md
+      - Processing: api/processing.md
+      - Parsing: api/parsing.md
+      - CLI: api/cli.md
+      - External Services: api/external-services.md
+      - Utilities: api/utilities.md
+  - Development:
+      - Contributing: development/contributing.md
+      - Development Setup: development/setup.md
+      - Architecture: development/architecture.md
+      - Testing: development/testing.md
+  - About:
+      - Changelog: about/changelog.md
+      - License: about/license.md
+      - Citation: about/citation.md
+
+# Extra configuration
+extra:
+  version:
+    provider: mike
+  social:
+    - icon: fontawesome/brands/github
+      link: https://github.com/rajdeepmondaldotcom/pmcgrab
+    - icon: fontawesome/brands/python
+      link: https://pypi.org/project/pmcgrab/
+  generator: false
+
+# Additional CSS and JS
+extra_css:
+  - stylesheets/extra.css
+
+extra_javascript:
+  - javascripts/mathjax.js
+  - https://polyfill.io/v3/polyfill.min.js?features=es6
+  - https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js
