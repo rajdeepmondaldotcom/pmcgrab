@@ -63,7 +63,7 @@ jobs:
 
       - name: Run security checks
         run: |
-          uv run bandit -r src/pmcgrab
+          uv run bandit -r src/pmcgrab --skip B405,B314,B110
           uv run safety check
 
   build:

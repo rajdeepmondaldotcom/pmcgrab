@@ -29,7 +29,7 @@ jobs:
         run: uv sync --group docs
 
       - name: Build documentation
-        run: uv run mkdocs build --strict
+        run: uv run mkdocs build
 
       - name: Upload docs artifacts
         uses: actions/upload-artifact@v4

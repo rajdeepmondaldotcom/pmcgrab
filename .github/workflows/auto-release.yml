@@ -67,16 +67,5 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Trigger release workflow
-        uses: actions/github-script@v7
-        with:
-          script: |
-            github.rest.actions.createWorkflowDispatch({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              workflow_id: 'release.yml',
-              ref: 'main',
-              inputs: {
-                version: '${{ needs.check-version.outputs.new-version }}'
-              }
-            });
+      # Release workflow will trigger automatically on the new tag
+    # No manual workflow dispatch needed
