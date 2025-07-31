@@ -29,7 +29,9 @@ jobs:
         uses: astral-sh/setup-uv@v5
 
       - name: Install dependencies
-        run: uv sync --all-groups
+        run: |
+          uv sync
+          uv pip install pytest pytest-cov pytest-xdist
 
       - name: Run tests with coverage
         run: uv run pytest --cov=pmcgrab --cov-report=xml --cov-report=term-missing
@@ -58,7 +60,9 @@ jobs:
         uses: astral-sh/setup-uv@v5
 
       - name: Install dependencies
-        run: uv sync --all-groups
+        run: |
+          uv sync
+          uv pip install ruff mypy
 
       - name: Run ruff linting
         run: uv run ruff check .
@@ -85,17 +89,15 @@ jobs:
         uses: astral-sh/setup-uv@v5
 
       - name: Install dependencies
-        run: uv sync --all-groups
+        run: |
+          uv sync
+          uv pip install "bandit[toml]" safety
 
       - name: Run bandit security linter
-        run: |
-          uv run pip install bandit[toml]
-          uv run bandit -r src/ -f json -o bandit-report.json || true
+        run: uv run bandit -r src/ -f json -o bandit-report.json || true
 
       - name: Run safety check
-        run: |
-          uv run pip install safety
-          uv run safety check --json --output safety-report.json || true
+        run: uv run safety check --json --output safety-report.json || true
 
       - name: Upload security reports
         uses: actions/upload-artifact@v4

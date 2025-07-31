@@ -72,6 +72,31 @@ Changelog = "https://github.com/rajdeepmondaldotcom/pmcgrab/releases"
 "Source Code" = "https://github.com/rajdeepmondaldotcom/pmcgrab"
 "Download" = "https://pypi.org/project/pmcgrab/"
 
+[dependency-groups]
+dev = [
+    "pytest>=7.0.0",
+    "pytest-cov>=4.0.0",
+    "pytest-xdist>=3.0.0",
+    "ruff>=0.1.0",
+    "pre-commit>=3.0.0",
+    "mypy>=1.5.0",
+    "build>=0.10.0",
+    "twine>=4.0.0",
+    "bandit[toml]>=1.7.0",
+    "safety>=2.0.0",
+]
+docs = [
+    "mkdocs>=1.5.0",
+    "mkdocs-material>=9.0.0",
+    "mkdocstrings[python]>=0.20.0",
+]
+test = [
+    "pytest>=7.0.0",
+    "pytest-cov>=4.0.0",
+    "pytest-xdist>=3.0.0",
+    "responses>=0.23.0",
+]
+
 [project.optional-dependencies]
 dev = [
     "pytest>=7.0.0",
@@ -82,6 +107,8 @@ dev = [
     "mypy>=1.5.0",
     "build>=0.10.0",
     "twine>=4.0.0",
+    "bandit[toml]>=1.7.0",
+    "safety>=2.0.0",
 ]
 docs = [
     "mkdocs>=1.5.0",
@@ -160,8 +187,45 @@ ban-relative-imports = "all"
 [tool.ruff.format]
 quote-style = "double"
 indent-style = "space"
-skip-magic-trailing-comma = false
-line-ending = "auto"
+
+# Bandit configuration
+[tool.bandit]
+exclude_dirs = ["tests", "build", "dist"]
+skips = ["B101", "B601"]
+
+# Pydocstyle configuration
+[tool.pydocstyle]
+convention = "google"
+add-ignore = ["D100", "D104", "D105", "D107"]
+
+# Coverage configuration
+[tool.coverage.run]
+source = ["src"]
+omit = [
+    "*/tests/*",
+    "*/test_*",
+    "*/__pycache__/*",
+    "build/*",
+    "dist/*",
+]
+
+[tool.coverage.report]
+exclude_lines = [
+    "pragma: no cover",
+    "def __repr__",
+    "raise AssertionError",
+    "raise NotImplementedError",
+    "if __name__ == .__main__.:",
+    "if TYPE_CHECKING:",
+]
+
+# Commitizen configuration
+[tool.commitizen]
+name = "cz_conventional_commits"
+tag_format = "v$version"
+version_scheme = "semver"
+version_provider = "pep621"
+update_changelog_on_bump = true
 
 # Pytest configuration
 [tool.pytest.ini_options]
