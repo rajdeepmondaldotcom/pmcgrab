@@ -122,6 +122,9 @@ test = [
     "responses>=0.23.0",
 ]
 
+[project.scripts]
+pmcgrab = "pmcgrab.cli.pmcgrab_cli:main"
+
 [tool.hatch.build.targets.wheel]
 packages = ["src/pmcgrab"]
 
@@ -197,27 +200,6 @@ skips = ["B101", "B601"]
 [tool.pydocstyle]
 convention = "google"
 add-ignore = ["D100", "D104", "D105", "D107"]
-
-# Coverage configuration
-[tool.coverage.run]
-source = ["src"]
-omit = [
-    "*/tests/*",
-    "*/test_*",
-    "*/__pycache__/*",
-    "build/*",
-    "dist/*",
-]
-
-[tool.coverage.report]
-exclude_lines = [
-    "pragma: no cover",
-    "def __repr__",
-    "raise AssertionError",
-    "raise NotImplementedError",
-    "if __name__ == .__main__.:",
-    "if TYPE_CHECKING:",
-]
 
 # Commitizen configuration
 [tool.commitizen]
