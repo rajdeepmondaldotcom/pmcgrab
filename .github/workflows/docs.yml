@@ -42,73 +42,12 @@ jobs:
 
       - name: Install dependencies
         run: |
-          uv sync
-          uv pip install mkdocs mkdocs-material "mkdocstrings[python]"
+          uv sync --group docs
+          uv pip install mkdocs-minify-plugin
 
       - name: Build documentation
         run: |
-          # Create mkdocs.yml if it doesn't exist
-          if [ ! -f mkdocs.yml ]; then
-            cat > mkdocs.yml << EOF
-          site_name: pmcgrab
-          site_description: AI-ready retrieval of PubMed Central articles
-          site_url: https://rajdeepmondaldotcom.github.io/pmcgrab/
-          repo_url: https://github.com/rajdeepmondaldotcom/pmcgrab
-          repo_name: rajdeepmondaldotcom/pmcgrab
-
-          theme:
-            name: material
-            palette:
-              - media: "(prefers-color-scheme: light)"
-                scheme: default
-                toggle:
-                  icon: material/brightness-7
-                  name: Switch to dark mode
-              - media: "(prefers-color-scheme: dark)"
-                scheme: slate
-                toggle:
-                  icon: material/brightness-4
-                  name: Switch to light mode
-            features:
-              - navigation.sections
-              - navigation.expand
-              - navigation.top
-              - search.highlight
-              - content.code.copy
-
-          plugins:
-            - search
-            - mkdocstrings:
-                handlers:
-                  python:
-                    paths: [src]
-
-          nav:
-            - Home: README.md
-            - API Reference: api.md
-
-          markdown_extensions:
-            - pymdownx.highlight
-            - pymdownx.superfences
-            - admonition
-            - pymdownx.details
-          EOF
-          fi
-
-          # Create docs directory if it doesn't exist
-          mkdir -p docs
-
-          # Create API documentation
-          if [ ! -f docs/api.md ]; then
-            cat > docs/api.md << EOF
-          # API Reference
-
-          ::: pmcgrab
-          EOF
-          fi
-
-          # Build docs
-          uv run mkdocs build
+          uv run mkdocs build --clean
 
       - name: Setup Pages
         if: github.ref == 'refs/heads/main'
