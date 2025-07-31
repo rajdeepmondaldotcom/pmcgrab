@@ -19,6 +19,19 @@ SAMPLE_XML = """<?xml version='1.0' encoding='utf-8'?>
       <article-meta>
         <article-id pub-id-type='pmcid'>PMC12345</article-id>
         <title-group><article-title>Sample Article</article-title></title-group>
+        <contrib-group>
+          <contrib contrib-type='author' equal-contrib='yes'>
+            <name><surname>Doe</surname><given-names>Jane</given-names></name>
+            <contrib-id contrib-id-type='orcid'>0000-0001-2345-6789</contrib-id>
+            <address><email>jane@example.com</email></address>
+            <xref ref-type='aff' rid='aff1'/>
+          </contrib>
+          <aff id='aff1'><institution>Test University</institution><addr-line>City</addr-line><country>Country</country></aff>
+        </contrib-group>
+        <history>
+          <date date-type='received'><day>01</day><month>12</month><year>2023</year></date>
+          <date date-type='accepted'><day>10</day><month>12</month><year>2023</year></date>
+        </history>
         <pub-date pub-type='ppub'>
           <year>2024</year><month>1</month><day>15</day>
         </pub-date>
@@ -35,6 +48,18 @@ SAMPLE_XML = """<?xml version='1.0' encoding='utf-8'?>
     <abstract><p>Abstract text</p></abstract>
     <body>
       <sec><title>Intro</title><p>Body paragraph</p></sec>
+    <kwd-group kwd-group-type='author'>
+        <kwd>Neuroscience</kwd><kwd>Machine Learning</kwd>
+      </kwd-group>
+    <back>
+      <fn-group><fn id='fn1'><p>Footnote</p></fn>
+      <fn fn-type='conflict'><p>No conflict</p></fn>
+    </fn-group>
+    </back>
+    <supplementary-material id='sup1' xlink:href='sup1.pdf' xmlns:xlink='http://www.w3.org/1999/xlink'>
+      <label>Supplementary Figure</label>
+      <caption><p>Supplementary caption</p></caption>
+    </supplementary-material>
     </body>
     <back>
       <fn-group><fn id='fn1'><p>Footnote</p></fn></fn-group>
@@ -53,5 +78,12 @@ def test_paper_dict_from_pmc(monkeypatch):
     assert d["Journal Title"] == "Test Journal"
     assert d["Published Date"]["ppub"] == datetime.date(2024, 1, 15)
     assert d["Footnote"] == "Footnote"
+    assert datetime.date(2023, 12, 1) == d["History Dates"]["received"]
+    assert datetime.date(2023, 12, 10) == d["History Dates"]["accepted"]
     assert isinstance(d["Body"][0], TextSection)
     assert isinstance(d["Abstract"][0], TextParagraph)
+    assert {"author": ["Neuroscience", "Machine Learning"]} in d["Keywords"]
+    assert d["Authors"].iloc[0]["ORCID"] == "0000-0001-2345-6789"
+    assert d["Authors"].iloc[0]["Equal_Contrib"] is True
+    assert d["Ethics"]["Conflicts of Interest"] == "No conflict"
+    assert d["Supplementary Material"][0]["Href"] == "sup1.pdf"
