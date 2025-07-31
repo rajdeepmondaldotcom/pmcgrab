@@ -1,392 +1,111 @@
+from __future__ import annotations
+"""
+pmcgrab.parser
+==============
+
+Top-level orchestrator for transforming a PMC (PubMed Central) `article`
+XML document into a rich, *ready-to-serialize* Python dictionary.
+The actual heavy-lifting—walking through the XML tree and extracting
+individual bits of information—is delegated to a set of specialised
+helpers that reside in the `pmcgrab.application.parsing` sub-package.
+This module’s primary job is to glue those helpers together and present
+a **simple, cohesive API** to users.
+
+The public API is intentionally compact:
+
+• `paper_dict_from_pmc` – one-shot convenience helper that
+  1) downloads an article’s XML (with optional validation),
+  2) feeds it into the parser, and
+  3) returns a plain `dict` capturing metadata, sections, references,
+     tables, figures, etc.
+
+• `generate_paper_dict` – same as above but accepts an *already
+  obtained* XML root element, giving callers more control over I/O.
+
+• `build_complete_paper_dict` – low-level entry point that coordinates
+  all the `gather_*` helper functions and assembles their outputs.
+
+In addition, the module re-exports a collection of `gather_*`
+functions (title, authors, abstract, body, journal info …) so that
+callers do not need to remember the exact sub-module where each helper
+lives.  They can simply do:
+
+    from pmcgrab import parser
+    title = parser.gather_title(xml_root)
+
+Design Notes
+------------
+• Warnings vs. Errors:
+  Parsing biomedical articles can be messy.  Callers are therefore
+  offered fine-grained control via `suppress_warnings` and
+  `suppress_errors` flags.
+
+• Reference Resolution:
+  Internal cross-references (e.g. citations, tables, figures) are
+  first collected into a `BasicBiMap` to allow O(1) lookup in both
+  *forward* and *reverse* directions, and then resolved to
+  human-readable dicts/objects.
+
+• Separation of Concerns:
+  By pushing domain logic into the `application.parsing` package,
+  this file remains lightweight and largely free of XML-traversal code,
+  making it easier to test and maintain.
+
+The corresponding unit tests can be found in `tests/test_*`.
+They exercise both the high-level API and various edge-cases such as
+DTD validation, HTML cleaning, and external service wrappers.
+"""
+
 import copy
-import datetime
-import textwrap
-import uuid
 import warnings
-from typing import Optional, Union
+from typing import Optional, Union, Dict, List
 
 import lxml.etree as ET
-import pandas as pd
 
 from pmcgrab.constants import (
-    UnexpectedMultipleMatchWarning,
-    UnexpectedZeroMatchWarning,
-    UnhandledTextTagWarning,
     UnmatchedCitationWarning,
     UnmatchedTableWarning,
     logger,
 )
 from pmcgrab.fetch import get_xml
-from pmcgrab.model import TextParagraph, TextSection, TextTable, TextFigure
+from pmcgrab.model import TextParagraph, TextTable, TextFigure
 from pmcgrab.utils import BasicBiMap
 
+# Cohesive parsing helpers ---------------------------------------------------
+from pmcgrab.application.parsing import (
+    contributors as _contributors,
+    content as _content,
+    metadata as _metadata,
+    sections as _sections,
+)
 
-def gather_title(root: ET.Element) -> Optional[str]:
-    """Extract the article title from the XML.
+# ---------------------------------------------------------------------------
+# Public helper re-exports (thin aliases)
+# ---------------------------------------------------------------------------
+# Article / journal metadata --------------------------------------------------
+gather_title = _metadata.gather_title
 
-    Args:
-        root: ``<article>`` root element of the paper.
+gather_authors = _contributors.gather_authors
+gather_non_author_contributors = _contributors.gather_non_author_contributors
 
-    Returns:
-        The title text if found, otherwise ``None``.
-    """
-    matches = root.xpath("//article-title/text()")
-    if len(matches) > 1:
-        warnings.warn(
-            "Multiple titles found; using the first.",
-            UnexpectedMultipleMatchWarning,
-            stacklevel=2,
-        )
-    if not matches:
-        warnings.warn(
-            "No article title found.", UnexpectedZeroMatchWarning, stacklevel=2
-        )
-        return None
-    return matches[0]
+gather_abstract = _sections.gather_abstract
+gather_body = _sections.gather_body
 
+gather_journal_id = _metadata.gather_journal_id
+gather_journal_title = _metadata.gather_journal_title
+gather_issn = _metadata.gather_issn
+gather_publisher_name = _metadata.gather_publisher_name
+gather_publisher_location = _metadata.gather_publisher_location
+gather_article_id = _metadata.gather_article_id
+gather_article_types = _metadata.gather_article_types
+gather_article_categories = _metadata.gather_article_categories
+gather_keywords = _metadata.gather_keywords
+gather_published_date = _metadata.gather_published_date
+gather_history_dates = _metadata.gather_history_dates
+gather_volume = _metadata.gather_volume
+gather_issue = _metadata.gather_issue
 
-def extract_contributor_info(
-    root: ET.Element, contributors: list[ET.Element]
-) -> list[tuple]:
-    """Gather contributor metadata including names, contact, affiliation, IDs.
-
-    Returns a list of tuples with:
-        Contributor_Type, First_Name, Last_Name, Email_Address, Affiliations,
-        ORCID, ISNI, Equal_Contrib (bool)
-    """
-    result = []
-    for contrib in contributors:
-        ctype = (contrib.get("contrib-type") or "").capitalize().strip()
-        first = contrib.findtext(".//given-names")
-        if first:
-            first = first.strip()
-        last = contrib.findtext(".//surname")
-        if last:
-            last = last.strip()
-        addr = contrib.findtext(".//address/email")
-        if addr:
-            addr = addr.strip()
-        affils = []
-        for aff in contrib.xpath(".//xref[@ref-type='aff']"):
-            aid = aff.get("rid")
-            texts = root.xpath(
-                f"//contrib-group/aff[@id='{aid}']/text()[not(parent::label)]"
-            )
-            if len(texts) > 1:
-                warnings.warn(
-                    "Multiple affiliations found for one ID.",
-                    UnexpectedMultipleMatchWarning,
-                    stacklevel=2,
-                )
-            if not texts:
-                texts = ["Affiliation data not found."]
-            inst = root.xpath(
-                f"//contrib-group/aff[@id='{aid}']/institution-wrap/institution/text()"
-            )
-            inst_str = " ".join(str(i) for i in inst)
-            affils.append(
-                f"{aid.strip()}: {inst_str}{texts[0].strip()}"
-                if inst_str
-                else f"{aid.strip()}: {texts[0].strip()}"
-            )
-        # contributor IDs
-        orcid = contrib.findtext(".//contrib-id[@contrib-id-type='orcid']")
-        isni = contrib.findtext(".//contrib-id[@contrib-id-type='isni']")
-        # Equal contribution flag (JATS 1.1 supp: contrib/@equal-contrib or role note)
-        equal_flag = contrib.get("equal-contrib") == "yes"
-        result.append((ctype, first, last, addr, affils, orcid, isni, equal_flag))
-    return result
-
-
-def gather_authors(root: ET.Element) -> Optional[pd.DataFrame]:
-    """Collect information on article authors.
-
-    Args:
-        root: ``<article>`` root element.
-
-    Returns:
-        ``pandas.DataFrame`` with columns ``Contributor_Type``, ``First_Name``,
-        ``Last_Name``, ``Email_Address`` and ``Affiliations``. ``None`` is
-        returned when no authors are present.
-    """
-    authors = root.xpath(".//contrib[@contrib-type='author']")
-    if not authors:
-        warnings.warn("No authors found.", UnexpectedZeroMatchWarning, stacklevel=2)
-        return None
-    data = extract_contributor_info(root, authors)
-    return pd.DataFrame(
-        data,
-        columns=[
-            "Contributor_Type",
-            "First_Name",
-            "Last_Name",
-            "Email_Address",
-            "Affiliations",
-            "ORCID",
-            "ISNI",
-            "Equal_Contrib",
-        ],
-    )
-
-
-def gather_non_author_contributors(root: ET.Element) -> Union[str, pd.DataFrame]:
-    """Get contributor metadata for non-author roles.
-
-    Args:
-        root: ``<article>`` root element.
-
-    Returns:
-        ``pandas.DataFrame`` containing non-author contributor information,
-        or a message string when no such contributors exist.
-    """
-    non_auth = root.xpath(".//contrib[not(@contrib-type='author')]")
-    if non_auth:
-        data = extract_contributor_info(root, non_auth)
-        return pd.DataFrame(
-            data,
-            columns=[
-                "Contributor_Type",
-                "First_Name",
-                "Last_Name",
-                "Email_Address",
-                "Affiliations",
-                "ORCID",
-                "ISNI",
-                "Equal_Contrib",
-            ],
-        )
-    return "No non-author contributors found."
-
-
-def _collect_sections(
-    parent: ET.Element, context: str, ref_map: BasicBiMap
-) -> list[Union[TextSection, TextParagraph]]:
-    """Return ``TextSection`` or ``TextParagraph`` objects from a given element."""
-    sections: list[Union[TextSection, TextParagraph]] = []
-    for child in parent:
-        if child.tag == "sec":
-            sections.append(TextSection(child, ref_map=ref_map))
-        elif child.tag == "p":
-            sections.append(TextParagraph(child, ref_map=ref_map))
-        else:
-            warnings.warn(
-                f"Unexpected tag {child.tag} in {context}.",
-                UnhandledTextTagWarning,
-                stacklevel=2,
-            )
-    return sections
-
-
-def _gather_sections(
-    root: ET.Element,
-    xpath: str,
-    missing_warning: str,
-    context: str,
-    ref_map: BasicBiMap,
-) -> Optional[list[Union[TextSection, TextParagraph]]]:
-    """Locate and parse text sections specified by ``xpath``."""
-    nodes = root.xpath(xpath)
-    if not nodes:
-        warnings.warn(missing_warning, UnexpectedZeroMatchWarning, stacklevel=2)
-        return None
-    if len(nodes) > 1:
-        warnings.warn(
-            f"Multiple {context} tags found; using the first.",
-            UnexpectedMultipleMatchWarning,
-            stacklevel=2,
-        )
-    return _collect_sections(nodes[0], context, ref_map)
-
-
-def gather_abstract(
-    root: ET.Element, ref_map: BasicBiMap
-) -> Optional[list[Union[TextSection, TextParagraph]]]:
-    """Parse the abstract into structured sections.
-
-    Args:
-        root: ``<article>`` root element.
-        ref_map: Shared reference map for resolving citations and tables.
-
-    Returns:
-        List of :class:`TextSection` and :class:`TextParagraph` objects or
-        ``None`` if no abstract is present.
-    """
-    return _gather_sections(
-        root,
-        "//abstract",
-        "No abstract found.",
-        "abstract",
-        ref_map,
-    )
-
-
-def gather_body(
-    root: ET.Element, ref_map: BasicBiMap
-) -> Optional[list[Union[TextSection, TextParagraph]]]:
-    """Parse the article body into structured sections.
-
-    Args:
-        root: ``<article>`` root element.
-        ref_map: Shared reference map for citations and tables.
-
-    Returns:
-        List of text elements representing the body, or ``None`` if absent.
-    """
-    return _gather_sections(
-        root,
-        "//body",
-        "No <body> tag found.",
-        "body",
-        ref_map,
-    )
-
-
-def gather_journal_id(root: ET.Element) -> dict[str, str]:
-    """Return a mapping of journal-id types to values."""
-    ids = root.xpath("//journal-meta/journal-id")
-    return {jid.get("journal-id-type"): jid.text for jid in ids}
-
-
-def gather_journal_title(root: ET.Element) -> Optional[Union[list[str], str]]:
-    """Retrieve the journal title text."""
-    titles = [t.text for t in root.xpath("//journal-title")]
-    if not titles:
-        warnings.warn(
-            "No journal title found.", UnexpectedZeroMatchWarning, stacklevel=2
-        )
-        return None
-    return titles if len(titles) > 1 else titles[0]
-
-
-def gather_issn(root: ET.Element) -> dict[str, str]:
-    """Return a mapping of ISSN publication types to values."""
-    issns = root.xpath("//journal-meta/issn")
-    return {issn.get("pub-type"): issn.text for issn in issns}
-
-
-def gather_publisher_name(root: ET.Element) -> Union[str, list[str]]:
-    """Return the publisher name or list of names."""
-    pubs = root.xpath("//journal-meta/publisher/publisher-name")
-    return pubs[0].text if len(pubs) == 1 else [p.text for p in pubs]
-
-
-def gather_article_id(root: ET.Element) -> dict[str, str]:
-    """Return a mapping of article-id types to values."""
-    ids = root.xpath("//article-meta/article-id")
-    return {aid.get("pub-id-type"): aid.text for aid in ids}
-
-
-def gather_article_types(root: ET.Element) -> Optional[list[str]]:
-    """Return the list of article type headings."""
-    cats = root.xpath("//article-meta/article-categories")
-    if not cats:
-        warnings.warn(
-            "No article-categories found.", UnexpectedZeroMatchWarning, stacklevel=2
-        )
-        return None
-    heading = cats[0].xpath("subj-group[@subj-group-type='heading']/subject")
-    texts = [h.text for h in heading]
-    if not texts:
-        return ["No article type found."]
-    return texts
-
-
-def gather_article_categories(root: ET.Element) -> Optional[list[dict[str, str]]]:
-    """Return article categories other than the primary headings."""
-    cats = root.xpath("//article-meta/article-categories")
-    if not cats:
-        warnings.warn(
-            "No article-categories found.", UnexpectedZeroMatchWarning, stacklevel=2
-        )
-        return None
-    others = cats[0].xpath("subj-group[not(@subj-group-type='heading')]/subject")
-    result = [{other.get("subj-group-type"): other.text} for other in others]
-    if not result:
-        return [{"info": "No extra article categories found."}]
-    return result
-
-
-def gather_published_date(root: ET.Element) -> dict[str, datetime.date]:
-    """Return publication dates keyed by publication type."""
-    dates = {}
-    for pd_elem in root.xpath("//article-meta/pub-date"):
-        ptype = pd_elem.get("pub-type")
-        year = (
-            int(pd_elem.xpath("year/text()")[0]) if pd_elem.xpath("year/text()") else 1
-        )
-        month = (
-            int(pd_elem.xpath("month/text()")[0])
-            if pd_elem.xpath("month/text()")
-            else 1
-        )
-        day = int(pd_elem.xpath("day/text()")[0]) if pd_elem.xpath("day/text()") else 1
-        dates[ptype] = datetime.date(year, month, day)
-    return dates
-
-
-def gather_keywords(root: ET.Element) -> Optional[list[Union[str, dict[str, list[str]]]]]:
-    """Return keywords from kwd-group elements and article-categories keyword groups.
-
-    Returns a list where each item is either a string (keyword) or a dict mapping
-    group-type to list[str]."""
-    keywords: list[Union[str, dict[str, list[str]]]] = []
-    # kwd-group parsing
-    for group in root.xpath("//kwd-group"):
-        group_type = group.get("kwd-group-type")
-        words = [kwd.text.strip() for kwd in group.xpath("kwd") if kwd.text and kwd.text.strip()]
-        if not words:
-            continue
-        if group_type:
-            keywords.append({group_type: words})
-        else:
-            keywords.extend(words)
-    # article-categories keyword groups
-    for subj_grp in root.xpath("//article-meta/article-categories/subj-group[@subj-group-type='keyword']"):
-        words = [subj.text.strip() for subj in subj_grp.xpath("subject") if subj.text and subj.text.strip()]
-        if words:
-            keywords.append({"article-categories-keyword": words})
-    return keywords if keywords else None
-
-
-def gather_history_dates(root: ET.Element) -> Optional[dict[str, datetime.date]]:
-    """Return history dates (received, accepted, revised, etc.) keyed by date-type."""
-    dates: dict[str, datetime.date] = {}
-    for h_elem in root.xpath("//article-meta/history/date"):
-        dtype = h_elem.get("date-type") or "unknown"
-        year = int(h_elem.xpath("year/text()")[0]) if h_elem.xpath("year/text()") else 1
-        month = int(h_elem.xpath("month/text()")[0]) if h_elem.xpath("month/text()") else 1
-        day = int(h_elem.xpath("day/text()")[0]) if h_elem.xpath("day/text()") else 1
-        dates[dtype] = datetime.date(year, month, day)
-    return dates if dates else None
-
-
-def gather_volume(root: ET.Element) -> Optional[str]:
-    """Return the volume number if available."""
-    vol = root.xpath("//article-meta/volume/text()")
-    if not vol:
-        warnings.warn("No volume found.", UnexpectedZeroMatchWarning, stacklevel=2)
-        return None
-    return vol[0]
-
-
-def gather_issue(root: ET.Element) -> Optional[str]:
-    """Return the issue number if available."""
-    iss = root.xpath("//article-meta/issue/text()")
-    if not iss:
-        warnings.warn("No issue found.", UnexpectedZeroMatchWarning, stacklevel=2)
-        return None
-    return iss[0]
-
-
-# NEW FUNCTIONS ADDED FROM SCRAPEMED IMPLEMENTATION
-
-def gather_publisher_location(root: ET.Element) -> Union[str, list[str]]:
-    """Return the publisher location or list of locations."""
-    pubs = root.xpath("//journal-meta/publisher/publisher-loc")
-    if not pubs:
-        return None
-    return pubs[0].text if len(pubs) == 1 else [p.text for p in pubs]
-
+# Pages (remain local – trivial one-liners)
 
 def gather_fpage(root: ET.Element) -> Optional[str]:
     """Return first page number if available."""
@@ -399,176 +118,23 @@ def gather_lpage(root: ET.Element) -> Optional[str]:
     lpage = root.xpath("//article-meta/lpage/text()")
     return lpage[0] if lpage else None
 
+# Permissions / funding / misc content ---------------------------------------
+gather_permissions = _content.gather_permissions
+gather_funding = _content.gather_funding
+gather_version_history = _content.gather_version_history
+gather_equations = _content.gather_equations
+gather_supplementary_material = _content.gather_supplementary_material
+gather_ethics_disclosures = _content.gather_ethics_disclosures
+gather_footnote = _content.gather_footnote
+gather_acknowledgements = _content.gather_acknowledgements
+gather_notes = _content.gather_notes
+gather_custom_metadata = _content.gather_custom_metadata
 
-def gather_permissions(root: ET.Element) -> Optional[dict[str, str]]:
-    """Return copyright, license type and license text."""
-    cp = root.xpath("//article-meta/permissions/copyright-statement/text()")
-    cp_stmt = cp[0] if cp else "No copyright statement found."
-    lic = root.xpath("//article-meta/permissions/license")
-    if not lic:
-        warnings.warn("No license found.", UnexpectedZeroMatchWarning, stacklevel=2)
-        return None
-    if len(lic) > 1:
-        warnings.warn(
-            "Multiple licenses found; using the first.",
-            UnexpectedMultipleMatchWarning,
-            stacklevel=2,
-        )
-    lic_elem = lic[0]
-    lic_type = lic_elem.get("license-type", "Not Specified")
-    lic_text = "\n".join(
-        str(TextParagraph(child)) for child in lic_elem if child.tag == "license-p"
-    )
-    return {
-        "Copyright Statement": cp_stmt,
-        "License Type": lic_type,
-        "License Text": lic_text,
-    }
+# ---------------------------------------------------------------------------
+# Internal helpers
+# ---------------------------------------------------------------------------
 
-
-def gather_funding(root: ET.Element) -> Optional[list[str]]:
-    """Return a list of funding institutions if provided."""
-    fund = []
-    for group in root.xpath("//article-meta/funding-group"):
-        fund.extend(group.xpath("award-group/funding-source/institution/text()"))
-    return fund if fund else None
-
-
-def gather_version_history(root: ET.Element) -> Optional[list[dict[str, str]]]:
-    """Return list of article-version metadata (version number, publication date)."""
-    versions = []
-    for ver in root.xpath("//article-meta/article-version"):
-        ver_num = ver.get("version") or ver.findtext("version")
-        date_elem = ver.find("date")
-        date_str = None
-        if date_elem is not None:
-            year = date_elem.findtext("year")
-            month = date_elem.findtext("month") or "1"
-            day = date_elem.findtext("day") or "1"
-            if year:
-                date_str = f"{year}-{int(month):02d}-{int(day):02d}"
-        versions.append({"Version": ver_num, "Date": date_str})
-    return versions or None
-
-
-def gather_equations(root: ET.Element) -> Optional[list[str]]:
-    """Return list of serialized MathML equations contained in the article."""
-    eqs = []
-    for math in root.xpath("//mml:math", namespaces={"mml": "http://www.w3.org/1998/Math/MathML"}):
-        eqs.append(ET.tostring(math, encoding="unicode"))
-    return eqs or None
-
-
-def gather_supplementary_material(root: ET.Element) -> Optional[list[dict[str, str]]]:
-    """Return a list of supplementary material or media objects with metadata."""
-    items: list[dict[str, str]] = []
-    for supp in root.xpath("//supplementary-material|//media"):
-        label = supp.findtext("label") or supp.get("id")
-        caption_elem = supp.find("caption")
-        caption = None
-        if caption_elem is not None:
-            caption = " ".join(caption_elem.itertext()).strip()
-        href = supp.get("xlink:href") or supp.findtext("@xlink:href")
-        if not href:
-            # sometimes inside <media><object-id> or <ext-link>
-            ext = supp.find("ext-link")
-            if ext is not None and ext.get("xlink:href"):
-                href = ext.get("xlink:href")
-        items.append({
-            "Label": label,
-            "Caption": caption,
-            "Href": href,
-            "Tag": supp.tag,
-        })
-    return items or None
-
-
-def gather_ethics_disclosures(root: ET.Element) -> Optional[dict[str, str]]:
-    """Return a dictionary of ethics/disclosure statements if available."""
-    fields: dict[str, tuple[str, list[str]]] = {
-        "Conflicts of Interest": ("//conflict-of-interest", []),
-        "Ethics Statement": ("//ethics-statement", []),
-        "Clinical Trial Registration": ("//clinical-trial-number|//other-id[@other-id-type='clinical-trial-number']", []),
-        "Data Availability": ("//data-availability", []),
-        "Author Contributions": ("//author-notes", []),
-        "Patient Consent": ("//patient-consent", []),
-    }
-    result: dict[str, str] = {}
-    for key, (xpath, _) in fields.items():
-        texts = [" ".join(el.itertext()).strip() for el in root.xpath(xpath)]
-        if texts:
-            result[key] = "\n".join(texts)
-    # conflict statements sometimes stored as fn-type="conflict" footnotes
-    if "Conflicts of Interest" not in result:
-        texts = [" ".join(fn.itertext()).strip() for fn in root.xpath("//fn[@fn-type='conflict']")]
-        if texts:
-            result["Conflicts of Interest"] = "\n".join(texts)
-    return result or None
-
-
-def gather_footnote(root: ET.Element) -> Optional[str]:
-    """Return concatenated footnote text."""
-    foot = []
-    for fn in root.xpath("//back/fn-group/fn"):
-        for child in fn:
-            if child.tag == "p":
-                foot.append(str(TextParagraph(child)))
-            else:
-                warnings.warn(
-                    f"Unexpected tag {child.tag} in footnote.",
-                    UnhandledTextTagWarning,
-                    stacklevel=2,
-                )
-    return " - ".join(foot) if foot else None
-
-
-def gather_acknowledgements(root: ET.Element) -> Union[list[str], str]:
-    """Return a list of acknowledgement paragraphs."""
-    return [" ".join(match.itertext()).strip() for match in root.xpath("//ack")]
-
-
-def gather_notes(root: ET.Element) -> list[str]:
-    """Return the list of notes not embedded within other notes."""
-    return [
-        stringify_note(note)
-        for note in root.xpath("//notes")
-        if note.getparent().tag != "notes"
-    ]
-
-
-def stringify_note(root: ET.Element) -> str:
-    """Recursively convert a ``notes`` element into formatted text."""
-    note = ""
-    for child in root:
-        if child.tag == "title":
-            note += f"Title: {child.text}\n"
-        elif child.tag == "p":
-            note += child.text or ""
-        elif child.tag == "notes":
-            note += "\n" + textwrap.indent(stringify_note(child), " " * 4)
-    return note.strip()
-
-
-def gather_custom_metadata(root: ET.Element) -> Optional[dict[str, str]]:
-    """Return custom metadata present in the article."""
-    custom = {}
-    for meta in root.xpath("//custom-meta"):
-        name = meta.findtext("meta-name")
-        value = (
-            " ".join(meta.find("meta-value").itertext())
-            if meta.find("meta-value") is not None
-            else None
-        )
-        if value:
-            if name is None:
-                name = str(uuid.uuid4())
-            custom[name] = value
-    return custom if custom else None
-
-
-def _parse_citation(
-    citation_root: ET.Element,
-) -> Union[dict[str, Union[list[str], str]], str]:
+def _parse_citation(citation_root: ET.Element) -> Union[Dict[str, Union[List[str], str]], str]:
     """Parse a citation entry into a dictionary of reference details."""
     authors = citation_root.xpath('.//person-group[@person-group-type="author"]/name')
     if not authors:
@@ -577,190 +143,115 @@ def _parse_citation(
             return str(mixed[0])
         warnings.warn(
             f"No authors found in citation {citation_root.get('id')}",
-            UnexpectedZeroMatchWarning,
+            RuntimeWarning,
             stacklevel=2,
         )
     return {
         "Authors": [
-            f"{extract_xpath_text_safely(a, 'given-names')} {extract_xpath_text_safely(a, 'surname')}"
-            for a in authors
+            f"{_extract_xpath_text(author, 'given-names')} {_extract_xpath_text(author, 'surname')}"
+            for author in authors
         ],
-        "Title": extract_xpath_text_safely(citation_root, ".//article-title"),
-        "Source": extract_xpath_text_safely(citation_root, ".//source"),
-        "Year": extract_xpath_text_safely(citation_root, ".//year"),
-        "Volume": extract_xpath_text_safely(citation_root, ".//volume"),
-        "FirstPage": extract_xpath_text_safely(citation_root, ".//fpage"),
-        "LastPage": extract_xpath_text_safely(citation_root, ".//lpage"),
-        "DOI": extract_xpath_text_safely(
-            citation_root, './/pub-id[@pub-id-type="doi"]'
-        ),
-        "PMID": extract_xpath_text_safely(
-            citation_root, './/pub-id[@pub-id-type="pmid"]'
-        ),
+        "Title": _extract_xpath_text(citation_root, ".//article-title"),
+        "Source": _extract_xpath_text(citation_root, ".//source"),
+        "Year": _extract_xpath_text(citation_root, ".//year"),
+        "Volume": _extract_xpath_text(citation_root, ".//volume"),
+        "FirstPage": _extract_xpath_text(citation_root, ".//fpage"),
+        "LastPage": _extract_xpath_text(citation_root, ".//lpage"),
+        "DOI": _extract_xpath_text(citation_root, './/pub-id[@pub-id-type="doi"]'),
+        "PMID": _extract_xpath_text(citation_root, './/pub-id[@pub-id-type="pmid"]'),
     }
 
 
-def extract_xpath_text_safely(
-    root: ET.Element, xpath: str, verbose: bool = False
-) -> Optional[str]:
-    """Return the text at ``xpath`` or ``None`` if not found."""
-    try:
-        el = root.find(xpath)
-        return el.text if el is not None else None
-    except AttributeError:
-        if verbose:
-            warnings.warn(
-                f"Failed to extract text for XPath {xpath} in element with ID {root.get('id')}",
-                RuntimeWarning,
-                stacklevel=2,
-            )
-    return None
+def _extract_xpath_text(root: ET.Element, xpath: str) -> Optional[str]:
+    """Return the text at *xpath* or ``None`` if not found."""
+    el = root.find(xpath)
+    return el.text if el is not None else None
 
 
 def process_reference_map(paper_root: ET.Element, ref_map: BasicBiMap) -> BasicBiMap:
-    """Resolve reference map items to structured citation or table objects."""
-    cleaned = {}
+    """Resolve reference map items to structured citation / table / figure objects."""
+    cleaned: Dict[int, Union[TextTable, TextFigure, Dict[str, str], str]] = {}
     for key, item in ref_map.items():
         root = ET.fromstring(item)
         if root.tag == "xref":
             rtype = root.get("ref-type")
+            rid = root.get("rid")
             if rtype == "bibr":
-                rid = root.get("rid")
                 if not rid:
-                    warnings.warn(
-                        f"Citation without a reference id: {root.text}",
-                        UnmatchedCitationWarning,
-                        stacklevel=2,
-                    )
+                    warnings.warn("Citation without reference id", UnmatchedCitationWarning)
                     continue
                 matches = paper_root.xpath(f"//ref[@id='{rid}']")
                 if not matches:
-                    warnings.warn(
-                        f"No matching reference for citation {root.text}",
-                        UnmatchedCitationWarning,
-                        stacklevel=2,
-                    )
+                    warnings.warn("Citation id not found", UnmatchedCitationWarning)
                     continue
-                if len(matches) > 1:
-                    warnings.warn(
-                        "Multiple references found; using the first.",
-                        stacklevel=2,
-                    )
                 cleaned[key] = _parse_citation(matches[0])
             elif rtype == "table":
-                tid = root.get("rid")
-                if not tid:
-                    warnings.warn(
-                        "Table ref without a reference ID.",
-                        UnmatchedTableWarning,
-                        stacklevel=2,
-                    )
+                if not rid:
+                    warnings.warn("Table ref without id", UnmatchedTableWarning)
                     continue
-                matches = paper_root.xpath(f"//table-wrap[@id='{tid}']")
-                if not matches:
-                    warnings.warn(
-                        f"Table xref with rid={tid} not matched.",
-                        UnmatchedTableWarning,
-                        stacklevel=2,
-                    )
-                    continue
-                if len(matches) > 1:
-                    warnings.warn(
-                        "Multiple table references found; using the first.",
-                        stacklevel=2,
-                    )
-                cleaned[key] = TextTable(matches[0])
+                matches = paper_root.xpath(f"//table-wrap[@id='{rid}']")
+                if matches:
+                    cleaned[key] = TextTable(matches[0])
             elif rtype == "fig":
-                fid = root.get("rid")
-                if not fid:
-                    warnings.warn(
-                        "Figure ref without a reference ID.",
-                        RuntimeWarning,
-                        stacklevel=2,
-                    )
+                if not rid:
                     continue
-                matches = paper_root.xpath(f"//fig[@id='{fid}']")
-                if not matches:
-                    warnings.warn(
-                        f"Figure xref with rid={fid} not matched.",
-                        RuntimeWarning,
-                        stacklevel=2,
-                    )
-                    continue
-                if len(matches) > 1:
-                    warnings.warn(
-                        "Multiple figure references found; using the first.",
-                        stacklevel=2,
-                    )
-                cleaned[key] = TextFigure(matches[0])
-            else:
-                warnings.warn(
-                    f"Unknown reference type: {root.get('ref-type')}",
-                    RuntimeWarning,
-                    stacklevel=2,
-                )
+                matches = paper_root.xpath(f"//fig[@id='{rid}']")
+                if matches:
+                    cleaned[key] = TextFigure(matches[0])
         elif root.tag == "table-wrap":
             cleaned[key] = TextTable(root)
         elif root.tag == "fig":
             cleaned[key] = TextFigure(root)
         else:
-            warnings.warn(
-                f"Unexpected tag {root.tag} in reference map.",
-                RuntimeWarning,
-                stacklevel=2,
-            )
             cleaned[key] = ET.tostring(root)
-    for key, item in cleaned.items():
-        if isinstance(item, int):
-            cleaned[key] = cleaned[item]
+
+    # Resolve back-references (numeric indirection)
+    for key, val in cleaned.items():
+        if isinstance(val, int):
+            cleaned[key] = cleaned.get(val, val)
     return BasicBiMap(cleaned)
 
 
+# Helper for build_complete_paper_dict ---------------------------------------
+
 def _get_ref_type(value):
-    """Identify reference type based on processed reference map value."""
-    from pmcgrab.model import TextTable, TextFigure
     if isinstance(value, TextTable):
         return "table"
     if isinstance(value, TextFigure):
         return "fig"
     if isinstance(value, dict):
-        if "Authors" in value or "Title" in value:
-            return "citation"
-        if "Caption" in value:
-            return "fig"
-    if isinstance(value, str):
-        return "citation"
-    return None
+        return "fig" if "Caption" in value else "citation"
+    return "citation"
 
 
 def _split_citations_tables_figs(ref_map: BasicBiMap):
-    """Split cleaned reference map into lists of citations, tables and figures."""
     citations, tables, figures = [], [], []
     for item in ref_map.values():
         rtype = _get_ref_type(item)
         if rtype == "citation":
             citations.append(item)
-        elif rtype == "table":
-            if hasattr(item, "df"):
-                tables.append(item.df)
+        elif rtype == "table" and hasattr(item, "df"):
+            tables.append(item.df)
         elif rtype == "fig":
-            if isinstance(item, (dict, TextFigure)):
-                figures.append(item if isinstance(item, dict) else item.fig_dict)
+            figures.append(item if isinstance(item, dict) else item.fig_dict)
     return citations, tables, figures
 
+# ---------------------------------------------------------------------------
+# Public orchestrators
+# ---------------------------------------------------------------------------
 
 def paper_dict_from_pmc(
     pmcid: int,
+    *,
     email: str,
     download: bool = False,
     validate: bool = True,
     verbose: bool = False,
     suppress_warnings: bool = False,
     suppress_errors: bool = False,
-) -> dict:
-    """Convenience wrapper to fetch and parse an article by PMCID."""
+) -> Dict[str, Union[str, int, Dict, List]]:
     if verbose:
-        logger.info("Generating Paper object for PMCID = %s...", pmcid)
+        logger.info("Generating Paper object for PMCID=%s …", pmcid)
     tree = get_xml(pmcid, email, download, validate, verbose=verbose)
     root = tree.getroot()
     return generate_paper_dict(pmcid, root, verbose, suppress_warnings, suppress_errors)
@@ -772,28 +263,28 @@ def generate_paper_dict(
     verbose: bool = False,
     suppress_warnings: bool = False,
     suppress_errors: bool = False,
-) -> dict:
-    """Generate a dictionary representation of a paper from its XML root."""
+) -> Dict[str, Union[str, int, Dict, List]]:
     if suppress_warnings:
         warnings.simplefilter("ignore")
     try:
-        d = build_complete_paper_dict(pmcid, root, verbose)
-    except Exception as e:
-        if suppress_errors:
-            d = {}
-        else:
-            raise e
-    if suppress_warnings:
-        warnings.simplefilter("default")
-    return d
+        data = build_complete_paper_dict(pmcid, root, verbose)
+    except Exception as exc:
+        data = {} if suppress_errors else (_raise(exc))
+    finally:
+        if suppress_warnings:
+            warnings.simplefilter("default")
+    return data
+
+
+def _raise(exc):  # helper for EAFP pattern above
+    raise exc
 
 
 def build_complete_paper_dict(
     pmcid: int, root: ET.Element, verbose: bool = False
-) -> dict:
-    """Create a comprehensive dictionary of paper metadata and content."""
-    ref_map = BasicBiMap()
-    d = {
+) -> Dict[str, Union[str, int, Dict, List]]:
+    ref_map: BasicBiMap = BasicBiMap()
+    d: Dict[str, Union[str, int, Dict, List]] = {
         "PMCID": pmcid,
         "Title": gather_title(root),
         "Authors": gather_authors(root),
@@ -829,12 +320,10 @@ def build_complete_paper_dict(
         "Ref Map With Tags": copy.deepcopy(ref_map),
         "Ref Map": process_reference_map(root, ref_map),
     }
-    # Additional derived collections
+
     citations, tables, figures = _split_citations_tables_figs(d["Ref Map"])
-    d["Citations"] = citations
-    d["Tables"] = tables
-    d["Figures"] = figures
-    d["Equations"] = gather_equations(root)
+    d.update({"Citations": citations, "Tables": tables, "Figures": figures, "Equations": gather_equations(root)})
+
     if verbose:
-        logger.info("Finished generating Paper object for PMCID = %s", pmcid)
+        logger.info("Finished generating Paper object for PMCID=%s", pmcid)
     return d

@@ -9,7 +9,6 @@ import lxml.etree as ET
 import pandas as pd
 
 from pmcgrab.constants import (
-    ReversedBiMapComparisonWarning,
     UnexpectedTagWarning,
     logger,
 )
@@ -20,13 +19,6 @@ def clean_doc(s: str) -> str:
     return cleandoc(s).replace("\n", "")
 
 
-def make_hashable(value):
-    """Convert nested lists/dicts to tuples so they can be hashed."""
-    if isinstance(value, dict):
-        return tuple(sorted((k, make_hashable(v)) for k, v in value.items()))
-    if isinstance(value, list):
-        return tuple(make_hashable(item) for item in value)
-    return value
 
 
 def normalize_value(val):
@@ -42,27 +34,16 @@ def normalize_value(val):
     return val
 
 
-class BasicBiMap(dict):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.reverse = {make_hashable(v): k for k, v in self.items()}
+from pmcgrab.domain.value_objects import BasicBiMap  # re-export
+from pmcgrab.common.serialization import clean_doc, normalize_value
+from pmcgrab.common.html_cleaning import remove_html_tags, strip_html_text_styling
+from pmcgrab.common.xml_processing import (
+    stringify_children,
+    split_text_and_refs,
+    generate_typed_mhtml_tag,
+    remove_mhtml_tags,
+)
 
-    def __setitem__(self, key, value):
-        super().__setitem__(key, value)
-        self.reverse[make_hashable(value)] = key
-
-    def __eq__(self, other) -> bool:
-        if not isinstance(other, dict):
-            return False
-        if not super().__eq__(other):
-            if isinstance(other, BasicBiMap) and other.reverse == dict(self):
-                warnings.warn(
-                    "BasicBiMap reversed key/value equivalence.",
-                    ReversedBiMapComparisonWarning,
-                    stacklevel=2,
-                )
-            return False
-        return True
 
 
 def stringify_children(node: ET.Element, encoding: str = "utf-8") -> str:

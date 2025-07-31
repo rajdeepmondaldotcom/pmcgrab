@@ -84,57 +84,6 @@ class Paper:
         self.data_dict = define_data_dict()
         self.vector_collection = None
 
-    @classmethod
-    def from_pmc(
-        cls,
-        pmcid: int,
-        email: str,
-        download: bool = False,
-        validate: bool = True,
-        verbose: bool = False,
-        suppress_warnings: bool = False,
-        suppress_errors: bool = False,
-    ) -> Optional["Paper"]:
-        """Create a :class:`Paper` by fetching a PMC article.
-
-        Args:
-            pmcid: PMCID of the article.
-            email: Contact email address used for Entrez.
-            download: Whether to cache the raw XML.
-            validate: Perform DTD validation when ``True``.
-            verbose: Output progress information when ``True``.
-            suppress_warnings: If ``True`` ignore parser warnings.
-            suppress_errors: If ``True`` return ``None`` instead of raising errors.
-
-        Returns:
-            A new :class:`Paper` instance or ``None`` if retrieval failed.
-        """
-        attempts = 3
-        d = None
-        from pmcgrab.parser import paper_dict_from_pmc
-
-        for _ in range(attempts):
-            try:
-                d = paper_dict_from_pmc(
-                    pmcid,
-                    email,
-                    download,
-                    validate,
-                    verbose,
-                    suppress_warnings,
-                    suppress_errors,
-                )
-                break
-            except HTTPError:
-                time.sleep(5)
-        if not d:
-            warnings.warn(
-                f"Unable to retrieve PMCID {pmcid} from PMC.",
-                PubmedHTTPError,
-                stacklevel=2,
-            )
-            return None
-        return cls(d)
 
     def abstract_as_str(self) -> str:
         """Return the abstract as plain text."""

@@ -15,7 +15,10 @@ from pmcgrab.model import Paper
 from pmcgrab.utils import normalize_value
 
 
-def process_single_pmc(pmc_id: str) -> Optional[dict[str, Union[str, dict, list]]]:
+# Deprecated – left for backwards compatibility. Delegates to application layer.
+from pmcgrab.application.processing import process_single_pmc  # noqa: F401
+
+def _legacy_process_single_pmc(pmc_id: str) -> Optional[dict[str, Union[str, dict, list]]]:
     """Download and parse one PMC article.
 
     Args:
@@ -30,14 +33,13 @@ def process_single_pmc(pmc_id: str) -> Optional[dict[str, Union[str, dict, list]
     p_obj = None
     try:
         pmc_id_num = int(pmc_id)
-        current_email = constants.EMAILS[
-            (constants.email_counter // 3) % len(constants.EMAILS)
-        ]
-        constants.email_counter += 1
+        from pmcgrab.infrastructure.settings import next_email
+        current_email = next_email()
         signal.alarm(60)
         try:
-            p_obj = Paper.from_pmc(
-                pmc_id_num, current_email, download=True, validate=False
+            from pmcgrab.application.paper_builder import build_paper_from_pmc
+            p_obj = build_paper_from_pmc(
+                pmc_id_num, email=current_email, download=True, validate=False
             )
         except TimeoutException:
             return None
