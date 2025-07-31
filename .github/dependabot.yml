@@ -6,7 +6,7 @@ updates:
     schedule:
       interval: "weekly"
       day: "monday"
-      time: "08:00"
+      time: "09:00"
     open-pull-requests-limit: 10
     reviewers:
       - "rajdeepmondaldotcom"
@@ -15,9 +15,6 @@ updates:
     commit-message:
       prefix: "deps"
       include: "scope"
-    labels:
-      - "dependencies"
-      - "automated"
 
   # Enable version updates for GitHub Actions
   - package-ecosystem: "github-actions"
@@ -25,7 +22,7 @@ updates:
     schedule:
       interval: "weekly"
       day: "monday"
-      time: "08:00"
+      time: "09:00"
     open-pull-requests-limit: 5
     reviewers:
       - "rajdeepmondaldotcom"
@@ -34,6 +31,3 @@ updates:
     commit-message:
       prefix: "ci"
       include: "scope"
-    labels:
-      - "ci/cd"
-      - "automated"

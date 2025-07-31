@@ -1,92 +1,169 @@
-name: Create Release
+name: Release and Publish
 
 on:
   push:
-    branches: ["main"]
+    tags:
+      - "v*"
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Version to release (e.g., 0.4.1)"
+        required: true
+        type: string
 
 jobs:
-  check-version:
+  test:
     runs-on: ubuntu-latest
-    outputs:
-      version: ${{ steps.get-version.outputs.version }}
-      version-changed: ${{ steps.check-version.outputs.changed }}
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v4
+
+      - name: Set up Python
+        run: uv python install 3.12
+
+      - name: Install dependencies
+        run: uv sync --dev --all-groups
+
+      - name: Run tests
+        run: uv run pytest --cov=pmcgrab
+
+      - name: Run linting
+        run: |
+          uv run ruff check .
+          uv run ruff format --check .
+
+      - name: Run type checking
+        run: uv run mypy src/pmcgrab
+
+  build:
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v4
+
+      - name: Set up Python
+        run: uv python install 3.12
+
+      - name: Install dependencies
+        run: uv sync --dev
+
+      - name: Build package
+        run: uv build
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
         with:
-          fetch-depth: 2
+          name: dist
+          path: dist/
 
-      - name: Get current version
-        id: get-version
-        run: |
-          VERSION=$(grep '^version = ' pyproject.toml | sed 's/version = "\(.*\)"/\1/')
-          echo "version=$VERSION" >> $GITHUB_OUTPUT
+  publish:
+    needs: build
+    runs-on: ubuntu-latest
+    environment: release
+    permissions:
+      id-token: write # For trusted publishing
+    steps:
+      - uses: actions/checkout@v4
 
-      - name: Check if version changed
-        id: check-version
-        run: |
-          # Get current and previous version
-          CURRENT_VERSION=$(grep '^version = ' pyproject.toml | sed 's/version = "\(.*\)"/\1/')
-          PREVIOUS_VERSION=$(git show HEAD~1:pyproject.toml | grep '^version = ' | sed 's/version = "\(.*\)"/\1/' || echo "")
+      - name: Download build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: dist
+          path: dist/
 
-          echo "Current version: $CURRENT_VERSION"
-          echo "Previous version: $PREVIOUS_VERSION"
+      - name: Install uv
+        uses: astral-sh/setup-uv@v4
 
-          if [ "$CURRENT_VERSION" != "$PREVIOUS_VERSION" ] && [ -n "$PREVIOUS_VERSION" ]; then
-            echo "changed=true" >> $GITHUB_OUTPUT
-            echo "Version changed from $PREVIOUS_VERSION to $CURRENT_VERSION"
-          else
-            echo "changed=false" >> $GITHUB_OUTPUT
-            echo "No version change detected"
-          fi
+      - name: Publish to PyPI
+        run: uv publish --token ${{ secrets.PYPI_API_TOKEN }}
+        env:
+          UV_PUBLISH_TOKEN: ${{ secrets.PYPI_API_TOKEN }}
 
   create-release:
-    needs: check-version
-    if: needs.check-version.outputs.version-changed == 'true'
+    needs: publish
     runs-on: ubuntu-latest
     permissions:
       contents: write
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Set up Python
-        uses: actions/setup-python@v5
+      - uses: actions/checkout@v4
         with:
-          python-version: "3.x"
+          fetch-depth: 0
 
-      - name: Install uv
-        uses: astral-sh/setup-uv@v5
-
-      - name: Build distributions
-        run: uv build
+      - name: Get version from tag
+        id: get_version
+        run: |
+          if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
+            echo "version=${{ github.event.inputs.version }}" >> $GITHUB_OUTPUT
+          else
+            echo "version=${GITHUB_REF#refs/tags/v}" >> $GITHUB_OUTPUT
+          fi
 
       - name: Generate changelog
         id: changelog
         run: |
-          VERSION="${{ needs.check-version.outputs.version }}"
-          echo "## What's Changed in v$VERSION" > CHANGELOG.md
-          echo "" >> CHANGELOG.md
-          echo "### Features & Improvements" >> CHANGELOG.md
-          echo "- Updated pmcgrab to version $VERSION" >> CHANGELOG.md
-          echo "- See commit history for detailed changes" >> CHANGELOG.md
-          echo "" >> CHANGELOG.md
-          echo "### Installation" >> CHANGELOG.md
-          echo "\`\`\`bash" >> CHANGELOG.md
-          echo "pip install pmcgrab==$VERSION" >> CHANGELOG.md
-          echo "\`\`\`" >> CHANGELOG.md
-          echo "" >> CHANGELOG.md
-          echo "**Full Changelog**: https://github.com/rajdeepmondaldotcom/pmcgrab/commits/v$VERSION" >> CHANGELOG.md
+          # Get the previous tag
+          PREV_TAG=$(git describe --tags --abbrev=0 HEAD^ 2>/dev/null || echo "")
 
-      - name: Create Release
-        uses: softprops/action-gh-release@v2
+          if [ -n "$PREV_TAG" ]; then
+            echo "## Changes since $PREV_TAG" > CHANGELOG.md
+            git log --pretty=format:"- %s (%h)" $PREV_TAG..HEAD >> CHANGELOG.md
+          else
+            echo "## Initial Release" > CHANGELOG.md
+            echo "- First release of PMCGrab with uv-first ecosystem" >> CHANGELOG.md
+          fi
+
+          echo "changelog<<EOF" >> $GITHUB_OUTPUT
+          cat CHANGELOG.md >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+
+      - name: Create GitHub Release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          tag_name: "v${{ needs.check-version.outputs.version }}"
-          name: "Release v${{ needs.check-version.outputs.version }}"
-          body_path: CHANGELOG.md
-          files: |
-            dist/*.whl
-            dist/*.tar.gz
+          tag_name: v${{ steps.get_version.outputs.version }}
+          release_name: PMCGrab v${{ steps.get_version.outputs.version }}
+          body: |
+            # PMCGrab v${{ steps.get_version.outputs.version }}
+
+            🚀 **New Release Available!**
+
+            ## Installation
+
+            Install with uv (recommended):
+            ```bash
+            uv add pmcgrab
+            ```
+
+            Or with pip:
+            ```bash
+            pip install pmcgrab==${{ steps.get_version.outputs.version }}
+            ```
+
+            ## Usage
+
+            ```python
+            from pmcgrab import process_single_pmc
+
+            # Process a PMC article
+            data = process_single_pmc("7114487")
+
+            if data:
+                print(f"Title: {data['title']}")
+                print(f"Authors: {len(data['authors'])}")
+                print(f"Sections: {list(data['body'].keys())}")
+            ```
+
+            ${{ steps.changelog.outputs.changelog }}
+
+            ---
+
+            **Full Documentation:** https://rajdeepmondaldotcom.github.io/pmcgrab/
+            **PyPI Package:** https://pypi.org/project/pmcgrab/${{ steps.get_version.outputs.version }}/
           draft: false
           prerelease: false
-          generate_release_notes: true
