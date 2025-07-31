@@ -11,7 +11,7 @@ This document provides information on how to develop and contribute to pmcgrab.
 
 1. Clone the repository:
 ```bash
-git clone https://github.com/rajdeepmondal/pmcgrab.git
+git clone https://github.com/rajdeepmondaldotcom/pmcgrab.git
 cd pmcgrab
 ```
 
@@ -206,6 +206,6 @@ The project uses GitHub Actions for CI/CD:
 
 ### Getting Help
 
-- Check the [Issues](https://github.com/rajdeepmondal/pmcgrab/issues) page
+- Check the [Issues](https://github.com/rajdeepmondaldotcom/pmcgrab/issues) page
 - Review the documentation in README.md
 - Look at existing tests for examples

@@ -43,11 +43,11 @@ classifiers = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/rajdeepmondal/pmcgrab"
-Documentation = "https://github.com/rajdeepmondal/pmcgrab#readme"
-Repository = "https://github.com/rajdeepmondal/pmcgrab.git"
-Issues = "https://github.com/rajdeepmondal/pmcgrab/issues"
-Changelog = "https://github.com/rajdeepmondal/pmcgrab/releases"
+Homepage = "https://github.com/rajdeepmondaldotcom/pmcgrab"
+Documentation = "https://github.com/rajdeepmondaldotcom/pmcgrab#readme"
+Repository = "https://github.com/rajdeepmondaldotcom/pmcgrab.git"
+Issues = "https://github.com/rajdeepmondaldotcom/pmcgrab/issues"
+Changelog = "https://github.com/rajdeepmondaldotcom/pmcgrab/releases"
 
 [project.optional-dependencies]
 dev = [

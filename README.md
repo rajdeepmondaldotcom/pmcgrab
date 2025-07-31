@@ -4,9 +4,6 @@ Your gateway to AI-ready scientific literature from PubMed Central
 
 [![PyPI](https://img.shields.io/pypi/v/pmcgrab.svg)](https://pypi.org/project/pmcgrab/)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE)
-[![CI](https://github.com/rajdeepmondal/pmcgrab/actions/workflows/ci.yml/badge.svg)](https://github.com/rajdeepmondal/pmcgrab/actions/workflows/ci.yml)
-[![Coverage Status](https://img.shields.io/badge/coverage-100%25-brightgreen.svg)](htmlcov/index.html)
-[![Python Versions](https://img.shields.io/pypi/pyversions/pmcgrab.svg)](https://pypi.org/project/pmcgrab/)
 
 `pmcgrab` is a specialised Python toolkit for **retrieving, validating and restructuring PubMed Central (PMC) articles into clean, section-aware JSON** that large-language-model (LLM) pipelines can ingest directly for Retrieval-Augmented Generation (RAG), question-answering, summarisation and other downstream tasks.
 
@@ -67,7 +64,7 @@ pip install pmcgrab
 
 ### From Source
 ```bash
-git clone https://github.com/rajdeepmondal/pmcgrab.git
+git clone https://github.com/rajdeepmondaldotcom/pmcgrab.git
 cd pmcgrab
 pip install .
 ```
@@ -87,11 +84,26 @@ Fetch and inspect a single article:
 from pmcgrab import Paper
 
 # NCBI requires an email for identification
-paper = Paper.from_pmc("7181753", email="your.name@example.com")
+paper = Paper.from_pmc("7181753", email="rajdeep@rajdeepmondal.com")
 
 print(paper.title)
 print(paper.body["Introduction"][:500])  # first 500 chars of Introduction
 ```
+
+### Example: Process five PMC articles
+
+Run the helper script located in `examples/run_five_pmcs.py`:
+
+```bash
+python examples/run_five_pmcs.py
+```
+
+The script will:
+
+1. Download five predefined PMCIDs (see the source).
+2. Print a brief summary for each article (title, abstract snippet, author count).
+3. Persist the full JSON output into `pmc_output/PMC<id>.json` for further inspection.
+
 
 ---
 
@@ -226,7 +238,7 @@ If this project contributes to your research, please consider citing it:
   author       = {Rajdeep Mondal},
   title        = {pmcgrab: AI-ready retrieval of PubMed Central articles},
   year         = {2024},
-  url          = {https://github.com/rajdeepmondal/pmcgrab},
+  url          = {https://github.com/rajdeepmondaldotcom/pmcgrab},
   version      = {0.2.0},
   license      = {Apache-2.0}
 }
