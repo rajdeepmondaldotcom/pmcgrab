@@ -8,6 +8,8 @@ from urllib.error import HTTPError
 import lxml.etree as ET
 import pandas as pd
 
+from pmcgrab.figure import TextFigure
+
 from pmcgrab.constants import (
     MultipleTitleWarning,
     PubmedHTTPError,
@@ -51,9 +53,17 @@ class Paper:
         self.article_id = d.get("Article ID")
         self.article_types = d.get("Article Types")
         self.article_categories = d.get("Article Categories")
+        self.keywords = d.get("Keywords")
         self.published_date = d.get("Published Date")
+        self.history_dates = d.get("History Dates")
         self.volume = d.get("Volume")
         self.issue = d.get("Issue")
+        # Accept both shorthand and full keys for page numbers
+        self.fpage = d.get("FPage", d.get("First Page"))
+        self.lpage = d.get("LPage", d.get("Last Page"))
+        self.citations = d.get("Citations")
+        self.tables = d.get("Tables")
+        self.figures = d.get("Figures")
         self.permissions = d.get("Permissions")
         if self.permissions:
             self.copyright = self.permissions.get("Copyright Statement")
@@ -62,6 +72,9 @@ class Paper:
             self.copyright = None
             self.license = None
         self.funding = d.get("Funding")
+        self.ethics = d.get("Ethics")
+        self.supplementary = d.get("Supplementary Material")
+        self.equations = d.get("Equations")
         self.footnote = d.get("Footnote")
         self.acknowledgements = d.get("Acknowledgements")
         self.notes = d.get("Notes")
@@ -216,6 +229,10 @@ class TextSection(TextElement):
                 self.children.append(
                     TextTable(child, parent=self, ref_map=self.get_ref_map())
                 )
+            elif child.tag == "fig":
+                self.children.append(
+                    TextFigure(child, parent=self, ref_map=self.get_ref_map())
+                )
             else:
                 warnings.warn(
                     f"Unexpected tag {child.tag} in section.",
@@ -248,6 +265,8 @@ class TextSection(TextElement):
                 )
             elif isinstance(child, TextParagraph):
                 res += "\n" + child.text_with_refs + "\n"
+            elif isinstance(child, TextFigure):
+                res += "\n" + str(child) + "\n"
         return res
 
     def __eq__(self, other: object) -> bool:
