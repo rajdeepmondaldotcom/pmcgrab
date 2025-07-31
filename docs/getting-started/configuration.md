@@ -239,10 +239,10 @@ For command-line usage, PMCGrab provides several configuration options:
 
 ```bash
 # Basic usage
-python -m pmcgrab PMC7114487
+uv run python -m pmcgrab PMC7114487
 
 # With custom settings
-python -m pmcgrab \
+uv run python -m pmcgrab \
     --output-dir ./results \
     --workers 4 \
     --batch-size 10 \
@@ -250,7 +250,7 @@ python -m pmcgrab \
     PMC7114487 PMC3084273
 
 # From file
-python -m pmcgrab --input-file pmcids.txt --output-dir results/
+uv run python -m pmcgrab --input-file pmcids.txt --output-dir results/
 ```
 
 ## Best Practices

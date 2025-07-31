@@ -6,7 +6,7 @@ Complete guide for setting up PMCGrab for development.
 
 - Python 3.10+
 - Git
-- uv (recommended) or pip
+- uv (recommended)
 
 ## Installation
 
@@ -19,18 +19,8 @@ cd pmcgrab
 
 ### 2. Set Up Virtual Environment
 
-#### Using uv (Recommended)
-
 ```bash
-uv sync --dev
-```
-
-#### Using pip
-
-```bash
-python -m venv venv
-source venv/bin/activate  # On Windows: venv\Scripts\activate
-pip install -e ".[dev]"
+uv sync --dev --all-groups
 ```
 
 ### 3. Verify Installation

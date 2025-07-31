@@ -8,20 +8,20 @@ PMCGrab provides a powerful command-line interface for batch processing and arti
 
 ```bash
 # Process a single PMC article
-python -m pmcgrab PMC7181753
+uv run uv run python -m pmcgrab PMC7181753
 
 # Specify email (required by NCBI)
-python -m pmcgrab --email your-email@example.com PMC7181753
+uv run uv run python -m pmcgrab --email your-email@example.com PMC7181753
 ```
 
 ### Multiple Articles
 
 ```bash
 # Process multiple articles
-python -m pmcgrab PMC7181753 PMC3539614 PMC5454911
+uv run uv run python -m pmcgrab PMC7181753 PMC3539614 PMC5454911
 
 # From a file (one PMC ID per line)
-python -m pmcgrab --input-file pmc_ids.txt
+uv run uv run python -m pmcgrab --input-file pmc_ids.txt
 ```
 
 ## Command Options
@@ -30,42 +30,42 @@ python -m pmcgrab --input-file pmc_ids.txt
 
 ```bash
 # Custom output directory
-python -m pmcgrab --output-dir ./results PMC7181753
+uv run uv run python -m pmcgrab --output-dir ./results PMC7181753
 
 # Create timestamped directory
-python -m pmcgrab --output-dir ./results_$(date +%Y%m%d) PMC7181753
+uv run uv run python -m pmcgrab --output-dir ./results_$(date +%Y%m%d) PMC7181753
 ```
 
 ### Performance Options
 
 ```bash
 # Parallel processing
-python -m pmcgrab --workers 8 PMC7181753 PMC3539614
+uv run uv run python -m pmcgrab --workers 8 PMC7181753 PMC3539614
 
 # Batch size configuration
-python -m pmcgrab --batch-size 20 --workers 4 PMC7181753 PMC3539614
+uv run uv run python -m pmcgrab --batch-size 20 --workers 4 PMC7181753 PMC3539614
 
 # Timeout settings
-python -m pmcgrab --timeout 60 PMC7181753
+uv run uv run python -m pmcgrab --timeout 60 PMC7181753
 ```
 
 ### Error Handling
 
 ```bash
 # Retry configuration
-python -m pmcgrab --max-retries 5 PMC7181753
+uv run python -m pmcgrab --max-retries 5 PMC7181753
 
 # Verbose output
-python -m pmcgrab --verbose PMC7181753
+uv run python -m pmcgrab --verbose PMC7181753
 
 # Suppress warnings
-python -m pmcgrab --quiet PMC7181753
+uv run python -m pmcgrab --quiet PMC7181753
 ```
 
 ## Complete Example
 
 ```bash
-python -m pmcgrab \
+uv run python -m pmcgrab \
     --email your-email@example.com \
     --output-dir ./pmc_results \
     --workers 8 \
@@ -93,7 +93,7 @@ Create `pmc_ids.txt`:
 Then run:
 
 ```bash
-python -m pmcgrab --input-file pmc_ids.txt --email your-email@example.com
+uv run python -m pmcgrab --input-file pmc_ids.txt --email your-email@example.com
 ```
 
 ### CSV Input
@@ -102,10 +102,10 @@ For CSV files with PMC IDs in a specific column:
 
 ```bash
 # If PMC IDs are in 'pmcid' column
-python -m pmcgrab --input-csv articles.csv --pmcid-column pmcid
+uv run python -m pmcgrab --input-csv articles.csv --pmcid-column pmcid
 
 # If PMC IDs are in 'id' column
-python -m pmcgrab --input-csv data.csv --pmcid-column id
+uv run python -m pmcgrab --input-csv data.csv --pmcid-column id
 ```
 
 ## Output Files
@@ -143,7 +143,7 @@ export PMCGRAB_TIMEOUT=60
 export PMCGRAB_MAX_RETRIES=3
 
 # Now you can run with defaults
-python -m pmcgrab PMC7181753
+uv run python -m pmcgrab PMC7181753
 ```
 
 ## Advanced Usage
@@ -152,34 +152,34 @@ python -m pmcgrab PMC7181753
 
 ```bash
 # Validate XML structure
-python -m pmcgrab --validate PMC7181753
+uv run python -m pmcgrab --validate PMC7181753
 
 # Skip validation for speed
-python -m pmcgrab --no-validate PMC7181753
+uv run python -m pmcgrab --no-validate PMC7181753
 
 # Download and cache XML files
-python -m pmcgrab --download --cache-dir ./xml_cache PMC7181753
+uv run python -m pmcgrab --download --cache-dir ./xml_cache PMC7181753
 ```
 
 ### Resume Processing
 
 ```bash
 # Resume from previous failed run
-python -m pmcgrab --resume --input-dir ./previous_output PMC7181753 PMC3539614
+uv run python -m pmcgrab --resume --input-dir ./previous_output PMC7181753 PMC3539614
 
 # Or resume from failed IDs file
-python -m pmcgrab --input-file ./previous_output/failed_pmcids.txt
+uv run python -m pmcgrab --input-file ./previous_output/failed_pmcids.txt
 ```
 
 ### Logging Options
 
 ```bash
 # Enable detailed logging
-python -m pmcgrab --verbose --log-file processing.log PMC7181753
+uv run python -m pmcgrab --verbose --log-file processing.log PMC7181753
 
 # Different log levels
-python -m pmcgrab --log-level DEBUG PMC7181753
-python -m pmcgrab --log-level WARNING PMC7181753
+uv run python -m pmcgrab --log-level DEBUG PMC7181753
+uv run python -m pmcgrab --log-level WARNING PMC7181753
 ```
 
 ## Batch Processing Examples
@@ -187,7 +187,7 @@ python -m pmcgrab --log-level WARNING PMC7181753
 ### Small Scale (< 100 articles)
 
 ```bash
-python -m pmcgrab \
+uv run python -m pmcgrab \
     --input-file small_list.txt \
     --workers 4 \
     --batch-size 10 \
@@ -197,7 +197,7 @@ python -m pmcgrab \
 ### Medium Scale (100-1000 articles)
 
 ```bash
-python -m pmcgrab \
+uv run python -m pmcgrab \
     --input-file medium_list.txt \
     --workers 8 \
     --batch-size 25 \
@@ -210,7 +210,7 @@ python -m pmcgrab \
 ### Large Scale (1000+ articles)
 
 ```bash
-python -m pmcgrab \
+uv run python -m pmcgrab \
     --input-file large_list.txt \
     --workers 12 \
     --batch-size 50 \
@@ -236,7 +236,7 @@ python -m pmcgrab \
 
 ```bash
 # Run with error handling
-python -m pmcgrab PMC7181753 PMC3539614
+uv run python -m pmcgrab PMC7181753 PMC3539614
 EXIT_CODE=$?
 
 if [ $EXIT_CODE -eq 0 ]; then
@@ -252,12 +252,12 @@ fi
 
 ```bash
 # Initial processing
-python -m pmcgrab --input-file all_ids.txt --output-dir ./results
+uv run python -m pmcgrab --input-file all_ids.txt --output-dir ./results
 
 # Retry failed articles
 if [ -f ./results/failed_pmcids.txt ]; then
     echo "Retrying failed articles..."
-    python -m pmcgrab \
+    uv run python -m pmcgrab \
         --input-file ./results/failed_pmcids.txt \
         --output-dir ./results \
         --max-retries 5 \
@@ -271,7 +271,7 @@ fi
 
 ```bash
 # For slow networks
-python -m pmcgrab \
+uv run python -m pmcgrab \
     --workers 2 \
     --batch-size 5 \
     --timeout 120 \
@@ -279,7 +279,7 @@ python -m pmcgrab \
     PMC7181753
 
 # For fast networks
-python -m pmcgrab \
+uv run python -m pmcgrab \
     --workers 16 \
     --batch-size 50 \
     --timeout 30 \
@@ -291,14 +291,14 @@ python -m pmcgrab \
 
 ```bash
 # For memory-constrained systems
-python -m pmcgrab \
+uv run python -m pmcgrab \
     --workers 2 \
     --batch-size 5 \
     --no-cache \
     PMC7181753
 
 # For high-memory systems
-python -m pmcgrab \
+uv run python -m pmcgrab \
     --workers 16 \
     --batch-size 100 \
     --cache-dir ./large_cache \
@@ -323,7 +323,7 @@ echo "Input file: $INPUT_FILE"
 echo "Output directory: $OUTPUT_DIR"
 echo "Log file: $LOG_FILE"
 
-python -m pmcgrab \
+uv run python -m pmcgrab \
     --input-file "$INPUT_FILE" \
     --output-dir "$OUTPUT_DIR" \
     --email "$EMAIL" \
@@ -360,7 +360,7 @@ Write-Host "Input file: $INPUT_FILE"
 Write-Host "Output directory: $OUTPUT_DIR"
 Write-Host "Log file: $LOG_FILE"
 
-python -m pmcgrab `
+uv run python -m pmcgrab `
     --input-file $INPUT_FILE `
     --output-dir $OUTPUT_DIR `
     --email $EMAIL `
@@ -387,19 +387,19 @@ if ($LASTEXITCODE -eq 0) {
 
 ```bash
 # Show help message
-python -m pmcgrab --help
+uv run python -m pmcgrab --help
 
 # Show version
-python -m pmcgrab --version
+uv run python -m pmcgrab --version
 
 # Show configuration
-python -m pmcgrab --show-config
+uv run python -m pmcgrab --show-config
 ```
 
 ### All Available Options
 
 ```
-Usage: python -m pmcgrab [OPTIONS] [PMCIDS...]
+Usage: uv run python -m pmcgrab [OPTIONS] [PMCIDS...]
 
 Options:
   --email TEXT                    Contact email for NCBI API (required)

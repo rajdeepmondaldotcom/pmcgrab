@@ -1,11 +1,19 @@
 # Installation
 
-PMCGrab supports Python 3.10+ and can be installed via pip or from source.
+PMCGrab supports Python 3.10+ and can be installed via uv or from source.
 
-## Using pip (Recommended)
+## Using uv (Recommended)
+
+For adding to an existing project:
 
 ```bash
-pip install pmcgrab
+uv add pmcgrab
+```
+
+For standalone installation:
+
+```bash
+uv pip install pmcgrab
 ```
 
 This installs the latest stable version from PyPI along with all required dependencies.
@@ -17,7 +25,7 @@ If you want the latest development version or need to modify PMCGrab:
 ```bash
 git clone https://github.com/rajdeepmondaldotcom/pmcgrab.git
 cd pmcgrab
-pip install -e .
+uv pip install -e .
 ```
 
 ## Development Installation
@@ -28,11 +36,8 @@ For development work, install with development dependencies:
 git clone https://github.com/rajdeepmondaldotcom/pmcgrab.git
 cd pmcgrab
 
-# Using uv (recommended)
-uv sync --dev
-
-# Or using pip
-pip install -e ".[dev]"
+# Install with all development dependencies
+uv sync --dev --all-groups
 ```
 
 ## Verify Installation
@@ -47,7 +52,7 @@ print(pmcgrab.__version__)
 Or use the command line:
 
 ```bash
-python -m pmcgrab --help
+uv run python -m pmcgrab --help
 ```
 
 ## Dependencies
@@ -67,9 +72,9 @@ PMCGrab requires the following packages:
 For development and documentation:
 
 ```bash
-pip install "pmcgrab[dev]"    # Development tools
-pip install "pmcgrab[docs]"   # Documentation tools
-pip install "pmcgrab[test]"   # Testing dependencies
+uv add "pmcgrab[dev]"    # Development tools
+uv add "pmcgrab[docs]"   # Documentation tools
+uv add "pmcgrab[test]"   # Testing dependencies
 ```
 
 ## System Requirements
@@ -93,7 +98,7 @@ sudo apt-get install libxml2-dev libxslt-dev python3-dev
 brew install libxml2 libxslt
 
 # Then reinstall
-pip install --force-reinstall lxml
+uv pip install --force-reinstall lxml
 ```
 
 ### Permission Errors
@@ -101,17 +106,17 @@ pip install --force-reinstall lxml
 If you get permission errors during installation:
 
 ```bash
-pip install --user pmcgrab
+uv pip install --user pmcgrab
 ```
 
 ### Virtual Environment (Recommended)
 
-Always use a virtual environment:
+uv automatically manages virtual environments, but you can create one explicitly:
 
 ```bash
-python -m venv pmcgrab-env
+uv venv pmcgrab-env
 source pmcgrab-env/bin/activate  # On Windows: pmcgrab-env\Scripts\activate
-pip install pmcgrab
+uv pip install pmcgrab
 ```
 
 ## Next Steps

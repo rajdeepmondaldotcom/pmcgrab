@@ -333,10 +333,11 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
 
+      - name: Install uv
+        run: curl -LsSf https://astral.sh/uv/install.sh | sh
+
       - name: Install dependencies
-        run: |
-          pip install uv
-          uv sync --dev
+        run: uv sync --dev --all-groups
 
       - name: Run tests
         run: uv run pytest --cov=pmcgrab

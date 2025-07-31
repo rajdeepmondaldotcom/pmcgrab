@@ -103,10 +103,7 @@ pmcgrab/
 
 ```bash
 # Install in development mode
-uv pip install -e .
-
-# Or install with extras
-uv pip install -e ".[dev,docs,test]"
+uv sync --dev --all-groups
 ```
 
 ### Adding Dependencies

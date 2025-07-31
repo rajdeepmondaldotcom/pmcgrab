@@ -40,7 +40,13 @@ PMCGrab converts PubMed Central articles into clean, section-aware JSON optimize
 ### Installation
 
 ```bash
-pip install pmcgrab
+uv add pmcgrab
+```
+
+For a standalone installation:
+
+```bash
+uv pip install pmcgrab
 ```
 
 ### Basic Usage
@@ -97,7 +103,7 @@ for pmcid in PMC_IDS:
 Run this example:
 
 ```bash
-python examples/run_three_pmcs.py
+uv run python examples/run_three_pmcs.py
 ```
 
 ## Key Features
@@ -114,13 +120,13 @@ Process articles directly from the command line:
 
 ```bash
 # Single article
-python -m pmcgrab PMC7114487
+uv run python -m pmcgrab PMC7114487
 
 # Multiple articles
-python -m pmcgrab PMC7114487 PMC3084273 PMC7690653
+uv run python -m pmcgrab PMC7114487 PMC3084273 PMC7690653
 
 # From file
-python -m pmcgrab --input-file pmcids.txt --output-dir results/
+uv run python -m pmcgrab --input-file pmcids.txt --output-dir results/
 ```
 
 ## Use Cases
@@ -181,18 +187,18 @@ Each processed article returns a comprehensive JSON structure:
 # Clone and setup
 git clone https://github.com/rajdeepmondaldotcom/pmcgrab.git
 cd pmcgrab
-pip install -e ".[dev,test,docs]"
+uv sync --dev --all-groups
 
 # Run tests
-pytest
+uv run pytest
 
 # Build documentation
-mkdocs serve
+uv run mkdocs serve
 ```
 
 ## Links
 
-- **[PyPI Package](https://pypi.org/project/pmcgrab/)** - Install via pip
+- **[PyPI Package](https://pypi.org/project/pmcgrab/)** - Install via uv
 - **[GitHub Repository](https://github.com/rajdeepmondaldotcom/pmcgrab)** - Source code and issues
 - **[Documentation](https://rajdeepmondaldotcom.github.io/pmcgrab/)** - Complete user guide
 - **[License](https://github.com/rajdeepmondaldotcom/pmcgrab/blob/main/LICENSE)** - Apache 2.0

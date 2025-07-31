@@ -4,8 +4,8 @@ build-backend = "hatchling.build"
 
 [project]
 name = "pmcgrab"
-version = "0.3.6"
-description = "AI-ready retrieval and parsing of PubMed Central articles for RAG applications"
+version = "0.4.0"
+description = "AI-ready retrieval and parsing of PubMed Central articles for RAG applications. Install with uv for best performance."
 readme = "README.md"
 license = "Apache-2.0"
 authors = [
@@ -39,7 +39,10 @@ keywords = [
     "ai",
     "retrieval augmented generation",
     "ncbi",
-    "entrez"
+    "entrez",
+    "uv",
+    "fast",
+    "modern"
 ]
 classifiers = [
     "Development Status :: 4 - Beta",

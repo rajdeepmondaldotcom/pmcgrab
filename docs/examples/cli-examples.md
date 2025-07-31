@@ -8,23 +8,23 @@ Practical command-line examples for common PMCGrab usage scenarios.
 
 ```bash
 # Basic usage - process one article
-python -m pmcgrab PMC7181753
+uv run python -m pmcgrab PMC7181753
 
 # With email specification (recommended)
-python -m pmcgrab --email researcher@university.edu PMC7181753
+uv run uv run python -m pmcgrab --email researcher@university.edu PMC7181753
 
 # Save to custom directory
-python -m pmcgrab --output-dir ./papers --email researcher@university.edu PMC7181753
+uv run uv run python -m pmcgrab --output-dir ./papers --email researcher@university.edu PMC7181753
 ```
 
 ### Multiple Articles
 
 ```bash
 # Process several articles at once
-python -m pmcgrab PMC7181753 PMC3539614 PMC5454911
+uv run uv run python -m pmcgrab PMC7181753 PMC3539614 PMC5454911
 
 # With parallel processing
-python -m pmcgrab --workers 4 PMC7181753 PMC3539614 PMC5454911
+uv run uv run python -m pmcgrab --workers 4 PMC7181753 PMC3539614 PMC5454911
 ```
 
 ## File Input
@@ -43,7 +43,7 @@ Create `pmcids.txt`:
 Process the list:
 
 ```bash
-python -m pmcgrab --input-file pmcids.txt --email researcher@university.edu
+uv run python -m pmcgrab --input-file pmcids.txt --email researcher@university.edu
 ```
 
 ## Advanced Options
@@ -52,7 +52,7 @@ python -m pmcgrab --input-file pmcids.txt --email researcher@university.edu
 
 ```bash
 # Process with custom settings
-python -m pmcgrab \
+uv run python -m pmcgrab \
     --input-file pmcids.txt \
     --output-dir ./output \
     --email researcher@university.edu \

@@ -139,13 +139,13 @@ PMCGrab also works from the command line:
 
 ```bash
 # Single paper
-python -m pmcgrab PMC7114487
+uv run python -m pmcgrab PMC7114487
 
 # Multiple papers
-python -m pmcgrab PMC7114487 PMC3084273 PMC7690653
+uv run python -m pmcgrab PMC7114487 PMC3084273 PMC7690653
 
 # With custom settings
-python -m pmcgrab \
+uv run python -m pmcgrab \
     --output-dir ./results \
     --workers 4 \
     --email your-email@example.com \

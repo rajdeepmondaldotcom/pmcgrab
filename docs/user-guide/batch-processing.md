@@ -413,14 +413,14 @@ For command-line batch processing, use the built-in CLI:
 
 ```bash
 # From individual IDs
-python -m pmcgrab PMC7114487 PMC3084273 PMC7690653
+uv run python -m pmcgrab PMC7114487 PMC3084273 PMC7690653
 
 # From file
 echo -e "7114487\n3084273\n7690653" > pmcids.txt
-python -m pmcgrab --input-file pmcids.txt --output-dir batch_results/
+uv run python -m pmcgrab --input-file pmcids.txt --output-dir batch_results/
 
 # With custom settings
-python -m pmcgrab \
+uv run python -m pmcgrab \
     --input-file pmcids.txt \
     --output-dir ./results \
     --workers 4 \

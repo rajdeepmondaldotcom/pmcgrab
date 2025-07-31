@@ -12,23 +12,23 @@ PMCGrab's command-line interface for batch processing and article retrieval.
 
 ```bash
 # Process single paper
-python -m pmcgrab PMC7181753
+uv run python -m pmcgrab PMC7181753
 
 # Process multiple papers
-python -m pmcgrab PMC7181753 PMC3539614 PMC5454911
+uv run python -m pmcgrab PMC7181753 PMC3539614 PMC5454911
 ```
 
 ### Advanced Options
 
 ```bash
 # Custom output directory
-python -m pmcgrab --output-dir ./results PMC7181753
+uv run python -m pmcgrab --output-dir ./results PMC7181753
 
 # Parallel processing
-python -m pmcgrab --workers 8 PMC7181753 PMC3539614
+uv run python -m pmcgrab --workers 8 PMC7181753 PMC3539614
 
 # From file input
-python -m pmcgrab --input-file pmc_ids.txt --max-retries 3
+uv run python -m pmcgrab --input-file pmc_ids.txt --max-retries 3
 ```
 
 ### All Options
