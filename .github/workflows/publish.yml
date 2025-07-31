@@ -9,7 +9,6 @@ jobs:
     name: Build & Publish to PyPI
     runs-on: ubuntu-latest
     timeout-minutes: 30
-    environment: pypi
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
