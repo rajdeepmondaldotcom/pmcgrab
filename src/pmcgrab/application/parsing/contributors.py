@@ -7,10 +7,7 @@ import warnings
 import lxml.etree as ET
 import pandas as pd
 
-from pmcgrab.constants import (
-    UnexpectedMultipleMatchWarning,
-    UnexpectedZeroMatchWarning,
-)
+from pmcgrab.constants import UnexpectedMultipleMatchWarning, UnexpectedZeroMatchWarning
 
 __all__: list[str] = [
     "extract_contributor_info",

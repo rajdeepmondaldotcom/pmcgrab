@@ -12,10 +12,7 @@ import warnings
 
 import lxml.etree as ET
 
-from pmcgrab.constants import (
-    UnexpectedMultipleMatchWarning,
-    UnexpectedZeroMatchWarning,
-)
+from pmcgrab.constants import UnexpectedMultipleMatchWarning, UnexpectedZeroMatchWarning
 
 __all__: list[str] = [
     "gather_article_categories",

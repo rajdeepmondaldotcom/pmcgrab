@@ -9,10 +9,7 @@ The sub-modules are intentionally small and focused:
 • **xml_processing** – XML/HTML text extraction and reference handling.
 """
 
-from pmcgrab.common.html_cleaning import (
-    remove_html_tags,
-    strip_html_text_styling,
-)
+from pmcgrab.common.html_cleaning import remove_html_tags, strip_html_text_styling
 from pmcgrab.common.serialization import clean_doc, normalize_value
 from pmcgrab.common.xml_processing import (
     generate_typed_mhtml_tag,

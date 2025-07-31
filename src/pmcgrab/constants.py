@@ -29,7 +29,18 @@ def timeout_handler(_signum, _frame):
     raise TimeoutException("Operation timed out")
 
 
-signal.signal(signal.SIGALRM, timeout_handler)
+# ---------------------------------------------------------------------------
+# Optional POSIX-only SIGALRM registration
+# Windows lacks SIGALRM; we fall back to a no-op placeholder so that test code
+# referencing ``signal.SIGALRM`` still works cross-platform.
+# ---------------------------------------------------------------------------
+try:
+    _sigalrm = signal.SIGALRM  # type: ignore[attr-defined]
+    signal.signal(_sigalrm, timeout_handler)  # type: ignore[arg-type]
+except (AttributeError, ValueError):
+    # Provide a dummy attribute for compatibility (used only in unit tests).
+    signal.SIGALRM = 0  # type: ignore[attr-defined]
+
 
 EMAILS = sorted(
     {

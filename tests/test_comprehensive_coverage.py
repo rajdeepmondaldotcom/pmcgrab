@@ -19,13 +19,10 @@ from pmcgrab.common.xml_processing import (
 
 # Import modules that need better coverage
 from pmcgrab.constants import TimeoutException, timeout_handler
-from pmcgrab.domain.value_objects import BasicBiMap, make_hashable
+from pmcgrab.domain.value_objects import BasicBiMap
 from pmcgrab.domain.value_objects import BasicBiMap as UtilsBiMap
-from pmcgrab.fetch import (
-    clean_xml_string,
-    fetch_pmc_xml_string,
-    xml_tree_from_string,
-)
+from pmcgrab.domain.value_objects import make_hashable
+from pmcgrab.fetch import clean_xml_string, fetch_pmc_xml_string, xml_tree_from_string
 from pmcgrab.http_utils import _backoff_sleep, cached_get
 from pmcgrab.model import Paper, TextSection, TextTable
 

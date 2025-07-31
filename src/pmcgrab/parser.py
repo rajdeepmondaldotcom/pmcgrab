@@ -62,23 +62,11 @@ import warnings
 
 import lxml.etree as ET
 
-from pmcgrab.application.parsing import (
-    content as _content,
-)
-from pmcgrab.application.parsing import (
-    contributors as _contributors,
-)
-from pmcgrab.application.parsing import (
-    metadata as _metadata,
-)
-from pmcgrab.application.parsing import (
-    sections as _sections,
-)
-from pmcgrab.constants import (
-    UnmatchedCitationWarning,
-    UnmatchedTableWarning,
-    logger,
-)
+from pmcgrab.application.parsing import content as _content
+from pmcgrab.application.parsing import contributors as _contributors
+from pmcgrab.application.parsing import metadata as _metadata
+from pmcgrab.application.parsing import sections as _sections
+from pmcgrab.constants import UnmatchedCitationWarning, UnmatchedTableWarning, logger
 from pmcgrab.domain.value_objects import BasicBiMap
 from pmcgrab.fetch import get_xml
 from pmcgrab.model import TextFigure, TextTable
