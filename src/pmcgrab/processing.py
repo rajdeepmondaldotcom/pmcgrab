@@ -50,11 +50,13 @@ def process_single_pmc(pmc_id: str) -> Optional[dict[str, Union[str, dict, list]
         if body_sections is not None:
             try:
                 # Test if we can iterate over it (handles pandas objects)
-                body_iter = iter(body_sections)
+                iter(body_sections)  # Just test iterability
                 sec_counter = 1
                 for section in body_sections:
                     try:
-                        text = getattr(section, "get_section_text", lambda: str(section))()
+                        text = getattr(
+                            section, "get_section_text", lambda s=section: str(s)
+                        )()
                         title = (
                             section.title
                             if (hasattr(section, "title") and section.title is not None)
