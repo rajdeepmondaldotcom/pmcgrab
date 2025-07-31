@@ -467,9 +467,9 @@ class TestUtilsModuleAdvanced:
     def test_split_text_and_refs_complex(self):
         """Test split_text_and_refs with complex references."""
         xml = """<p>
-            This text has multiple 
+            This text has multiple
             <xref ref-type="bibr" rid="ref1">citation 1</xref>
-            and 
+            and
             <xref ref-type="table" rid="table1">table reference</xref>
             and
             <xref ref-type="fig" rid="fig1">figure reference</xref>
@@ -558,7 +558,7 @@ class TestCommonModulesAdvanced:
 
         # Test split_text_and_refs
         ref_xml = """<p>
-            Text with <xref rid="ref1">reference</xref> 
+            Text with <xref rid="ref1">reference</xref>
             and <italic>formatting</italic>.
         </p>"""
         ref_element = ET.fromstring(ref_xml)

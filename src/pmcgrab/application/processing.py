@@ -14,9 +14,9 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 from typing import Dict, List, Optional, Union
 
 from pmcgrab.application.paper_builder import build_paper_from_pmc
+from pmcgrab.common.serialization import normalize_value
 from pmcgrab.constants import TimeoutException
 from pmcgrab.infrastructure.settings import next_email
-from pmcgrab.common.serialization import normalize_value
 
 __all__: list[str] = [
     "process_pmc_ids",

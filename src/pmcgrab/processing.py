@@ -11,8 +11,8 @@ from tqdm import tqdm
 
 # Deprecated – left for backwards compatibility. Delegates to application layer.
 from pmcgrab.application.processing import process_single_pmc
-from pmcgrab.constants import TimeoutException
 from pmcgrab.common.serialization import normalize_value
+from pmcgrab.constants import TimeoutException
 
 
 def _legacy_process_single_pmc(

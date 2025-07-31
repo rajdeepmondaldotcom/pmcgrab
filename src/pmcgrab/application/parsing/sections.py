@@ -12,8 +12,8 @@ from pmcgrab.constants import (
     UnexpectedZeroMatchWarning,
     UnhandledTextTagWarning,
 )
-from pmcgrab.model import TextParagraph, TextSection
 from pmcgrab.domain.value_objects import BasicBiMap
+from pmcgrab.model import TextParagraph, TextSection
 
 __all__: list[str] = [
     "gather_abstract",

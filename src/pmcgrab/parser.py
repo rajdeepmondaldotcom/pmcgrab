@@ -82,9 +82,9 @@ from pmcgrab.constants import (
     UnmatchedTableWarning,
     logger,
 )
+from pmcgrab.domain.value_objects import BasicBiMap
 from pmcgrab.fetch import get_xml
 from pmcgrab.model import TextFigure, TextTable
-from pmcgrab.domain.value_objects import BasicBiMap
 
 # ---------------------------------------------------------------------------
 # Public helper re-exports (thin aliases)

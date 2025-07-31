@@ -7,6 +7,8 @@ from urllib.error import HTTPError
 import lxml.etree as ET
 from Bio import Entrez
 
+from pmcgrab.common.html_cleaning import strip_html_text_styling
+from pmcgrab.common.serialization import clean_doc
 from pmcgrab.constants import (
     DTD_URL_PATTERN,
     END_OF_URL_PATTERN,
@@ -15,8 +17,6 @@ from pmcgrab.constants import (
     ValidationWarning,
     logger,
 )
-from pmcgrab.common.html_cleaning import strip_html_text_styling
-from pmcgrab.common.serialization import clean_doc
 
 
 def fetch_pmc_xml_string(

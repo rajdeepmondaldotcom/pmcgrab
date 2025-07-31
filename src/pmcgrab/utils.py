@@ -1,22 +1,10 @@
-
-
-
-
 # clean_doc is imported from common.serialization below
 
 
 # normalize_value is imported from common.serialization below
 
 
-from pmcgrab.common.html_cleaning import remove_html_tags, strip_html_text_styling
-from pmcgrab.common.serialization import clean_doc, normalize_value
-from pmcgrab.common.xml_processing import (
-    generate_typed_mhtml_tag,
-    remove_mhtml_tags,
-    split_text_and_refs,
-    stringify_children,
-)
-from pmcgrab.domain.value_objects import BasicBiMap, make_hashable
+from pmcgrab.common.serialization import clean_doc
 
 
 def define_data_dict() -> dict[str, str]:
