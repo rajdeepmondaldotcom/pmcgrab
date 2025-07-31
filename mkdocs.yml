@@ -40,6 +40,9 @@ theme:
     - navigation.expand
     - navigation.footer
     - navigation.indexes
+    - navigation.instant
+    - navigation.instant.prefetch
+    - navigation.instant.progress
     - navigation.sections
     - navigation.tabs
     - navigation.tabs.sticky
@@ -49,6 +52,7 @@ theme:
     - search.share
     - search.suggest
     - toc.follow
+    - toc.integrate
 
 # Extensions
 markdown_extensions:
@@ -96,6 +100,15 @@ markdown_extensions:
 plugins:
   - search:
       separator: '[\s\u200b\-_,:!=\[\]()"`/]+|\.(?!\d)|&[lg]t;|(?!\b)(?=[A-Z][a-z])'
+  - social:
+      cards_layout_options:
+        background_color: "#3f51b5"
+        color: "#ffffff"
+  - optimize:
+      enabled: !ENV [CI, false]
+  - privacy:
+      enabled: !ENV [CI, false]
+  - typeset
   - mkdocstrings:
       default_handler: python
       handlers:
@@ -160,9 +173,17 @@ extra:
   social:
     - icon: fontawesome/brands/github
       link: https://github.com/rajdeepmondaldotcom/pmcgrab
+      name: GitHub Repository
     - icon: fontawesome/brands/python
       link: https://pypi.org/project/pmcgrab/
+      name: PyPI Package
+    - icon: fontawesome/solid/book
+      link: https://rajdeepmondaldotcom.github.io/pmcgrab/
+      name: Documentation
   generator: false
+  status:
+    new: Recently added
+    deprecated: Deprecated
 
 # Additional CSS and JS
 extra_css:

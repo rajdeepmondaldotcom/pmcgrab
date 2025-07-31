@@ -7,6 +7,7 @@ hide:
 ---
 
 <div class="grid cards" markdown>
+
 -   :material-clock-fast:{ .lg .middle } **5-minute setup**
 
     ---
@@ -15,29 +16,29 @@ hide:
 
     [:octicons-arrow-right-24: Quick Start](getting-started/quick-start.md)
 
-- :material-book-open-page-variant:{ .lg .middle } **User Guide**
+-   :material-book-open-page-variant:{ .lg .middle } **User Guide**
 
-  ***
+    ---
 
-  Comprehensive guides for every feature.
+    Comprehensive guides for every feature.
 
-  [:octicons-arrow-right-24: User Guide](user-guide/basic-usage.md)
+    [:octicons-arrow-right-24: User Guide](user-guide/basic-usage.md)
 
-- :material-code-tags:{ .lg .middle } **API Reference**
+-   :material-code-tags:{ .lg .middle } **API Reference**
 
-  ***
+    ---
 
-  Auto-generated docs for every function and class.
+    Auto-generated docs for every function and class.
 
-  [:octicons-arrow-right-24: API Reference](api/core.md)
+    [:octicons-arrow-right-24: API Reference](api/core.md)
 
-- :material-lightbulb:{ .lg .middle } **Examples**
+-   :material-lightbulb:{ .lg .middle } **Examples**
 
-  ***
+    ---
 
-  Real-world usage & advanced patterns.
+    Real-world usage & advanced patterns.
 
-  [:octicons-arrow-right-24: Examples](examples/python-examples.md)
+    [:octicons-arrow-right-24: Examples](examples/python-examples.md)
 
 </div>
 
