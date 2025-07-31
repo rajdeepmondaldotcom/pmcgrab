@@ -4,7 +4,7 @@ Complete guide for setting up PMCGrab for development.
 
 ## Prerequisites
 
-- Python 3.9+
+- Python 3.10+
 - Git
 - uv (recommended) or pip
 

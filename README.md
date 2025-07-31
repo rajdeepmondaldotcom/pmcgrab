@@ -172,7 +172,7 @@ Each processed article returns a comprehensive JSON structure:
 
 ## Requirements
 
-- Python ≥ 3.9
+- Python ≥ 3.10
 - Internet connection for PMC API access
 
 ## Development

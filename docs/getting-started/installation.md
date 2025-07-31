@@ -1,6 +1,6 @@
 # Installation
 
-PMCGrab supports Python 3.9+ and can be installed via pip or from source.
+PMCGrab supports Python 3.10+ and can be installed via pip or from source.
 
 ## Using pip (Recommended)
 
@@ -74,7 +74,7 @@ pip install "pmcgrab[test]"   # Testing dependencies
 
 ## System Requirements
 
-- **Python**: 3.9, 3.10, 3.11, 3.12, or 3.13
+- **Python**: 3.10, 3.11, 3.12, or 3.13
 - **Operating System**: Windows, macOS, or Linux
 - **Memory**: Minimum 512MB RAM (2GB+ recommended for batch processing)
 - **Network**: Internet connection required for PMC article retrieval

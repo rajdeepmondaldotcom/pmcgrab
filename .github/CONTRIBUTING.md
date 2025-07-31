@@ -10,7 +10,7 @@ By participating in this project, you agree to abide by our Code of Conduct (to 
 
 ### Prerequisites
 
-- Python 3.9 or higher
+- Python 3.10 or higher
 - [uv](https://docs.astral.sh/uv/) package manager
 - Git
 

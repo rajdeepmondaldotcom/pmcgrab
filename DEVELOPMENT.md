@@ -4,7 +4,7 @@ This document provides information on how to develop and contribute to pmcgrab.
 
 ## Prerequisites
 
-- Python 3.9+
+- Python 3.10+
 - [uv](https://docs.astral.sh/uv/) package manager
 
 ## Installation for Development

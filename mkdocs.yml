@@ -158,6 +158,9 @@ nav:
       - Development Setup: development/setup.md
       - Architecture: development/architecture.md
       - Testing: development/testing.md
+  - About:
+      - License: about/license.md
+      - Citation: about/citation.md
 
 # Extra configuration
 extra:
