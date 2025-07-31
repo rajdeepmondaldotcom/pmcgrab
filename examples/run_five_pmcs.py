@@ -6,7 +6,7 @@ from pmcgrab.application.processing import process_single_pmc
 from pmcgrab.infrastructure.settings import next_email
 
 # The PMC IDs we want to process
-PMC_IDS = ["7114487", "3084273", "7690653"]
+PMC_IDS = ["7114487", "3084273", "7690653", "5707528", "7979870"]
 
 OUT_DIR = Path("pmc_output")
 OUT_DIR.mkdir(exist_ok=True)

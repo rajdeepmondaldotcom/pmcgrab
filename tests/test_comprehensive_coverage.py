@@ -26,8 +26,8 @@ from pmcgrab.fetch import (
 )
 from pmcgrab.http_utils import _backoff_sleep, cached_get
 from pmcgrab.model import Paper, TextSection, TextTable
-from pmcgrab.utils import BasicBiMap as UtilsBiMap
-from pmcgrab.utils import remove_html_tags, strip_html_text_styling
+from pmcgrab.common.html_cleaning import remove_html_tags, strip_html_text_styling
+from pmcgrab.domain.value_objects import BasicBiMap as UtilsBiMap
 
 
 class TestConstantsModule:
@@ -226,7 +226,7 @@ class TestApplicationParsingEdgeCases:
             <unexpected-tag>Unexpected content</unexpected-tag>
         </abstract>"""
         root = ET.fromstring(xml)
-        from pmcgrab.utils import BasicBiMap
+        from pmcgrab.domain.value_objects import BasicBiMap
 
         ref_map = BasicBiMap()
 

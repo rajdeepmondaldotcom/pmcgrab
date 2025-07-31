@@ -6,14 +6,14 @@ import warnings
 import lxml.etree as ET
 import pandas as pd
 
-from pmcgrab.utils import (
-    BasicBiMap,
+from pmcgrab.common.serialization import normalize_value
+from pmcgrab.common.xml_processing import (
     generate_typed_mhtml_tag,
-    normalize_value,
     remove_mhtml_tags,
     split_text_and_refs,
     stringify_children,
 )
+from pmcgrab.domain.value_objects import BasicBiMap
 
 
 class TestUtilsFunctions:

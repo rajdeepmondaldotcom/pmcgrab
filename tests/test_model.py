@@ -5,7 +5,7 @@ import pandas as pd
 
 from pmcgrab.figure import TextFigure
 from pmcgrab.model import Paper, TextParagraph, TextSection, TextTable
-from pmcgrab.utils import BasicBiMap
+from pmcgrab.domain.value_objects import BasicBiMap
 
 
 class TestPaper:

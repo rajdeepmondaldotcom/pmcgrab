@@ -36,17 +36,15 @@ from pmcgrab.processing import (
     _legacy_process_single_pmc,
     process_pmc_ids_in_batches,
 )
-from pmcgrab.utils import (
-    BasicBiMap,
-    clean_doc,
+from pmcgrab.common.serialization import clean_doc
+from pmcgrab.common.xml_processing import (
     generate_typed_mhtml_tag,
     remove_mhtml_tags,
     split_text_and_refs,
     stringify_children,
 )
-from pmcgrab.utils import (
-    normalize_value as utils_normalize_value,
-)
+from pmcgrab.domain.value_objects import BasicBiMap
+from pmcgrab.common.serialization import normalize_value as utils_normalize_value
 
 
 class TestProcessingLegacyModule:

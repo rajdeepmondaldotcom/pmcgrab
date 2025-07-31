@@ -155,7 +155,7 @@ class TestXmlProcessing:
         """Test splitting text without references."""
         xml = "<p>Simple text without references</p>"
         element = ET.fromstring(xml)
-        from pmcgrab.utils import BasicBiMap
+        from pmcgrab.domain.value_objects import BasicBiMap
 
         ref_map = BasicBiMap()
 
@@ -166,7 +166,7 @@ class TestXmlProcessing:
         """Test splitting text with references."""
         xml = '<p>Text with <xref ref-type="bibr" rid="ref1">citation</xref></p>'
         element = ET.fromstring(xml)
-        from pmcgrab.utils import BasicBiMap
+        from pmcgrab.domain.value_objects import BasicBiMap
 
         ref_map = BasicBiMap()
 

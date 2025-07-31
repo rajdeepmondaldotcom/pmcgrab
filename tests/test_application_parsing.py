@@ -6,7 +6,7 @@ import lxml.etree as ET
 import pandas as pd
 
 from pmcgrab.application.parsing import content, contributors, metadata, sections
-from pmcgrab.utils import BasicBiMap
+from pmcgrab.domain.value_objects import BasicBiMap
 
 
 class TestContentParsing:

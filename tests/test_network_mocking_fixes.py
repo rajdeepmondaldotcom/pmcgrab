@@ -254,7 +254,8 @@ class TestUtilsModuleFixes:
 
     def test_split_text_and_refs_no_refs(self):
         """Test split_text_and_refs with no references."""
-        from pmcgrab.utils import BasicBiMap, split_text_and_refs
+        from pmcgrab.common.xml_processing import split_text_and_refs
+        from pmcgrab.domain.value_objects import BasicBiMap
 
         # Simple paragraph with no references
         xml = "<p>This is plain text with no references.</p>"
@@ -269,7 +270,8 @@ class TestUtilsModuleFixes:
 
     def test_split_text_and_refs_with_refs(self):
         """Test split_text_and_refs with references."""
-        from pmcgrab.utils import BasicBiMap, split_text_and_refs
+        from pmcgrab.common.xml_processing import split_text_and_refs
+        from pmcgrab.domain.value_objects import BasicBiMap
 
         # Paragraph with references
         xml = """<p>
@@ -290,7 +292,7 @@ class TestUtilsModuleFixes:
 
     def test_remove_mhtml_tags_basic(self):
         """Test remove_mhtml_tags with basic tags."""
-        from pmcgrab.utils import generate_typed_mhtml_tag, remove_mhtml_tags
+        from pmcgrab.common.xml_processing import generate_typed_mhtml_tag, remove_mhtml_tags
 
         # Generate some MHTML tags
         citation_tag = generate_typed_mhtml_tag("citation", 1)
@@ -308,7 +310,7 @@ class TestUtilsModuleFixes:
 
     def test_remove_mhtml_tags_multiple_same_type(self):
         """Test remove_mhtml_tags with multiple tags of same type."""
-        from pmcgrab.utils import generate_typed_mhtml_tag, remove_mhtml_tags
+        from pmcgrab.common.xml_processing import generate_typed_mhtml_tag, remove_mhtml_tags
 
         # Generate multiple citation tags
         citation1 = generate_typed_mhtml_tag("citation", 1)
@@ -327,7 +329,7 @@ class TestUtilsModuleFixes:
 
     def test_remove_mhtml_tags_mixed_content(self):
         """Test remove_mhtml_tags with mixed content types."""
-        from pmcgrab.utils import generate_typed_mhtml_tag, remove_mhtml_tags
+        from pmcgrab.common.xml_processing import generate_typed_mhtml_tag, remove_mhtml_tags
 
         # Generate different types of tags
         citation_tag = generate_typed_mhtml_tag("citation", 1)
