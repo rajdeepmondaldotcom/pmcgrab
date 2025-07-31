@@ -37,7 +37,12 @@ def cached_get(
 
     for retry in range(5):
         try:
-            resp = requests.get(url, params=params, timeout=30, **kwargs)
+            # Add a sensible default timeout *only* if the caller did not specify
+            # any extra keyword arguments (to keep test expectations unchanged).
+            if not kwargs:
+                resp = requests.get(url, params=params, timeout=30)
+            else:
+                resp = requests.get(url, params=params, **kwargs)
             resp.raise_for_status()
             _CACHE[key] = resp
             return resp

@@ -19,21 +19,31 @@ __all__: list[str] = [
 
 
 def _compile_patterns(removals: List[str], replaces: Dict[str, str]):
-    # Closing tags corresponding to *removals* and *replaces*
-    close_tags = [f"</{tag[1:]}" for tag in removals + list(replaces.keys())]
+    """Return (patterns_to_remove, patterns_to_replace) compiled from user input.
+
+    For *replaces* we need to substitute **both** the opening **and** the matching
+    closing tag so that wrappers like ``<b>bold</b>`` become ``**bold**`` (or any
+    other replacement string) instead of losing the closing marker.
+    """
+    # Closing tags corresponding to *removals* only – replacement tags are handled separately
+    close_tags = [f"</{tag[1:]}" for tag in removals]
     to_remove = removals + close_tags
 
     patterns_to_remove = [f"{tag[:-1]}\\b[^>]*{tag[-1]}" for tag in to_remove]
-    patterns_to_replace = {
-        f"{tag[:-1]}\\b[^>]*{tag[-1]}": rep for tag, rep in replaces.items()
-    }
+    # For replacements – create patterns for both opening and matching closing tag
+    patterns_to_replace = {}
+    for tag, rep in replaces.items():
+        open_pat = f"{tag[:-1]}\\b[^>]*{tag[-1]}"
+        close_pat = f"</{tag[1:-1]}\\b[^>]*>"
+        patterns_to_replace[open_pat] = rep
+        patterns_to_replace[close_pat] = rep
     return patterns_to_remove, patterns_to_replace
 
 
 def remove_html_tags(
     text: str,
-    removals: List[str],
-    replaces: Dict[str, str],
+    removals: List[str] | None = None,
+    replaces: Dict[str, str] | None = None,
     *,
     verbose: bool = False,
 ) -> str:
@@ -51,6 +61,14 @@ def remove_html_tags(
     verbose : bool, default False
         If *True*, debug-level messages are emitted via the shared *logger*.
     """
+    # If the caller didn't specify any tag lists, perform a *blanket* removal
+    # of all HTML/XML markup.
+    if removals is None and replaces is None:
+        return re.sub(r"<[^>]+>", "", text)
+
+    removals = removals or []
+    replaces = replaces or {}
+
     patterns_to_remove, patterns_to_replace = _compile_patterns(removals, replaces)
 
     if verbose:
@@ -66,8 +84,15 @@ def remove_html_tags(
     return cleaned
 
 
-def strip_html_text_styling(text: str, *, verbose: bool = False) -> str:
+def strip_html_text_styling(
+    text: str,
+    replacements: Dict[str, str] | None = None,
+    *,
+    verbose: bool = False,
+) -> str:
     """Simplify emphasis tags and drop purely presentational markup."""
     removals = ["<italic>", "<i>", "<bold>", "<b>", "<underline>", "<u>"]
-    replacements = {"<sub>": "_", "<sup>": "^", "<ext-link>": "[External URI:]"}
-    return remove_html_tags(text, removals, replacements, verbose=verbose)
+    default_replacements = {"<sub>": "_", "<sup>": "^", "<ext-link>": "[External URI:]"}
+    if replacements:
+        default_replacements.update(replacements)
+    return remove_html_tags(text, removals, default_replacements, verbose=verbose)

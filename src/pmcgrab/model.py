@@ -57,6 +57,9 @@ class Paper:
         # Accept both shorthand and full keys for page numbers
         self.fpage = d.get("FPage", d.get("First Page"))
         self.lpage = d.get("LPage", d.get("Last Page"))
+        # Backwards compatibility aliases expected by legacy tests
+        self.first_page = self.fpage
+        self.last_page = self.lpage
         self.citations = d.get("Citations")
         self.tables = d.get("Tables")
         self.figures = d.get("Figures")

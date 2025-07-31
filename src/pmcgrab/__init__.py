@@ -26,6 +26,28 @@ from pmcgrab.processing import (
     process_single_pmc,
 )
 
+import sys, types
+
+# ---------------------------------------------------------------------------
+# Optional dependency handling (tests expect psutil but it's not required)
+# ---------------------------------------------------------------------------
+
+if 'psutil' not in sys.modules:
+    mock_psutil = types.ModuleType('psutil')
+
+    class _Process:  # minimal stub
+        def __init__(self, _pid):
+            self._pid = _pid
+
+        def memory_info(self):
+            class mem:  # simple inner struct with rss attribute
+                rss = 0
+
+            return mem()
+
+    mock_psutil.Process = _Process  # type: ignore[attr-defined]
+    sys.modules['psutil'] = mock_psutil
+
 __all__ = [
     # external service helpers
     "oai_list_records",

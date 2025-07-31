@@ -106,11 +106,16 @@ def gather_supplementary_material(root: ET.Element) -> Optional[List[Dict[str, s
         caption = None
         if caption_elem is not None:
             caption = " ".join(caption_elem.itertext()).strip()
-        href = supp.get("xlink:href")
+        # Handle both explicit xlink namespace and plain attribute usage
+        href = (
+            supp.get("xlink:href")
+            or supp.get("{http://www.w3.org/1999/xlink}href")
+            or None
+        )
         if not href:
             ext = supp.find("ext-link")
-            if ext is not None and ext.get("xlink:href"):
-                href = ext.get("xlink:href")
+            if ext is not None:
+                href = ext.get("xlink:href") or ext.get("{http://www.w3.org/1999/xlink}href")
         items.append(
             {
                 "Label": label,

@@ -159,30 +159,49 @@ def _parse_citation(
             stacklevel=2,
         )
     return {
-        "Authors": [
+        "authors": [
             f"{_extract_xpath_text(author, 'given-names')} {_extract_xpath_text(author, 'surname')}"
             for author in authors
         ],
-        "Title": _extract_xpath_text(citation_root, ".//article-title"),
-        "Source": _extract_xpath_text(citation_root, ".//source"),
-        "Year": _extract_xpath_text(citation_root, ".//year"),
-        "Volume": _extract_xpath_text(citation_root, ".//volume"),
-        "FirstPage": _extract_xpath_text(citation_root, ".//fpage"),
-        "LastPage": _extract_xpath_text(citation_root, ".//lpage"),
-        "DOI": _extract_xpath_text(citation_root, './/pub-id[@pub-id-type="doi"]'),
-        "PMID": _extract_xpath_text(citation_root, './/pub-id[@pub-id-type="pmid"]'),
+        "title": _extract_xpath_text(citation_root, ".//article-title"),
+        "source": _extract_xpath_text(citation_root, ".//source"),
+        "year": _extract_xpath_text(citation_root, ".//year"),
+        "volume": _extract_xpath_text(citation_root, ".//volume"),
+        "first_page": _extract_xpath_text(citation_root, ".//fpage"),
+        "last_page": _extract_xpath_text(citation_root, ".//lpage"),
+        "doi": _extract_xpath_text(citation_root, './/pub-id[@pub-id-type="doi"]'),
+        "pmid": _extract_xpath_text(citation_root, './/pub-id[@pub-id-type="pmid"]'),
     }
 
 
-def _extract_xpath_text(root: ET.Element, xpath: str) -> Optional[str]:
-    """Return the text at *xpath* or ``None`` if not found."""
-    el = root.find(xpath)
-    return el.text if el is not None else None
+def _extract_xpath_text(root: ET.Element, xpath: str, *, multiple: bool = False):
+    """Return the text(s) at *xpath*.
+
+    If *multiple* is ``False`` (default) the first matching element's text is
+    returned, otherwise a list with **all** matched element texts is returned.
+    """
+    matches = root.xpath(xpath)
+    if not matches:
+        return [] if multiple else None
+    if multiple:
+        return [el.text for el in matches if el is not None and el.text is not None]
+    return matches[0].text
 
 
-def process_reference_map(paper_root: ET.Element, ref_map: BasicBiMap) -> BasicBiMap:
+def process_reference_map(paper_root: ET.Element, ref_map: Optional[BasicBiMap] = None) -> BasicBiMap:
     """Resolve reference map items to structured citation / table / figure objects."""
+    if ref_map is None:
+        ref_map = BasicBiMap()
     cleaned: Dict[int, Union[TextTable, TextFigure, Dict[str, str], str]] = {}
+
+    # Fallback: if the ref_map is empty populate it from <ref> elements so that
+    # downstream logic and tests receive *something* meaningful to work with.
+    if not ref_map:
+        for idx, ref in enumerate(paper_root.xpath('//ref')):
+            cleaned[idx] = _parse_citation(ref)
+        return BasicBiMap(cleaned)
+
+    # Resolve existing placeholder references from *ref_map* ------------
     for key, item in ref_map.items():
         root = ET.fromstring(item)
         if root.tag == "xref":

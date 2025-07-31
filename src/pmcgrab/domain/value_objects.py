@@ -53,7 +53,14 @@ class BasicBiMap(dict[Hashable, Any]):
     # dict API overrides
     # ------------------------------------------------------------------
     def __setitem__(self, key: Hashable, value: Any) -> None:  # type: ignore[override]
+        # Remove old reverse mapping if key already exists
+        if key in self:
+            old_value = self.get(key)
+            old_hash = make_hashable(old_value)
+            if old_hash in self.reverse:
+                del self.reverse[old_hash]
         super().__setitem__(key, value)
+        # Update reverse mapping – latest key wins if duplicate values occur
         self.reverse[make_hashable(value)] = key
 
     # ------------------------------------------------------------------

@@ -18,26 +18,52 @@ from pmcgrab.application.processing import process_pmc_ids
 
 
 def _parse_args() -> argparse.Namespace:
+    """Return parsed command-line arguments.
+
+    The CLI keeps backward-compatibility with both the **new** (short) flag names
+    and the legacy ones expected by the comprehensive test-suite.
+    """
     p = argparse.ArgumentParser(description="Batch download & parse PMC articles")
-    p.add_argument("--ids", nargs="+", help="List of PMCIDs to process", required=True)
+    # Support both –pmcids and –ids (legacy)
     p.add_argument(
-        "--out", default="./pmc_output", help="Output directory for JSON files"
+        "--pmcids",
+        "--ids",
+        nargs="+",
+        dest="pmcids",
+        required=True,
+        help="List of PMCIDs to process",
     )
-    p.add_argument("--workers", type=int, default=16, help="Thread-pool size")
+    # Output directory
+    p.add_argument(
+        "--output-dir",
+        "--out",
+        dest="output_dir",
+        default="./pmc_output",
+        help="Output directory for JSON files",
+    )
+    # Batch size / worker threads
+    p.add_argument(
+        "--batch-size",
+        "--workers",
+        dest="batch_size",
+        type=int,
+        default=10,
+        help="Number of worker threads",
+    )
     return p.parse_args()
 
 
 def main() -> None:
     args = _parse_args()
-    pmc_ids: List[str] = args.ids
-    out_dir = Path(args.out)
+    pmc_ids: List[str] = args.pmcids
+    out_dir = Path(args.output_dir)
     out_dir.mkdir(parents=True, exist_ok=True)
 
     results = {}
     bar = tqdm(total=len(pmc_ids), desc="Processing PMC IDs", unit="paper")
     for chunk_start in range(0, len(pmc_ids), 100):
         chunk = pmc_ids[chunk_start : chunk_start + 100]
-        chunk_results = process_pmc_ids(chunk, workers=args.workers)
+        chunk_results = process_pmc_ids(chunk, batch_size=args.batch_size)
         for pid, success in chunk_results.items():
             if success:
                 # assuming process_single_pmc already wrote the file via higher-level call

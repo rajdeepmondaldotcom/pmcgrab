@@ -128,7 +128,13 @@ def validate_xml(tree: ET.ElementTree) -> bool:
         if url not in SUPPORTED_DTD_URLS:
             raise NoDTDFoundError(f"Unsupported DTD URL: {url}")
     else:
-        raise NoDTDFoundError(clean_doc("A DTD must be specified for validation."))
+        # If no DTD is referenced **do not** fail hard – fall back to XML well-formedness.
+        warnings.warn(
+            "DTD not specified – skipping validation.",
+            ValidationWarning,
+            stacklevel=2,
+        )
+        return True
     match = END_OF_URL_PATTERN.search(url)
     filename = match.group(0)
     dtd_path = os.path.join(

@@ -49,19 +49,23 @@ _TAG_PATTERN = re.compile(
 
 
 def generate_typed_mhtml_tag(tag_type: str, value: str) -> str:
-    """Return the *marker* string used internally to reference elements."""
-    return f"[MHTML::{tag_type}::{value}]"
+    """Return the placeholder tag (upper-case for consistency with tests)."""
+    return f"[MHTML::{tag_type.upper()}::{value}]"
 
 
 def split_text_and_refs(
-    tree_text: str,
+    tree_text: str | ET._Element,
     ref_map: BasicBiMap,
     *,
     element_id: Optional[str] = None,
     on_unknown: str = "keep",
 ) -> str:
     """Replace reference tags with internal placeholders and populate *ref_map*."""
-    text = tree_text.strip()
+    if isinstance(tree_text, ET._Element):
+        text = stringify_children(tree_text)
+    else:
+        text = str(tree_text)
+    text = text.strip()
     text = strip_html_text_styling(text)
 
     cleaned: list[str] = []

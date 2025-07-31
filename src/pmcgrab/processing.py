@@ -11,6 +11,7 @@ from tqdm import tqdm
 
 # Deprecated – left for backwards compatibility. Delegates to application layer.
 from pmcgrab.application.processing import process_single_pmc
+from pmcgrab.application.paper_builder import build_paper_from_pmc  # Expose for mocking in tests
 from pmcgrab.common.serialization import normalize_value
 from pmcgrab.constants import TimeoutException
 
@@ -179,7 +180,9 @@ def _legacy_process_single_pmc(
 
 
 def process_pmc_ids_in_batches(
-    pmc_ids: list[str], base_directory: str, batch_size: int = 16
+    pmc_ids: list[str],
+    base_directory: str | None = None,
+    batch_size: int = 16,
 ):
     """Process PMCIDs concurrently and write results to disk.
 
@@ -190,13 +193,14 @@ def process_pmc_ids_in_batches(
     """
 
     def process_single_pmc_wrapper(pmc_id: str):
-        info = process_single_pmc(pmc_id)
-        if info:
+        info = _legacy_process_single_pmc(pmc_id)
+        if base_directory and info:
             file_path = os.path.join(base_directory, f"PMC{pmc_id}.json")
             with open(file_path, "w", encoding="utf-8") as jf:
                 json.dump(info, jf, ensure_ascii=False, indent=4, default=str)
         return pmc_id, info is not None
 
+    results: dict[str, Optional[dict[str, Union[str, dict, list]]]] = {}
     total_processed = 0
     successful = 0
     failed = 0
@@ -216,7 +220,8 @@ def process_pmc_ids_in_batches(
             }
             for future in as_completed(futures):
                 try:
-                    _, success = future.result()
+                    pmcid, success = future.result()
+                    results[pmcid] = success
                     if success:
                         successful += 1
                     else:
@@ -235,6 +240,8 @@ def process_pmc_ids_in_batches(
                     }
                 )
                 pbar.update(1)
+
+    return results
 
 
 def process_in_batches(pmc_ids, base_directory, chunk_size=100, parallel_workers=16):

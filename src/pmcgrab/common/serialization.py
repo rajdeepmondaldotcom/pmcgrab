@@ -23,7 +23,12 @@ def clean_doc(text: str) -> str:
     readable in the source while emitting a compact single-line string in the
     application.
     """
-    return cleandoc(text).replace("\n", "")
+    # Collapse indentation, strip leading/trailing whitespace per line and
+    # join everything into a **single** string with *no* newlines or excess
+    # internal spaces.
+    cleaned_lines = [ln.strip() for ln in cleandoc(text).splitlines()]
+    # Remove empty lines and concatenate without extra spaces
+    return "".join(filter(None, cleaned_lines))
 
 
 def normalize_value(val: Any):
@@ -37,6 +42,8 @@ def normalize_value(val: Any):
         return val.isoformat()
     if isinstance(val, pd.DataFrame):
         return val.to_dict(orient="records")
+    if isinstance(val, pd.Series):
+        return val.to_list()
     if isinstance(val, dict):
         return {k: normalize_value(v) for k, v in val.items()}
     if isinstance(val, list):
