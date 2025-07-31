@@ -8,6 +8,7 @@ repos:
       - id: end-of-file-fixer
         exclude: ^tests/.*\.txt$
       - id: check-yaml
+        exclude: ^mkdocs\.yml$
       - id: check-toml
       - id: check-json
       - id: check-added-large-files
