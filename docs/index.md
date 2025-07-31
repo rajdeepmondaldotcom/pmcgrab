@@ -6,39 +6,20 @@ hide:
   - toc
 ---
 
+<!-- Navigation Cards -->
 <div class="grid cards" markdown>
 
-- :material-clock-fast:{ .lg .middle } **5-minute setup**
+- [:material-timer-sand-complete: **5-minute setup**](getting-started/quick-start.md)
+  Install PMCGrab and run a multi-paper demo in minutes.
 
-  ***
+- [:material-book-open-variant: **User Guide**](user-guide/basic-usage.md)
+  Comprehensive guides covering every feature.
 
-  Install PMCGrab and process multiple papers immediately.
-
-  [:octicons-arrow-right-24: Quick Start](getting-started/quick-start.md)
-
-- :material-book-open-page-variant:{ .lg .middle } **User Guide**
-
-  ***
-
-  Comprehensive guides for every feature.
-
-  [:octicons-arrow-right-24: User Guide](user-guide/basic-usage.md)
-
-- :material-code-tags:{ .lg .middle } **API Reference**
-
-  ***
-
+- [:material-code-tags: **API Reference**](api/core.md)
   Auto-generated docs for every function and class.
 
-  [:octicons-arrow-right-24: API Reference](api/core.md)
-
-- :material-lightbulb:{ .lg .middle } **Examples**
-
-  ***
-
-  Real-world usage & advanced patterns.
-
-  [:octicons-arrow-right-24: Examples](examples/python-examples.md)
+- [:material-lightbulb-outline: **Examples**](examples/python-examples.md)
+  Real-world usage and advanced patterns.
 
 </div>
 
