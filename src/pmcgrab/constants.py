@@ -40,6 +40,13 @@ try:
 except (AttributeError, ValueError):
     # Provide a dummy attribute for compatibility (used only in unit tests).
     signal.SIGALRM = 0  # type: ignore[attr-defined]
+    if not hasattr(signal, "alarm"):
+
+        def _noop_alarm(_secs: int) -> None:
+            """Dummy replacement for signal.alarm on non-POSIX systems."""
+            return
+
+        signal.alarm = _noop_alarm  # type: ignore[assignment]
 
 
 EMAILS = sorted(
