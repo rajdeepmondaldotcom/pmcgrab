@@ -225,13 +225,19 @@ def define_data_dict() -> dict[str, str]:
         ),
         "Article Types": "List of header article types.",
         "Article Categories": "List of non-header article types.",
+        "Keywords": "Keywords or subject terms for the article. Strings or grouped dicts.",
         "Published Date": clean_doc(
             "Dict of publication dates (e.g., electronic, print)."
+        ),
+        "History Dates": clean_doc(
+            "Dict of manuscript history dates (received, accepted, revised, etc.)."
         ),
         "Volume": clean_doc("Volume number."),
         "Issue": clean_doc("Issue number."),
         "FPage": "First page of publication.",
         "LPage": "Last page of publication.",
+        "First Page": "First page of publication (alias).",
+        "Last Page": "Last page of publication (alias).",
         "Permissions": clean_doc(
             "Summary of copyright, license type, and full license text."
         ),
@@ -240,10 +246,16 @@ def define_data_dict() -> dict[str, str]:
         ),
         "License": clean_doc("License type (e.g., Open Access)."),
         "Funding": clean_doc("List of funding groups, important for bias detection."),
+        "Ethics": clean_doc("Dict of ethics / disclosure statements (conflicts, ethics statement, trial registration, etc.)."),
         "Footnote": "Text of any footnotes provided with the article.",
         "Acknowledgements": clean_doc("List of acknowledgement statements."),
         "Notes": "List of notes included with the article.",
         "Custom Meta": clean_doc("Dict of custom metadata key/value pairs."),
+        "Citations": "List of parsed citation dictionaries or strings.",
+        "Tables": "List of pandas DataFrame objects parsed from tables.",
+        "Figures": "List of figure metadata dictionaries (Label, Caption, Link).",
+        "Supplementary Material": "List of supplementary-material/media objects with Label, Caption, Href.",
+        "Equations": "List of MathML equation strings present in the article.",
         "Ref Map": clean_doc(
             "Dict mapping reference indices to reference data for linking text with citations, tables, etc."
         ),
