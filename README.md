@@ -1,17 +1,16 @@
-# pmcgrab
-Your gateway to AI-ready scientific literature from PubMed Central
-**Download • Parse • Structure • Scale**
+# PMCGrab
+From PMCID to structured JSON - bridge PubMed Central and your AI pipeline.
 
-[![PyPI](https://img.shields.io/pypi/v/pmcgrab.svg)](https://pypi.org/project/pmcgrab/)
+[![PyPI](https://img.shields.io/pypi/v/PMCGrab.svg)](https://pypi.org/project/PMCGrab/)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE)
 
-`pmcgrab` is a specialised Python toolkit for **retrieving, validating and restructuring PubMed Central (PMC) articles into clean, section-aware JSON** that large-language-model (LLM) pipelines can ingest directly for Retrieval-Augmented Generation (RAG), question-answering, summarisation and other downstream tasks.
+`PMCGrab` is a specialised Python toolkit for **retrieving, validating and restructuring PubMed Central (PMC) articles into clean, section-aware JSON** that large-language-model (LLM) pipelines can ingest directly for Retrieval-Augmented Generation (RAG), question-answering, summarisation and other downstream tasks.
 
 ---
 
 ## Table of Contents
 1. [Key Features](#key-features)
-2. [Why pmcgrab?](#why-pmcgrab)
+2. [Why PMCGrab?](#why-PMCGrab)
 3. [Installation](#installation)
 4. [Quick Start (Python)](#quick-start-python)
 5. [Command-Line Interface](#command-line-interface)
@@ -31,24 +30,21 @@ Your gateway to AI-ready scientific literature from PubMed Central
 * **Effortless Retrieval** – Fetch full-text articles with a single PMCID using NCBI Entrez.
 * **AI-Optimised JSON** – Output is pre-segmented into `Introduction`, `Methods`, `Results`, `Discussion`, etc., dramatically improving context relevance in RAG pipelines.
 * **Highly Concurrent** – Multithreaded batch downloader with configurable worker count, retries and timeouts.
-* **DTD Validation (Optional)** – Verify incoming XML to prevent downstream parsing errors.
 * **HTML & Reference Cleaning** – Utilities to strip or normalise embedded HTML, citations and footnotes.
-* **12-Factor Configuration** – Override behaviour via environment variables without touching code.
-* **100 % Test Coverage** – Comprehensive pytest suite ensures reliability across updates.
 
 ---
 
-## Why pmcgrab?
+## Why PMCGrab?
 While the NCBI Entrez API already provides raw XML, consuming it directly is burdensome:
 
-|                     | Entrez XML | pmcgrab JSON |
+|                     | Entrez XML | PMCGrab JSON |
 |---------------------|-----------:|-------------:|
 | Section delineation | ❌          | ✅ |
 | Straightforward to embed in vector DB | ❌ | ✅ |
 | Ready for LLM chunking | ❌ | ✅ |
 | Batch parallelism | Limited | Automatic |
 
-Put simply, `pmcgrab` turns *publisher-centric* documents into *AI-centric* assets.
+Put simply, `PMCGrab` turns *pubmed central* papers into *AI-centric* assets.
 
 ---
 
@@ -59,13 +55,13 @@ Put simply, `pmcgrab` turns *publisher-centric* documents into *AI-centric* asse
 
 ### From PyPI
 ```bash
-pip install pmcgrab
+pip install PMCGrab
 ```
 
 ### From Source
 ```bash
-git clone https://github.com/rajdeepmondaldotcom/pmcgrab.git
-cd pmcgrab
+git clone https://github.com/rajdeepmondaldotcom/PMCGrab.git
+cd PMCGrab
 pip install .
 ```
 
@@ -81,7 +77,7 @@ pip install .[dev,test,docs]
 Fetch and inspect a single article:
 
 ```python
-from pmcgrab import Paper
+from PMCGrab import Paper
 
 # NCBI requires an email for identification
 paper = Paper.from_pmc("7181753", email="rajdeep@rajdeepmondal.com")
@@ -111,7 +107,7 @@ The script will:
 Batch-process multiple PMCIDs directly from the shell:
 
 ```bash
-python -m pmcgrab.cli.pmcgrab_cli \
+python -m PMCGrab.cli.PMCGrab_cli \
   --pmcids 7181753 3539614 5454911 \
   --output-dir ./pmc_output \
   --batch-size 8
@@ -133,7 +129,7 @@ A `summary.json` file captures success/failure for each ID.
 Programmatic interface for large experiments:
 
 ```python
-from pmcgrab.application.processing import process_pmc_ids
+from PMCGrab.application.processing import process_pmc_ids
 
 pmc_ids = ["7181753", "3539614", "5454911", ...]
 stats = process_pmc_ids(pmc_ids, workers=32)
@@ -173,24 +169,24 @@ This shape maps cleanly to embeddings or vector stores where section titles beco
 ---
 
 ## Configuration
-`pmcgrab` follows the 12-factor methodology: **environment variables override defaults**.
+`PMCGrab` follows the 12-factor methodology: **environment variables override defaults**.
 
 | Variable            | Purpose                                                  | Default |
 |---------------------|----------------------------------------------------------|---------|
-| `PMCGRAB_EMAILS`    | Comma-separated pool of email addresses rotated for API  | Internal sample list |
-| `PMCGRAB_WORKERS`   | Default worker count for batch processing (if not set programmatically) | `16` |
+| `PMCGrab_EMAILS`    | Comma-separated pool of email addresses rotated for API  | Internal sample list |
+| `PMCGrab_WORKERS`   | Default worker count for batch processing (if not set programmatically) | `16` |
 
 Set them in your shell or orchestrator:
 
 ```bash
-export PMCGRAB_EMAILS="you@org.com,lab@org.com"
-export PMCGRAB_WORKERS=32
+export PMCGrab_EMAILS="you@org.com,lab@org.com"
+export PMCGrab_WORKERS=32
 ```
 
 ---
 
 ## Logging
-`pmcgrab` uses the standard Python `logging` library and leaves configuration to the host application:
+`PMCGrab` uses the standard Python `logging` library and leaves configuration to the host application:
 
 ```python
 import logging
@@ -205,9 +201,9 @@ Switch to `DEBUG` for verbose network and parsing diagnostics.
 1. Clone the repository and install the dev extras:
    `pip install -e .[dev,test,docs]`
 2. Run the test-suite (100 % coverage):
-   `pytest -n auto --cov=pmcgrab`
+   `pytest -n auto --cov=PMCGrab`
 3. Lint & type-check:
-   `ruff check . && mypy src/pmcgrab`
+   `ruff check . && mypy src/PMCGrab`
 4. Build documentation (MkDocs):
    `mkdocs serve`
 
@@ -226,7 +222,7 @@ Contributions are welcome!  Please read the [CONTRIBUTING.md](CONTRIBUTING.md) (
 ---
 
 ## License
-`pmcgrab` is licensed under the [Apache 2.0](LICENSE) License.
+`PMCGrab` is licensed under the [Apache 2.0](LICENSE) License.
 
 ---
 
@@ -234,13 +230,12 @@ Contributions are welcome!  Please read the [CONTRIBUTING.md](CONTRIBUTING.md) (
 If this project contributes to your research, please consider citing it:
 
 ```bibtex
-@software{pmcgrab,
+@software{PMCGrab,
   author       = {Rajdeep Mondal},
-  title        = {pmcgrab: AI-ready retrieval of PubMed Central articles},
+  title        = {PMCGrab: AI-ready retrieval of PubMed Central articles},
   year         = {2025},
-  url          = {https://github.com/rajdeepmondaldotcom/pmcgrab},
+  url          = {https://github.com/rajdeepmondaldotcom/PMCGrab},
   version      = {0.2.1},
-  license      = {Apache-2.0}
 }
 ```
 
@@ -249,6 +244,3 @@ If this project contributes to your research, please consider citing it:
 ## Acknowledgements
 * The National Center for Biotechnology Information (NCBI) for maintaining PubMed Central.
 * The open-source community behind **Biopython**, **BeautifulSoup**, **lxml** and other dependencies that make this project possible.
-
-> **Disclaimer**
-> Use of PubMed Central content is bound by the PMC terms of use.  Ensure you have the right to download and redistribute any article you process with `pmcgrab`.
