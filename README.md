@@ -212,7 +212,7 @@ Continuous Integration replicates the above on every pull request.
 ---
 
 ## Contributing
-Contributions are welcome!  Please read the [CONTRIBUTING.md](CONTRIBUTING.md) (to be created) for details on:
+Contributions are welcome!  Please read the [CONTRIBUTING.md](.github/CONTRIBUTING.md) for details on:
 
 * Code style and commit guidelines
 * Branching and release process

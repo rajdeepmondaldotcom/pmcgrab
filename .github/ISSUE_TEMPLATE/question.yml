@@ -1,0 +1,49 @@
+name: Question
+description: Ask a question about pmcgrab usage or functionality
+title: "[QUESTION] "
+labels: ["question", "needs-triage"]
+
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for your question! Please check the documentation first: https://github.com/rajdeepmondaldotcom/pmcgrab#readme
+
+  - type: textarea
+    id: question
+    attributes:
+      label: Question
+      description: What would you like to know?
+      placeholder: "How do I..."
+    validations:
+      required: true
+
+  - type: textarea
+    id: context
+    attributes:
+      label: Context
+      description: Please provide any relevant context about what you're trying to achieve.
+      placeholder: "I'm trying to..."
+    validations:
+      required: true
+
+  - type: textarea
+    id: attempted
+    attributes:
+      label: What I've Tried
+      description: What have you already tried?
+      placeholder: "I tried..."
+
+  - type: textarea
+    id: code
+    attributes:
+      label: Code Example
+      description: If applicable, please provide a minimal code example.
+      render: python
+
+  - type: input
+    id: version
+    attributes:
+      label: pmcgrab Version
+      description: What version of pmcgrab are you using?
+      placeholder: "0.2.3"

@@ -1,0 +1,34 @@
+# Configuration for the labeler action
+# Labels will be applied based on file paths changed in PRs
+
+"documentation":
+  - "docs/**/*"
+  - "README.md"
+  - "*.md"
+  - "mkdocs.yml"
+
+"dependencies":
+  - "pyproject.toml"
+  - "uv.lock"
+  - "requirements*.txt"
+
+"ci/cd":
+  - ".github/workflows/**/*"
+  - ".github/**/*"
+
+"tests":
+  - "tests/**/*"
+  - "test_*.py"
+  - "*_test.py"
+
+"core":
+  - "src/pmcgrab/**/*"
+
+"examples":
+  - "examples/**/*"
+
+"configuration":
+  - "pyproject.toml"
+  - "mypy.ini"
+  - ".pre-commit-config.yaml"
+  - ".gitignore"
