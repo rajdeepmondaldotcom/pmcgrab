@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "pmcgrab"
-version = "0.2.3"
+version = "0.3.0"
 description = "AI-ready retrieval and parsing of PubMed Central articles for RAG applications"
 readme = "README.md"
 license = "Apache-2.0"
