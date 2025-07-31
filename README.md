@@ -81,20 +81,6 @@ pip install .[dev,test,docs]
 
 ---
 
-## Quick Start (Python)
-
-Fetch and inspect a single article:
-
-```python
-from pmcgrab import Paper
-
-# NCBI requires an email for identification
-paper = Paper.from_pmc("7181753", email="rajdeep@rajdeepmondal.com")
-
-print(paper.title)
-print(paper.body["Introduction"][:500])  # first 500 chars of Introduction
-```
-
 ### Example: Process five PMC articles
 
 Run the helper script located in `examples/run_five_pmcs.py`:
@@ -105,7 +91,7 @@ python examples/run_five_pmcs.py
 
 The script will:
 
-1. Download five predefined PMCIDs (see the source).
+1. Download five predefined PMCIDs (see the source). (Please Replace with your choice of PMC IDs)
 2. Print a brief summary for each article (title, abstract snippet, author count).
 3. Persist the full JSON output into `pmc_output/PMC<id>.json` for further inspection.
 

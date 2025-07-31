@@ -1,3 +1,26 @@
+"""Legacy batch processing interface with UI components.
+
+This module provides the original batch processing interface for PMCGrab with
+progress bars, console output, and file I/O handling. It's maintained for
+backward compatibility with existing scripts and applications.
+
+The functions in this module include user interface elements (tqdm progress bars,
+print statements) and handle direct file writing, making them suitable for
+interactive use and existing automation scripts. For new applications, consider
+using the cleaner application-layer functions in pmcgrab.application.processing.
+
+Key Functions:
+    process_single_pmc: Legacy single article processing with UI feedback
+    process_pmc_ids_in_batches: Concurrent batch processing with progress tracking
+    process_in_batches: Sequential chunk processing with console output
+    process_in_batches_with_retry: Batch processing with automatic retry logic
+
+Note:
+    This module is deprecated but maintained for backward compatibility.
+    New applications should use pmcgrab.application.processing for cleaner
+    application-layer functions without UI dependencies.
+"""
+
 import contextlib
 import gc
 import json
@@ -16,20 +39,64 @@ from pmcgrab.constants import TimeoutException
 
 # Re-export the legacy function with the expected name for backwards compatibility
 def process_single_pmc(pmc_id: str) -> Optional[dict[str, Union[str, dict, list]]]:
-    """Legacy wrapper - delegates to _legacy_process_single_pmc for backwards compatibility."""
+    """Legacy single PMC article processing function.
+
+    Backward-compatible wrapper that delegates to the internal legacy implementation.
+    This function is maintained for compatibility with existing scripts and applications
+    that rely on the original pmcgrab API.
+
+    Args:
+        pmc_id: String representation of the PMC ID (e.g., "7181753")
+
+    Returns:
+        Optional[dict[str, Union[str, dict, list]]]: Normalized article dictionary
+                                                     or None if processing fails
+
+    Examples:
+        >>> result = process_single_pmc("7181753")
+        >>> if result:
+        ...     print(f"Title: {result['title']}")
+        ...     print(f"Body sections: {list(result['body'].keys())}")
+
+    Note:
+        For new applications, consider using pmcgrab.application.processing.process_single_pmc
+        which provides cleaner separation of concerns without UI dependencies.
+    """
     return _legacy_process_single_pmc(pmc_id)
 
 
 def _legacy_process_single_pmc(
     pmc_id: str,
 ) -> Optional[dict[str, Union[str, dict, list]]]:
-    """Download and parse one PMC article.
+    """Internal legacy implementation for single PMC article processing.
+
+    Downloads, parses, and normalizes a single PMC article with timeout protection
+    and comprehensive error handling. Includes extensive normalization of all
+    article metadata and content for JSON serialization compatibility.
 
     Args:
-        pmc_id: String representation of the PMCID.
+        pmc_id: String representation of the PMC ID
 
     Returns:
-        Dictionary of normalized article metadata, or ``None`` on failure.
+        Optional[dict[str, Union[str, dict, list]]]: Comprehensive article dictionary
+                                                     with normalized values, or None if:
+                                                     - Network/parsing errors occur
+                                                     - Article has no usable body content
+                                                     - Timeout exceeded (60 seconds)
+
+    The returned dictionary includes:
+        - pmc_id: Article identifier
+        - title: Article title
+        - abstract: Plain text abstract
+        - body: Dictionary mapping section titles to text content
+        - authors: Normalized author information
+        - All journal and publication metadata
+        - Content metadata (funding, ethics, etc.)
+
+    Note:
+        This function includes a 60-second timeout, memory management via garbage
+        collection, and handles pandas DataFrame serialization issues. All values
+        are normalized for JSON compatibility.
     """
     gc.collect()
     paper_info: dict[str, Union[str, dict, list]] = {}
@@ -188,12 +255,43 @@ def process_pmc_ids_in_batches(
     base_directory: str | None = None,
     batch_size: int = 16,
 ):
-    """Process PMCIDs concurrently and write results to disk.
+    """Process multiple PMC IDs concurrently with progress tracking and file output.
+
+    Legacy batch processing function that provides concurrent article processing
+    with real-time progress tracking via tqdm progress bars and automatic JSON
+    file writing. Includes detailed statistics on success rates and processing times.
 
     Args:
-        pmc_ids: List of PMCIDs to process.
-        base_directory: Directory to write JSON outputs.
-        batch_size: Number of worker threads to spawn.
+        pmc_ids: List of PMC ID strings to process concurrently
+        base_directory: Target directory for JSON output files. If None, no files written.
+                       Files are named as "PMC{id}.json" (e.g., "PMC7181753.json")
+        batch_size: Number of concurrent worker threads (default: 16)
+
+    Returns:
+        dict[str, bool]: Mapping from PMC ID to processing success status
+                        (True for success, False for failure)
+
+    Features:
+        * Real-time progress bar with success/failure statistics
+        * Concurrent processing with configurable worker threads
+        * Automatic JSON file writing with UTF-8 encoding
+        * Memory management and error isolation per article
+        * Detailed timing statistics and success rate tracking
+
+    Examples:
+        >>> # Process with file output and progress tracking
+        >>> ids = ["7181753", "3539614", "5454911"]
+        >>> results = process_pmc_ids_in_batches(ids, "./output", batch_size=8)
+        >>> successful = sum(results.values())
+        >>> print(f"Successfully processed {successful}/{len(ids)} articles")
+        >>>
+        >>> # Process without file output (testing/validation)
+        >>> results = process_pmc_ids_in_batches(ids, base_directory=None)
+
+    Note:
+        This function includes user interface elements (progress bars) and file I/O.
+        For headless applications, consider using pmcgrab.application.processing.process_pmc_ids
+        which provides the same functionality without UI dependencies.
     """
 
     def process_single_pmc_wrapper(pmc_id: str):
@@ -251,16 +349,42 @@ def process_pmc_ids_in_batches(
 
 
 def process_in_batches(pmc_ids, base_directory, chunk_size=100, parallel_workers=16):
-    """Process PMCIDs in sequential chunks.
+    """Process large PMC ID collections in manageable sequential chunks.
 
-    This is a thin wrapper around :func:`process_pmc_ids_in_batches` that breaks
-    the ID list into smaller chunks.
+    High-level batch processing function that divides large PMC ID collections
+    into smaller chunks for memory-efficient processing. Each chunk is processed
+    concurrently with detailed console feedback and progress tracking.
+
+    This approach prevents memory exhaustion with very large datasets while
+    maintaining the benefits of concurrent processing within each chunk.
 
     Args:
-        pmc_ids: Iterable of PMCIDs to process.
-        base_directory: Output directory for JSON files.
-        chunk_size: Number of IDs per batch.
-        parallel_workers: Number of threads per batch.
+        pmc_ids: List or iterable of PMC ID strings to process
+        base_directory: Directory path for JSON output files
+        chunk_size: Maximum number of PMC IDs per processing chunk (default: 100)
+        parallel_workers: Number of concurrent threads per chunk (default: 16)
+
+    Output:
+        Prints detailed progress information to console including:
+        * Batch progress (e.g., "Processing Batch 1 of 5")
+        * Article counts per batch
+        * Completion notifications
+
+    Examples:
+        >>> # Process 500 articles in chunks of 50 with 8 workers each
+        >>> pmc_ids = [str(i) for i in range(7181753, 7182253)]
+        >>> process_in_batches(pmc_ids, "./output", chunk_size=50, parallel_workers=8)
+        # Output:
+        # === Processing Batch 1 of 10 ===
+        # Working on 50 papers. Please wait...
+        # Batch 1 complete!
+        # ...
+
+    Note:
+        This function is designed for interactive use with console output.
+        Each chunk is processed independently, providing natural breakpoints
+        for very large datasets. Files are written as "PMC{id}.json" in the
+        specified directory.
     """
     total_chunks = (len(pmc_ids) + chunk_size - 1) // chunk_size
     for chunk_index in range(total_chunks):
@@ -274,14 +398,61 @@ def process_in_batches(pmc_ids, base_directory, chunk_size=100, parallel_workers
 def process_in_batches_with_retry(
     pmc_ids, base_directory, chunk_size=100, parallel_workers=16, max_retries=3
 ):
-    """Attempt batch processing with automatic retries.
+    """Robust batch processing with automatic failure detection and retry logic.
+
+    Advanced batch processing function that ensures maximum success rates by
+    automatically detecting failed or incomplete processing attempts and
+    retrying them. Validates output files for both existence and content
+    quality (non-empty body sections).
+
+    The function performs comprehensive failure detection by checking:
+    * File existence in the output directory
+    * Valid JSON structure in output files
+    * Non-empty body content in parsed articles
 
     Args:
-        pmc_ids: Iterable of PMCIDs to process.
-        base_directory: Directory to write JSON files into.
-        chunk_size: Number of IDs per processing batch.
-        parallel_workers: Worker threads used for each batch.
-        max_retries: Maximum number of retry rounds.
+        pmc_ids: List or iterable of PMC ID strings to process
+        base_directory: Directory path for JSON output files
+        chunk_size: Number of PMC IDs per processing chunk (default: 100)
+        parallel_workers: Number of concurrent threads per chunk (default: 16)
+        max_retries: Maximum number of retry attempts for failed articles (default: 3)
+
+    Processing Flow:
+        1. Initial batch processing of all PMC IDs
+        2. Validation of output files and content quality
+        3. Identification of failed/incomplete articles
+        4. Retry processing for failed articles (up to max_retries attempts)
+        5. Final reporting of any permanently failed articles
+
+    Console Output:
+        Provides detailed progress reporting including:
+        * Initial processing statistics
+        * Retry attempt progress with remaining failure counts
+        * Final success/failure summary
+        * List of any permanently failed PMC IDs
+
+    Examples:
+        >>> # Process with retry for maximum reliability
+        >>> pmc_ids = ["7181753", "3539614", "5454911", "invalid_id"]
+        >>> process_in_batches_with_retry(
+        ...     pmc_ids, "./output", 
+        ...     chunk_size=50, 
+        ...     parallel_workers=8, 
+        ...     max_retries=5
+        ... )
+        # Output:
+        # === Initial Processing ===
+        # Total papers to process: 4
+        # ...
+        # *** Retry Attempt 1 of 5 ***
+        # Retrying processing for 1 paper(s) that failed...
+        # ...
+
+    Note:
+        This function is ideal for large-scale processing where maximum
+        success rates are important. It automatically handles transient
+        network failures, timeout issues, and parsing errors through
+        intelligent retry logic.
     """
     print("\n=== Initial Processing ===")
     print(f"Total papers to process: {len(pmc_ids)}")

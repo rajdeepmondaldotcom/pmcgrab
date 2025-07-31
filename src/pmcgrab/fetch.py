@@ -1,3 +1,22 @@
+"""XML fetching and validation utilities for PMC articles.
+
+This module provides the core functionality for downloading PMC article XML
+from NCBI Entrez, parsing it into ElementTree objects, and validating it
+against PMC DTD schemas. It handles network retries, caching, XML cleaning,
+and validation error recovery.
+
+The module supports both raw XML fetching and complete parsing pipelines
+with configurable validation, text styling removal, and error handling.
+It's designed to be robust against network failures and malformed XML
+while providing detailed feedback about validation issues.
+
+Key Functions:
+    fetch_pmc_xml_string: Download raw XML from NCBI with retry logic
+    xml_tree_from_string: Parse XML string into ElementTree
+    validate_xml: Validate XML against PMC DTD schemas
+    get_xml: Complete pipeline from PMCID to validated ElementTree
+"""
+
 import os
 import time
 import warnings
@@ -22,19 +41,38 @@ from pmcgrab.constants import (
 def fetch_pmc_xml_string(
     pmcid: int, email: str, download: bool = False, verbose: bool = False
 ) -> str:
-    """Return the raw XML for a PMC article.
+    """Download raw XML for a PMC article from NCBI Entrez with retry logic.
+
+    Fetches the complete XML document for a PubMed Central article using
+    the NCBI Entrez efetch API. Implements automatic retry with exponential
+    backoff on failures and optional local caching for repeated access.
 
     Args:
-        pmcid: Numeric PubMed Central ID.
-        email: Contact email for NCBI Entrez.
-        download: If ``True`` cache the XML to ``data/``.
-        verbose: If ``True`` log progress messages.
+        pmcid: Numeric PubMed Central ID (e.g., 7181753)
+        email: Contact email address required by NCBI Entrez API for identification
+        download: If True, cache the XML to local data/ directory for reuse
+        verbose: If True, log progress messages and preview of fetched content
 
     Returns:
-        Raw XML string for the requested article.
+        str: Complete raw XML document as UTF-8 string
 
     Raises:
-        HTTPError: If the download repeatedly fails.
+        HTTPError: If download fails after 3 retry attempts with exponential backoff
+
+    Examples:
+        >>> # Basic download
+        >>> xml_content = fetch_pmc_xml_string(7181753, "user@example.com")
+        >>> print(xml_content[:100])
+        >>> 
+        >>> # With caching and verbose output
+        >>> xml_content = fetch_pmc_xml_string(
+        ...     7181753, "user@example.com", 
+        ...     download=True, verbose=True
+        ... )
+
+    Note:
+        Respects NCBI rate limits with 5-second delays between retry attempts.
+        Creates data/ directory automatically if it doesn't exist.
     """
     os.makedirs("data", exist_ok=True)
     cache_path = os.path.join("data", f"entrez_download_PMCID={pmcid}.xml")
@@ -71,15 +109,32 @@ def fetch_pmc_xml_string(
 def clean_xml_string(
     xml_string: str, strip_text_styling: bool = True, verbose: bool = False
 ) -> str:
-    """Normalize an XML string before parsing.
+    """Normalize and clean XML string for reliable parsing.
+
+    Preprocesses raw XML from NCBI Entrez to remove problematic HTML-style
+    formatting tags that can interfere with parsing. The cleaning process
+    focuses on text styling elements while preserving structural markup
+    and content.
 
     Args:
-        xml_string: Raw XML text returned from Entrez.
-        strip_text_styling: When ``True`` remove emphasis tags and styling.
-        verbose: If ``True`` log the tag removal operations.
+        xml_string: Raw XML text as returned from NCBI Entrez API
+        strip_text_styling: If True, remove HTML emphasis tags (<b>, <i>, etc.)
+                           and other styling markup that's not needed for content extraction
+        verbose: If True, log details about which tags are being removed
 
     Returns:
-        Cleaned XML string suitable for ``lxml`` parsing.
+        str: Cleaned XML string optimized for lxml parsing with problematic
+             formatting removed but content and structure preserved
+
+    Examples:
+        >>> raw_xml = fetch_pmc_xml_string(7181753, "user@example.com")
+        >>> clean_xml = clean_xml_string(raw_xml, strip_text_styling=True, verbose=True)
+        >>> # Clean XML is now ready for reliable parsing
+
+    Note:
+        This function delegates to strip_html_text_styling() which handles
+        the actual tag removal logic. Setting strip_text_styling=False
+        returns the XML unchanged.
     """
     return (
         strip_html_text_styling(xml_string, verbose=verbose)
@@ -91,18 +146,37 @@ def clean_xml_string(
 def xml_tree_from_string(
     xml_string: str, strip_text_styling: bool = True, verbose: bool = False
 ) -> ET.ElementTree:
-    """Parse an XML string into an ``ElementTree``.
+    """Parse XML string into lxml ElementTree with preprocessing.
+
+    Converts raw XML text into a structured ElementTree object suitable
+    for XPath queries and content extraction. Includes optional text
+    styling cleanup to ensure reliable parsing of PMC articles.
 
     Args:
-        xml_string: The XML text to parse.
-        strip_text_styling: Whether to remove emphasis tags before parsing.
-        verbose: If ``True`` log additional information.
+        xml_string: Raw XML text to parse
+        strip_text_styling: If True, remove HTML-style formatting tags
+                           before parsing to avoid parser issues
+        verbose: If True, log parsing steps and any issues encountered
 
     Returns:
-        ``lxml.etree.ElementTree`` representation of the XML document.
+        ET.ElementTree: Parsed XML document tree ready for content extraction
+                       and XPath queries
 
     Raises:
-        ET.XMLSyntaxError: If the XML is malformed.
+        ET.XMLSyntaxError: If the XML is malformed and cannot be parsed
+                          even after cleaning attempts
+
+    Examples:
+        >>> xml_content = fetch_pmc_xml_string(7181753, "user@example.com")
+        >>> tree = xml_tree_from_string(xml_content, strip_text_styling=True)
+        >>> root = tree.getroot()
+        >>> title = root.xpath("//article-title/text()")[0]
+        >>> print(f"Article title: {title}")
+
+    Note:
+        This function automatically applies clean_xml_string() preprocessing
+        before parsing to handle common XML formatting issues found in
+        PMC articles from NCBI.
     """
     cleaned = clean_xml_string(xml_string, strip_text_styling, verbose)
     tree = ET.ElementTree(ET.fromstring(cleaned))
@@ -110,16 +184,36 @@ def xml_tree_from_string(
 
 
 def validate_xml(tree: ET.ElementTree) -> bool:
-    """Validate an XML tree against supported PMC DTD files.
+    """Validate XML document against PMC DTD schema definitions.
+
+    Performs structural validation of PMC article XML against the appropriate
+    Document Type Definition (DTD) schema. Handles DTD resolution, entity
+    amplification limits, and provides graceful fallbacks for validation issues.
 
     Args:
-        tree: Parsed XML document tree.
+        tree: Parsed XML document tree to validate
 
     Returns:
-        ``True`` if validation succeeds, otherwise ``False``.
+        bool: True if validation succeeds or is skipped due to DTD issues,
+              False if validation explicitly fails
 
     Raises:
-        NoDTDFoundError: If the tree references an unsupported or missing DTD.
+        NoDTDFoundError: If the DTD URL is unsupported or DTD file is missing
+
+    Warns:
+        ValidationWarning: When DTD is not specified or DTD parsing fails
+                          but XML structure is accepted
+
+    Examples:
+        >>> xml_content = fetch_pmc_xml_string(7181753, "user@example.com")
+        >>> tree = xml_tree_from_string(xml_content)
+        >>> is_valid = validate_xml(tree)
+        >>> print(f"XML is valid: {is_valid}")
+
+    Note:
+        The function gracefully handles DTD entity amplification limits
+        by falling back to basic XML well-formedness validation when
+        full DTD validation is not possible.
     """
     doctype = tree.docinfo.doctype
     match = DTD_URL_PATTERN.search(doctype)
@@ -179,18 +273,53 @@ def get_xml(
     strip_text_styling: bool = True,
     verbose: bool = False,
 ) -> ET.ElementTree:
-    """Fetch, parse and optionally validate the XML for a PMCID.
+    """Complete pipeline from PMCID to validated, parsed XML ElementTree.
+
+    High-level function that orchestrates the entire XML acquisition and
+    processing pipeline: downloading from NCBI, cleaning, parsing, and
+    validating. This is the main entry point for converting a PMCID into
+    a ready-to-use XML document tree.
 
     Args:
-        pmcid: PubMed Central ID of the article.
-        email: Contact email for NCBI Entrez.
-        download: Cache the raw XML locally when ``True``.
-        validate: Perform DTD validation if ``True``.
-        strip_text_styling: Remove styling tags before parsing.
-        verbose: Emit informational log messages when ``True``.
+        pmcid: PubMed Central ID of the target article
+        email: Contact email address required by NCBI Entrez API
+        download: If True, cache raw XML locally in data/ directory for reuse
+        validate: If True, perform DTD validation against PMC schema
+        strip_text_styling: If True, remove HTML-style formatting tags during processing
+        verbose: If True, emit detailed progress and diagnostic messages
 
     Returns:
-        Parsed XML tree of the article.
+        ET.ElementTree: Complete parsed and validated XML document tree
+                       ready for content extraction and analysis
+
+    Warns:
+        ValidationWarning: When validation is skipped (validate=False)
+
+    Examples:
+        >>> # Basic usage with validation
+        >>> tree = get_xml(7181753, "user@example.com")
+        >>> root = tree.getroot()
+        >>> title = root.xpath("//article-title/text()")[0]
+        >>> 
+        >>> # With caching and verbose output
+        >>> tree = get_xml(
+        ...     7181753, "user@example.com",
+        ...     download=True, 
+        ...     validate=True, 
+        ...     verbose=True
+        ... )
+        >>> 
+        >>> # Fast processing without validation
+        >>> tree = get_xml(
+        ...     7181753, "user@example.com",
+        ...     validate=False,
+        ...     strip_text_styling=True
+        ... )
+
+    Note:
+        This function combines all the individual steps (fetch, clean, parse, validate)
+        into a single convenient interface. For more control over individual steps,
+        use the component functions directly.
     """
     xml_text = fetch_pmc_xml_string(pmcid, email, download, verbose)
     tree = xml_tree_from_string(xml_text, strip_text_styling, verbose)

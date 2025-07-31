@@ -1,3 +1,21 @@
+"""Utility functions and data dictionaries for PMCGrab Paper class.
+
+This module provides utility functions and documentation data structures
+used by the Paper class and other components. It centralizes field
+documentation and provides helpers for data dictionary creation.
+
+The main purpose is to maintain comprehensive documentation for all
+Paper class attributes in a single location, making it easy to understand
+what each field contains and how it should be used.
+
+Key Functions:
+    define_data_dict: Returns comprehensive documentation for Paper fields
+
+Note:
+    Some utility functions (clean_doc, normalize_value) are imported from
+    the common.serialization module to avoid circular dependencies.
+"""
+
 # clean_doc is imported from common.serialization below
 
 
@@ -8,7 +26,30 @@ from pmcgrab.common.serialization import clean_doc
 
 
 def define_data_dict() -> dict[str, str]:
-    """Return documentation strings for Paper fields."""
+    """Return comprehensive documentation dictionary for Paper class fields.
+    
+    Creates a mapping from Paper attribute names to human-readable
+    documentation strings explaining what each field contains and
+    how it should be interpreted. This serves as the definitive
+    reference for Paper class field semantics.
+    
+    Returns:
+        dict[str, str]: Dictionary mapping field names to documentation strings.
+                       Each string explains the field's purpose, data type,
+                       and usage patterns.
+                       
+    Examples:
+        >>> data_dict = define_data_dict()
+        >>> print(data_dict['Title'])
+        Title of the PMC article.
+        >>> print(data_dict['Authors'])
+        DataFrame of PMC Authors including names, emails, and affiliations.
+        
+    Note:
+        This function is used internally by the Paper class to populate
+        the data_dict attribute, providing self-documenting capabilities
+        for Paper instances.
+    """
     return {
         "PMCID": "PMCID of the PMC article. Unique.",
         "Title": "Title of the PMC article.",
