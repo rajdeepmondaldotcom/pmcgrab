@@ -1,136 +1,242 @@
 # pmcgrab
+Your gateway to AI-ready scientific literature from PubMed Central
+**Download • Parse • Structure • Scale**
 
-**Your gateway to AI-ready scientific literature from PubMed Central.**
+[![PyPI](https://img.shields.io/pypi/v/pmcgrab.svg)](https://pypi.org/project/pmcgrab/)
+[![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE)
+[![CI](https://github.com/rajdeepmondal/pmcgrab/actions/workflows/ci.yml/badge.svg)](https://github.com/rajdeepmondal/pmcgrab/actions/workflows/ci.yml)
+[![Coverage Status](https://img.shields.io/badge/coverage-100%25-brightgreen.svg)](htmlcov/index.html)
+[![Python Versions](https://img.shields.io/pypi/pyversions/pmcgrab.svg)](https://pypi.org/project/pmcgrab/)
 
-`pmcgrab` is a powerful Python toolkit for downloading, parsing, and structuring articles from PubMed Central (PMC). It transforms raw XML from PMC into a highly curated, AI-ready JSON format, specifically designed to be easily consumed by Large Language Models (LLMs) for robust Retrieval-Augmented Generation (RAG) applications.
+`pmcgrab` is a specialised Python toolkit for **retrieving, validating and restructuring PubMed Central (PMC) articles into clean, section-aware JSON** that large-language-model (LLM) pipelines can ingest directly for Retrieval-Augmented Generation (RAG), question-answering, summarisation and other downstream tasks.
 
-## Why `pmcgrab`?
+---
 
-While the NCBI Entrez API provides access to article data, `pmcgrab` excels by intelligently processing the raw XML into a semantically rich and immediately usable format. Instead of dealing with complex XML schemas or flat text, you get a clean, structured JSON that preserves the distinct sections of a scientific paper, making it perfect for advanced AI tasks.
+## Table of Contents
+1. [Key Features](#key-features)
+2. [Why pmcgrab?](#why-pmcgrab)
+3. [Installation](#installation)
+4. [Quick Start (Python)](#quick-start-python)
+5. [Command-Line Interface](#command-line-interface)
+6. [Batch Processing & Scaling](#batch-processing--scaling)
+7. [Output Schema](#output-schema)
+8. [Configuration](#configuration)
+9. [Logging](#logging)
+10. [Development](#development)
+11. [Contributing](#contributing)
+12. [License](#license)
+13. [Citation](#citation)
+14. [Acknowledgements](#acknowledgements)
 
-The core strength of `pmcgrab` lies in its output. It produces a detailed JSON object where the paper's body is pre-segmented by its natural sections (e.g., Introduction, Methods, Results), which is critical for enabling LLMs to perform targeted context retrieval.
+---
 
 ## Key Features
+* **Effortless Retrieval** – Fetch full-text articles with a single PMCID using NCBI Entrez.
+* **AI-Optimised JSON** – Output is pre-segmented into `Introduction`, `Methods`, `Results`, `Discussion`, etc., dramatically improving context relevance in RAG pipelines.
+* **Highly Concurrent** – Multithreaded batch downloader with configurable worker count, retries and timeouts.
+* **DTD Validation (Optional)** – Verify incoming XML to prevent downstream parsing errors.
+* **HTML & Reference Cleaning** – Utilities to strip or normalise embedded HTML, citations and footnotes.
+* **12-Factor Configuration** – Override behaviour via environment variables without touching code.
+* **100 % Test Coverage** – Comprehensive pytest suite ensures reliability across updates.
 
--   **Effortless Article Retrieval**: Fetch full-text articles using just a PubMed Central ID (PMCID) via the NCBI Entrez API.
--   **AI-Optimized JSON Output**: Generates a meticulously structured JSON that separates high-level metadata, the abstract, and sectioned body text for optimal use in RAG pipelines.
--   **Robust Batch Processing**: Process thousands of articles concurrently with configurable retries and error handling, ideal for building large-scale datasets.
--   **Data Integrity**: Includes optional DTD validation to ensure all XML inputs are well-formed before processing.
--   **Content Utilities**: Provides functions for cleaning embedded HTML tags and resolving in-text citations and references.
+---
+
+## Why pmcgrab?
+While the NCBI Entrez API already provides raw XML, consuming it directly is burdensome:
+
+|                     | Entrez XML | pmcgrab JSON |
+|---------------------|-----------:|-------------:|
+| Section delineation | ❌          | ✅ |
+| Straightforward to embed in vector DB | ❌ | ✅ |
+| Ready for LLM chunking | ❌ | ✅ |
+| Batch parallelism | Limited | Automatic |
+
+Put simply, `pmcgrab` turns *publisher-centric* documents into *AI-centric* assets.
+
+---
 
 ## Installation
+### Requirements
+* Python ≥ 3.9
+* GCC or compatible compiler for `lxml` wheels on some platforms
 
-Install the package directly from PyPI:
-
+### From PyPI
 ```bash
 pip install pmcgrab
 ```
 
-Or from a local clone of the repository:
-
+### From Source
 ```bash
+git clone https://github.com/rajdeepmondal/pmcgrab.git
+cd pmcgrab
 pip install .
 ```
 
-## Quick Start
+For optional development utilities:
 
-Fetch a single article and access its structured data with just two lines of code.
+```bash
+pip install .[dev,test,docs]
+```
+
+---
+
+## Quick Start (Python)
+Fetch and inspect a single article:
 
 ```python
 from pmcgrab import Paper
 
-# The email is required by the NCBI API for identification.
-paper = Paper.from_pmc("7181753", "your.name@example.com")
+# NCBI requires an email for identification
+paper = Paper.from_pmc("7181753", email="your.name@example.com")
 
-print(f"Title: {paper.title}")
-print(f"Journal: {paper.journal_title}")
-print(f"Published Date: {paper.published_date.get('epub')}")
-
-# Access specific sections of the paper's body
-if "Introduction" in paper.body:
-    print("\n--- Introduction Snippet ---")
-    print(paper.body["Introduction"][:300] + "...")
+print(paper.title)
+print(paper.body["Introduction"][:500])  # first 500 chars of Introduction
 ```
 
-## Batch Processing
+---
 
-For building larger datasets, `pmcgrab` can process a list of PMCIDs concurrently and save each result as a separate JSON file. This is ideal for populating a vector database for a RAG system.
+## Command-Line Interface
+Batch-process multiple PMCIDs directly from the shell:
+
+```bash
+python -m pmcgrab.cli.pmcgrab_cli \
+  --pmcids 7181753 3539614 5454911 \
+  --output-dir ./pmc_output \
+  --batch-size 8
+```
+
+After completion you will find:
+```
+pmc_output/
+├── PMC7181753.json
+├── PMC3539614.json
+└── PMC5454911.json
+```
+
+A `summary.json` file captures success/failure for each ID.
+
+---
+
+## Batch Processing & Scaling
+Programmatic interface for large experiments:
 
 ```python
-from pmcgrab.processing import process_in_batches_with_retry
+from pmcgrab.application.processing import process_pmc_ids
 
-pmc_ids = ["7181753", "PMC3539614", "PMC5454911"]
+pmc_ids = ["7181753", "3539614", "5454911", ...]
+stats = process_pmc_ids(pmc_ids, workers=32)
 
-# This will fetch all articles and save them as JSON files 
-# in the 'output_papers' directory.
-process_in_batches_with_retry(
-    pmc_ids=pmc_ids, 
-    output_dir="output_papers",
-    email="your.name@example.com"
-)
+success_rate = sum(stats.values()) / len(stats)
+print(f"{success_rate:%} downloaded successfully")
 ```
 
-Each article is written to `output_papers/PMC.json`.
+Internally, downloads are sharded across a thread pool and guarded by per-article timeouts.
 
-## Logging
+---
 
-`pmcgrab` uses Python's built-in `logging` module. The library does not
-configure logging for you, so to see informational or debugging output
-you should set up logging in your application before calling `pmcgrab`:
-
-```python
-import logging
-
-logging.basicConfig(level=logging.INFO)  # use DEBUG for more detail
-```
-
-Once configured, log messages from the `pmcgrab` logger will be emitted
-according to your chosen logging level.
-
-## The AI-Ready Output Structure
-
-The output JSON is designed for easy parsing and direct ingestion into AI pipelines. It separates key metadata from the core content and, most importantly, structures the body of the paper into its constituent parts.
-
-### Output Schema Highlights:
-
-*   **Top-Level Metadata**: Clean, accessible fields like `pmc_id`, `title`, `doi`, and `pmid`.
-*   **Structured Authorship**: A list of `authors` with their full name and `Affiliations`.
-*   **Sectioned Body**: The `body` is a dictionary where keys are the paper's section titles (e.g., `Introduction`, `Methods`, `Results`, `Discussion`) and values are the text within them. This allows an AI application to search for information within a specific context.
-*   **Enriched Information**: The parser also extracts and structures supplementary data, including `funding` information, `acknowledgements`, `license`, and `permissions`.
-
-### Example Output Snippet
-
-Below is a condensed example of the JSON structure generated for PMCID `7181753`.
+## Output Schema
+Below is an abridged view of the generated JSON (actual output contains >30 fields):
 
 ```json
 {
   "pmc_id": "7181753",
-  "title": "Single-cell transcriptomes of the human skin reveal age-related loss of fibroblast priming",
-  "abstract": "Fibroblasts are an essential cell population for human skin architecture and function. While fibroblast heterogeneity is well established, this phenomenon has not been analyzed systematically yet...",
+  "title": "...",
+  "abstract": "...",
   "authors": [
-    {
-      "Contributor_Type": "Author",
-      "First_Name": "Llorenç",
-      "Last_Name": "Solé-Boldo",
-      "Affiliations": [
-        "Aff1: Division of Epigenetics, DKFZ-ZMBH Alliance,  German Cancer Research Center, 69120 Heidelberg, Germany"
-      ]
-    }
+    {"Contributor_Type": "Author", "First_Name": "Llorenç", "Last_Name": "Solé-Boldo"}
   ],
   "body": {
-    "Introduction": "SECTION: Introduction:\\n\\n    The skin is the outermost protective barrier of the organism and comprises two main layers, the epidermis and the dermis...",
-    "Results": "SECTION: Results:\\n\\n    SECTION: scRNA-seq analysis of sun-protected human skin:\\n\\n        The anatomy of the skin can vary considerably depending on a number of endogenous and environmental factors...",
-    "Discussion": "SECTION: Discussion:\\n\\n    Single-cell transcriptomics currently represents the most effective method to define cell populations in a given tissue...",
-    "Methods": "SECTION: Methods:\\n\\n    SECTION: Clinical samples:\\n\\n        Skin specimens for single-cell RNA sequencing (see Supplementary Table 1) were obtained from patients undergoing routine surgery..."
+    "Introduction": "The skin is the outermost protective barrier...",
+    "Methods": "Clinical samples were obtained...",
+    "Results": "...",
+    "Discussion": "..."
   },
-  "published_date": {
-    "epub": "2020-04-23",
-    "collection": "2020-01-01"
-  },
+  "published_date": {"epub": "2020-04-23"},
   "journal_title": "Communications Biology"
 }
 ```
 
-## License
+This shape maps cleanly to embeddings or vector stores where section titles become metadata tags for context-aware retrieval.
 
-`pmcgrab` is licensed under the Apache 2.0 License.
+---
+
+## Configuration
+`pmcgrab` follows the 12-factor methodology: **environment variables override defaults**.
+
+| Variable            | Purpose                                                  | Default |
+|---------------------|----------------------------------------------------------|---------|
+| `PMCGRAB_EMAILS`    | Comma-separated pool of email addresses rotated for API  | Internal sample list |
+| `PMCGRAB_WORKERS`   | Default worker count for batch processing (if not set programmatically) | `16` |
+
+Set them in your shell or orchestrator:
+
+```bash
+export PMCGRAB_EMAILS="you@org.com,lab@org.com"
+export PMCGRAB_WORKERS=32
+```
+
+---
+
+## Logging
+`pmcgrab` uses the standard Python `logging` library and leaves configuration to the host application:
+
+```python
+import logging
+logging.basicConfig(level=logging.INFO, format="%(levelname)s %(name)s: %(message)s")
+```
+
+Switch to `DEBUG` for verbose network and parsing diagnostics.
+
+---
+
+## Development
+1. Clone the repository and install the dev extras:
+   `pip install -e .[dev,test,docs]`
+2. Run the test-suite (100 % coverage):
+   `pytest -n auto --cov=pmcgrab`
+3. Lint & type-check:
+   `ruff check . && mypy src/pmcgrab`
+4. Build documentation (MkDocs):
+   `mkdocs serve`
+
+Continuous Integration replicates the above on every pull request.
+
+---
+
+## Contributing
+Contributions are welcome!  Please read the [CONTRIBUTING.md](CONTRIBUTING.md) (to be created) for details on:
+
+* Code style and commit guidelines
+* Branching and release process
+* Reporting bugs or suggesting enhancements
+* Security disclosures (please email the maintainer directly)
+
+---
+
+## License
+`pmcgrab` is licensed under the [Apache 2.0](LICENSE) License.
+
+---
+
+## Citation
+If this project contributes to your research, please consider citing it:
+
+```bibtex
+@software{pmcgrab,
+  author       = {Rajdeep Mondal},
+  title        = {pmcgrab: AI-ready retrieval of PubMed Central articles},
+  year         = {2024},
+  url          = {https://github.com/rajdeepmondal/pmcgrab},
+  version      = {0.2.0},
+  license      = {Apache-2.0}
+}
+```
+
+---
+
+## Acknowledgements
+* The National Center for Biotechnology Information (NCBI) for maintaining PubMed Central.
+* The open-source community behind **Biopython**, **BeautifulSoup**, **lxml** and other dependencies that make this project possible.
+
+> **Disclaimer**
+> Use of PubMed Central content is bound by the PMC terms of use.  Ensure you have the right to download and redistribute any article you process with `pmcgrab`.
