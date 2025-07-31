@@ -211,7 +211,9 @@ def process_single_pmc(pmc_id: str) -> dict[str, str | dict | list] | None:
 # ---------------------------------------------------------------------------
 
 
-def process_pmc_ids(pmc_ids: list[str], *, workers: int = 16) -> dict[str, bool]:
+def process_pmc_ids(
+    pmc_ids: list[str], *, workers: int | None = None, batch_size: int | None = None
+) -> dict[str, bool]:
     """Process multiple PMC IDs concurrently and return success mapping.
 
     Application-layer batch processing function that handles concurrent
@@ -242,6 +244,12 @@ def process_pmc_ids(pmc_ids: list[str], *, workers: int = 16) -> dict[str, bool]
         Individual article processing is delegated to process_single_pmc().
         Exceptions during processing are caught and recorded as failures.
     """
+    # Resolve worker count (batch_size is kept for backward compatibility)
+    if batch_size is not None:
+        workers = batch_size
+    if workers is None:
+        workers = 16
+
     results: dict[str, bool] = {}
     with ThreadPoolExecutor(max_workers=workers) as executor:
         future_to_id = {

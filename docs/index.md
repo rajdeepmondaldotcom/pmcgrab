@@ -9,6 +9,7 @@
 PMCGrab is a specialized Python toolkit for **retrieving, validating and restructuring PubMed Central (PMC) articles into clean, section-aware JSON** that large-language-model (LLM) pipelines can ingest directly for Retrieval-Augmented Generation (RAG), question-answering, summarization and other downstream tasks.
 
 !!! tip "Get started in two commands"
+
     ```bash
     pip install pmcgrab
     python examples/run_three_pmcs.py
