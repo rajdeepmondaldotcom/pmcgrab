@@ -1,0 +1,206 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "pmcgrab"
+version = "0.2.0"
+description = "Utilities for fetching and processing PubMed Central articles"
+readme = "README.md"
+license = "Apache-2.0"
+authors = [
+    {name = "Rajdeep Mondal", email = "rajdeepmondal@example.com"},
+]
+maintainers = [
+    {name = "Rajdeep Mondal", email = "rajdeepmondal@example.com"},
+]
+requires-python = ">=3.9"
+dependencies = [
+    "biopython>=1.83",
+    "certifi>=2024.0.0",
+    "lxml>=4.9.0",
+    "numpy>=1.24.0",
+    "pandas>=2.0.0",
+    "requests>=2.28.0",
+    "tqdm>=4.64.0",
+]
+keywords = ["pubmed", "pmc", "text mining", "rag", "bioinformatics"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: Apache Software License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Scientific/Engineering :: Bio-Informatics",
+    "Topic :: Text Processing :: Markup :: XML",
+    "Operating System :: OS Independent",
+]
+
+[project.urls]
+Homepage = "https://github.com/rajdeepmondal/pmcgrab"
+Documentation = "https://github.com/rajdeepmondal/pmcgrab#readme"
+Repository = "https://github.com/rajdeepmondal/pmcgrab.git"
+Issues = "https://github.com/rajdeepmondal/pmcgrab/issues"
+Changelog = "https://github.com/rajdeepmondal/pmcgrab/releases"
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.0.0",
+    "pytest-cov>=4.0.0",
+    "pytest-xdist>=3.0.0",
+    "ruff>=0.1.0",
+    "pre-commit>=3.0.0",
+    "mypy>=1.5.0",
+    "build>=0.10.0",
+    "twine>=4.0.0",
+]
+docs = [
+    "mkdocs>=1.5.0",
+    "mkdocs-material>=9.0.0",
+    "mkdocstrings[python]>=0.20.0",
+]
+test = [
+    "pytest>=7.0.0",
+    "pytest-cov>=4.0.0",
+    "pytest-xdist>=3.0.0",
+    "responses>=0.23.0",
+]
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/pmcgrab"]
+
+[tool.hatch.build.targets.sdist]
+include = [
+    "src/pmcgrab",
+    "tests",
+    "README.md",
+    "LICENSE",
+]
+
+[tool.hatch.version]
+path = "src/pmcgrab/__init__.py"
+
+# Ruff configuration
+[tool.ruff]
+src = ["src", "tests"]
+line-length = 88
+target-version = "py39"
+
+[tool.ruff.lint]
+select = [
+    "E",   # pycodestyle errors
+    "W",   # pycodestyle warnings
+    "F",   # pyflakes
+    "I",   # isort
+    "B",   # flake8-bugbear
+    "C4",  # flake8-comprehensions
+    "UP",  # pyupgrade
+    "ARG", # flake8-unused-arguments
+    "SIM", # flake8-simplify
+    "ICN", # flake8-import-conventions
+    "T20", # flake8-print
+    "Q",   # flake8-quotes
+    "RET", # flake8-return
+    "TID", # flake8-tidy-imports
+    "RUF", # Ruff-specific rules
+]
+ignore = [
+    "E501",    # line too long, handled by formatter
+    "B008",    # do not perform function calls in argument defaults
+    "T201",    # allow print statements
+    "RET504",  # unnecessary variable assignment before return
+]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**/*.py" = ["ARG", "S101", "T20"]
+"__init__.py" = ["F401"]
+
+[tool.ruff.lint.isort]
+known-first-party = ["pmcgrab"]
+
+[tool.ruff.lint.flake8-tidy-imports]
+ban-relative-imports = "all"
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+skip-magic-trailing-comma = false
+line-ending = "auto"
+
+# Pytest configuration
+[tool.pytest.ini_options]
+minversion = "7.0"
+addopts = [
+    "-ra",
+    "--strict-markers",
+    "--strict-config",
+    "--cov=pmcgrab",
+    "--cov-report=term-missing",
+    "--cov-report=html",
+    "--cov-report=xml",
+]
+testpaths = ["tests"]
+python_files = ["test_*.py", "*_test.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
+markers = [
+    "slow: marks tests as slow (deselect with '-m \"not slow\"')",
+    "integration: marks tests as integration tests",
+    "unit: marks tests as unit tests",
+]
+
+# Coverage configuration
+[tool.coverage.run]
+source = ["src/pmcgrab"]
+branch = true
+omit = [
+    "tests/*",
+    "src/pmcgrab/__pycache__/*",
+]
+
+[tool.coverage.report]
+exclude_lines = [
+    "pragma: no cover",
+    "def __repr__",
+    "if self.debug:",
+    "if settings.DEBUG",
+    "raise AssertionError",
+    "raise NotImplementedError",
+    "if 0:",
+    "if __name__ == .__main__.:",
+    "class .*\\bProtocol\\):",
+    "@(abc\\.)?abstractmethod",
+]
+
+[tool.coverage.html]
+directory = "htmlcov"
+
+# MyPy configuration
+[tool.mypy]
+python_version = "3.9"
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = true
+disallow_incomplete_defs = true
+check_untyped_defs = true
+disallow_untyped_decorators = true
+no_implicit_optional = true
+warn_redundant_casts = true
+warn_unused_ignores = true
+warn_no_return = true
+warn_unreachable = true
+strict_equality = true
+show_error_codes = true
+
+[[tool.mypy.overrides]]
+module = [
+    "Bio.*",
+    "lxml.*",
+    "pandas.*",
+    "numpy.*",
+]
+ignore_missing_imports = true
