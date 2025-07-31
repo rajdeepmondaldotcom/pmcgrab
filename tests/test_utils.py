@@ -113,20 +113,18 @@ class TestUtilsFunctions:
 
     def test_split_text_and_refs_no_refs(self):
         """Test split_text_and_refs without references."""
-        xml = "<p>Simple text without references</p>"
-        element = ET.fromstring(xml)
+        xml_text = "<p>Simple text without references</p>"
         ref_map = BasicBiMap()
         
-        result = split_text_and_refs(element, ref_map)
+        result = split_text_and_refs(xml_text, ref_map)
         assert "Simple text without references" in result
 
     def test_split_text_and_refs_with_refs(self):
         """Test split_text_and_refs with references."""
-        xml = '<p>Text with <xref ref-type="bibr" rid="ref1">citation</xref> reference</p>'
-        element = ET.fromstring(xml)
+        xml_text = '<p>Text with <xref ref-type="bibr" rid="ref1">citation</xref> reference</p>'
         ref_map = BasicBiMap()
         
-        result = split_text_and_refs(element, ref_map)
+        result = split_text_and_refs(xml_text, ref_map)
         assert "Text with" in result
         assert "reference" in result
         # Should handle the reference appropriately
@@ -152,21 +150,25 @@ class TestUtilsFunctions:
 
     def test_remove_mhtml_tags_basic(self):
         """Test remove_mhtml_tags with basic tags."""
-        text = "Text with [CITATION:1] and [TABLE:2] references"
+        citation_tag = generate_typed_mhtml_tag("citation", 1)
+        table_tag = generate_typed_mhtml_tag("table", 2)
+        text = f"Text with {citation_tag} and {table_tag} references"
         result = remove_mhtml_tags(text)
         
-        assert "[CITATION:1]" not in result
-        assert "[TABLE:2]" not in result
+        assert citation_tag not in result
+        assert table_tag not in result
         assert "Text with" in result
         assert "references" in result
 
     def test_remove_mhtml_tags_multiple_same_type(self):
         """Test remove_mhtml_tags with multiple tags of same type."""
-        text = "Multiple [CITATION:1] and [CITATION:2] citations"
+        citation1 = generate_typed_mhtml_tag("citation", 1)
+        citation2 = generate_typed_mhtml_tag("citation", 2)
+        text = f"Multiple {citation1} and {citation2} citations"
         result = remove_mhtml_tags(text)
         
-        assert "[CITATION:1]" not in result
-        assert "[CITATION:2]" not in result
+        assert citation1 not in result
+        assert citation2 not in result
         assert "Multiple" in result
         assert "citations" in result
 
@@ -184,14 +186,19 @@ class TestUtilsFunctions:
 
     def test_remove_mhtml_tags_mixed_content(self):
         """Test remove_mhtml_tags with mixed content."""
-        text = "Study [CITATION:1] shows results in [TABLE:1] and [FIGURE:1] demonstrates [CITATION:2] findings."
+        citation1 = generate_typed_mhtml_tag("citation", 1)
+        citation2 = generate_typed_mhtml_tag("citation", 2)
+        table1 = generate_typed_mhtml_tag("table", 1)
+        figure1 = generate_typed_mhtml_tag("figure", 1)
+        
+        text = f"Study {citation1} shows results in {table1} and {figure1} demonstrates {citation2} findings."
         result = remove_mhtml_tags(text)
         
         # All MHTML tags should be removed
-        assert "[CITATION:1]" not in result
-        assert "[CITATION:2]" not in result
-        assert "[TABLE:1]" not in result
-        assert "[FIGURE:1]" not in result
+        assert citation1 not in result
+        assert citation2 not in result
+        assert table1 not in result
+        assert figure1 not in result
         
         # Regular text should remain
         assert "Study" in result

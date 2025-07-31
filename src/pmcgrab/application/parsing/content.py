@@ -108,7 +108,7 @@ def gather_supplementary_material(root: ET.Element) -> Optional[List[Dict[str, s
         caption = None
         if caption_elem is not None:
             caption = " ".join(caption_elem.itertext()).strip()
-        href = supp.get("xlink:href") or supp.findtext("@xlink:href")
+        href = supp.get("xlink:href")
         if not href:
             ext = supp.find("ext-link")
             if ext is not None and ext.get("xlink:href"):
