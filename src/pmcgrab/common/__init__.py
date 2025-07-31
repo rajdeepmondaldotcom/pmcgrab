@@ -1,0 +1,30 @@
+"""Common helper modules that live *outside* the domain layer but have no
+external I/O dependencies.  They are pure functions that can be reused across
+application or infrastructure code.
+
+The sub-modules are intentionally small and focused:
+
+• **serialization** – generic data normalisation helpers.
+• **html_cleaning** – safe HTML / XML tag removal & substitution.
+• **xml_processing** – XML/HTML text extraction and reference handling.
+"""
+
+from pmcgrab.common.serialization import clean_doc, normalize_value  # noqa: F401
+from pmcgrab.common.html_cleaning import remove_html_tags, strip_html_text_styling  # noqa: F401
+from pmcgrab.common.xml_processing import (
+    stringify_children,
+    split_text_and_refs,
+    generate_typed_mhtml_tag,
+    remove_mhtml_tags,
+)  # noqa: F401
+
+__all__: list[str] = [
+    "clean_doc",
+    "normalize_value",
+    "remove_html_tags",
+    "strip_html_text_styling",
+    "stringify_children",
+    "split_text_and_refs",
+    "generate_typed_mhtml_tag",
+    "remove_mhtml_tags",
+]
