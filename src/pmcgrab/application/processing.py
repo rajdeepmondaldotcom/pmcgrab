@@ -11,7 +11,6 @@ import contextlib
 import gc
 import signal
 from concurrent.futures import ThreadPoolExecutor, as_completed
-from typing import Dict, List, Optional, Union
 
 from pmcgrab.application.paper_builder import build_paper_from_pmc
 from pmcgrab.common.serialization import normalize_value
@@ -29,11 +28,11 @@ __all__: list[str] = [
 # ---------------------------------------------------------------------------
 
 
-def process_single_pmc(pmc_id: str) -> Optional[Dict[str, Union[str, Dict, List]]]:
+def process_single_pmc(pmc_id: str) -> dict[str, str | dict | list] | None:
     """Download and parse one PMC article returning a normalised dict."""
     gc.collect()
-    paper_info: Dict[str, Union[str, Dict, List]] = {}
-    body_info: Dict[str, str] = {}
+    paper_info: dict[str, str | dict | list] = {}
+    body_info: dict[str, str] = {}
 
     try:
         pmc_id_num = int(pmc_id)
@@ -180,9 +179,9 @@ def process_single_pmc(pmc_id: str) -> Optional[Dict[str, Union[str, Dict, List]
 # ---------------------------------------------------------------------------
 
 
-def process_pmc_ids(pmc_ids: List[str], *, workers: int = 16) -> Dict[str, bool]:
+def process_pmc_ids(pmc_ids: list[str], *, workers: int = 16) -> dict[str, bool]:
     """Process *pmc_ids* concurrently and return mapping `pmcid → success`."""
-    results: Dict[str, bool] = {}
+    results: dict[str, bool] = {}
     with ThreadPoolExecutor(max_workers=workers) as executor:
         future_to_id = {
             executor.submit(process_single_pmc, pid): pid for pid in pmc_ids

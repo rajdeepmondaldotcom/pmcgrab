@@ -8,7 +8,6 @@ dependencies for simple clean-ups.
 from __future__ import annotations
 
 import re
-from typing import Dict, List
 
 from pmcgrab.constants import logger
 
@@ -18,7 +17,7 @@ __all__: list[str] = [
 ]
 
 
-def _compile_patterns(removals: List[str], replaces: Dict[str, str]):
+def _compile_patterns(removals: list[str], replaces: dict[str, str]):
     """Return (patterns_to_remove, patterns_to_replace) compiled from user input.
 
     For *replaces* we need to substitute **both** the opening **and** the matching
@@ -42,8 +41,8 @@ def _compile_patterns(removals: List[str], replaces: Dict[str, str]):
 
 def remove_html_tags(
     text: str,
-    removals: List[str] | None = None,
-    replaces: Dict[str, str] | None = None,
+    removals: list[str] | None = None,
+    replaces: dict[str, str] | None = None,
     *,
     verbose: bool = False,
 ) -> str:
@@ -86,7 +85,7 @@ def remove_html_tags(
 
 def strip_html_text_styling(
     text: str,
-    replacements: Dict[str, str] | None = None,
+    replacements: dict[str, str] | None = None,
     *,
     verbose: bool = False,
 ) -> str:

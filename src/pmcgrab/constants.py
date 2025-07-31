@@ -4,7 +4,7 @@ import signal
 import warnings
 
 logger = logging.getLogger(__name__)
-warnings.formatwarning = lambda msg, cat, *args, **kwargs: f"{cat.__name__}: {msg}\n\n"
+warnings.formatwarning = lambda msg, cat, *_args, **_kwargs: f"{cat.__name__}: {msg}\n\n"
 warnings.filterwarnings("ignore")
 
 SUPPORTED_DTD_URLS = [
@@ -22,7 +22,7 @@ class TimeoutException(Exception):
     pass
 
 
-def timeout_handler(signum, frame):
+def timeout_handler(_signum, _frame):
     """Raise a ``TimeoutException`` when a signal alarm is triggered."""
     raise TimeoutException("Operation timed out")
 

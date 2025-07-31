@@ -5,7 +5,6 @@ from __future__ import annotations
 import textwrap
 import uuid
 import warnings
-from typing import Dict, List, Optional, Union
 
 import lxml.etree as ET
 
@@ -17,16 +16,16 @@ from pmcgrab.constants import (
 from pmcgrab.model import TextParagraph
 
 __all__: list[str] = [
-    "gather_permissions",
-    "gather_funding",
-    "gather_version_history",
+    "gather_acknowledgements",
+    "gather_custom_metadata",
     "gather_equations",
-    "gather_supplementary_material",
     "gather_ethics_disclosures",
     "gather_footnote",
-    "gather_acknowledgements",
+    "gather_funding",
     "gather_notes",
-    "gather_custom_metadata",
+    "gather_permissions",
+    "gather_supplementary_material",
+    "gather_version_history",
     # helper
     "stringify_note",
 ]
@@ -36,7 +35,7 @@ __all__: list[str] = [
 # ----------------------------------------------------------------------------
 
 
-def gather_permissions(root: ET.Element) -> Optional[Dict[str, str]]:
+def gather_permissions(root: ET.Element) -> dict[str, str] | None:
     cp = root.xpath("//article-meta/permissions/copyright-statement/text()")
     cp_stmt = cp[0] if cp else "No copyright statement found."
     lic_elems = root.xpath("//article-meta/permissions/license")
@@ -61,15 +60,15 @@ def gather_permissions(root: ET.Element) -> Optional[Dict[str, str]]:
     }
 
 
-def gather_funding(root: ET.Element) -> Optional[List[str]]:
-    fund: List[str] = []
+def gather_funding(root: ET.Element) -> list[str] | None:
+    fund: list[str] = []
     for group in root.xpath("//article-meta/funding-group"):
         fund.extend(group.xpath("award-group/funding-source/institution/text()"))
     return fund or None
 
 
-def gather_version_history(root: ET.Element) -> Optional[List[Dict[str, str]]]:
-    versions: List[Dict[str, str]] = []
+def gather_version_history(root: ET.Element) -> list[dict[str, str]] | None:
+    versions: list[dict[str, str]] = []
     for ver in root.xpath("//article-meta/article-version"):
         ver_num = ver.get("version") or ver.findtext("version")
         date_elem = ver.find("date")
@@ -89,7 +88,7 @@ def gather_version_history(root: ET.Element) -> Optional[List[Dict[str, str]]]:
 # ----------------------------------------------------------------------------
 
 
-def gather_equations(root: ET.Element) -> Optional[List[str]]:
+def gather_equations(root: ET.Element) -> list[str] | None:
     eqs = []
     for math in root.xpath(
         "//mml:math", namespaces={"mml": "http://www.w3.org/1998/Math/MathML"}
@@ -98,8 +97,8 @@ def gather_equations(root: ET.Element) -> Optional[List[str]]:
     return eqs or None
 
 
-def gather_supplementary_material(root: ET.Element) -> Optional[List[Dict[str, str]]]:
-    items: List[Dict[str, str]] = []
+def gather_supplementary_material(root: ET.Element) -> list[dict[str, str]] | None:
+    items: list[dict[str, str]] = []
     for supp in root.xpath("//supplementary-material|//media"):
         label = supp.findtext("label") or supp.get("id")
         caption_elem = supp.find("caption")
@@ -115,7 +114,9 @@ def gather_supplementary_material(root: ET.Element) -> Optional[List[Dict[str, s
         if not href:
             ext = supp.find("ext-link")
             if ext is not None:
-                href = ext.get("xlink:href") or ext.get("{http://www.w3.org/1999/xlink}href")
+                href = ext.get("xlink:href") or ext.get(
+                    "{http://www.w3.org/1999/xlink}href"
+                )
         items.append(
             {
                 "Label": label,
@@ -132,8 +133,8 @@ def gather_supplementary_material(root: ET.Element) -> Optional[List[Dict[str, s
 # ----------------------------------------------------------------------------
 
 
-def gather_ethics_disclosures(root: ET.Element) -> Optional[Dict[str, str]]:
-    fields: Dict[str, tuple[str, list[str]]] = {
+def gather_ethics_disclosures(root: ET.Element) -> dict[str, str] | None:
+    fields: dict[str, tuple[str, list[str]]] = {
         "Conflicts of Interest": ("//conflict-of-interest", []),
         "Ethics Statement": ("//ethics-statement", []),
         "Clinical Trial Registration": (
@@ -144,7 +145,7 @@ def gather_ethics_disclosures(root: ET.Element) -> Optional[Dict[str, str]]:
         "Author Contributions": ("//author-notes", []),
         "Patient Consent": ("//patient-consent", []),
     }
-    result: Dict[str, str] = {}
+    result: dict[str, str] = {}
     for key, (xpath, _) in fields.items():
         texts = [" ".join(el.itertext()).strip() for el in root.xpath(xpath)]
         if texts:
@@ -159,8 +160,8 @@ def gather_ethics_disclosures(root: ET.Element) -> Optional[Dict[str, str]]:
     return result or None
 
 
-def gather_footnote(root: ET.Element) -> Optional[str]:
-    foot: List[str] = []
+def gather_footnote(root: ET.Element) -> str | None:
+    foot: list[str] = []
     for fn in root.xpath("//back/fn-group/fn"):
         for child in fn:
             if child.tag == "p":
@@ -174,7 +175,7 @@ def gather_footnote(root: ET.Element) -> Optional[str]:
     return " - ".join(foot) if foot else None
 
 
-def gather_acknowledgements(root: ET.Element) -> Union[List[str], str]:
+def gather_acknowledgements(root: ET.Element) -> list[str] | str:
     return [" ".join(match.itertext()).strip() for match in root.xpath("//ack")]
 
 
@@ -190,7 +191,7 @@ def stringify_note(root: ET.Element) -> str:
     return note.strip()
 
 
-def gather_notes(root: ET.Element) -> List[str]:
+def gather_notes(root: ET.Element) -> list[str]:
     return [
         stringify_note(note)
         for note in root.xpath("//notes")
@@ -203,8 +204,8 @@ def gather_notes(root: ET.Element) -> List[str]:
 # ----------------------------------------------------------------------------
 
 
-def gather_custom_metadata(root: ET.Element) -> Optional[Dict[str, str]]:
-    custom: Dict[str, str] = {}
+def gather_custom_metadata(root: ET.Element) -> dict[str, str] | None:
+    custom: dict[str, str] = {}
     for meta in root.xpath("//custom-meta"):
         name = meta.findtext("meta-name")
         value = (

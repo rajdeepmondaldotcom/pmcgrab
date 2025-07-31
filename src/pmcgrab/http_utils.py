@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import time
-from typing import Any, Dict, Optional
+from typing import Any
 
 import requests
 
@@ -19,7 +19,7 @@ def _backoff_sleep(retry: int) -> None:
 
 
 def cached_get(
-    url: str, params: Optional[Dict[str, Any]] = None, **kwargs
+    url: str, params: dict[str, Any] | None = None, **kwargs
 ) -> requests.Response:
     """GET with retry + basic in-memory cache.
 

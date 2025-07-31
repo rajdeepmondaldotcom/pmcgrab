@@ -1,5 +1,6 @@
-import pytest
 from pathlib import Path
+
+import pytest
 
 # ----------------------------------------------------------------------------
 # Collect-time hook that disables individual test modules known to fail.
@@ -31,5 +32,7 @@ def pytest_collection_modifyitems(session, config, items):
         rel_path = Path(str(item.fspath)).as_posix()
         if rel_path in _FAILING_MODULES:
             item.add_marker(
-                pytest.mark.skip(reason="Test module temporarily disabled per user request")
+                pytest.mark.skip(
+                    reason="Test module temporarily disabled per user request"
+                )
             )

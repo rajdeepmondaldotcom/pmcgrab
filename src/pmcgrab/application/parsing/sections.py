@@ -3,7 +3,6 @@ from __future__ import annotations
 """Abstract / body text section parsing helpers."""
 
 import warnings
-from typing import List, Optional, Union
 
 import lxml.etree as ET
 
@@ -28,9 +27,9 @@ __all__: list[str] = [
 
 def _collect_sections(
     parent: ET.Element, context: str, ref_map: BasicBiMap
-) -> List[Union[TextSection, TextParagraph]]:
+) -> list[TextSection | TextParagraph]:
     """Build list of `TextSection`/`TextParagraph` from *parent* element."""
-    sections: List[Union[TextSection, TextParagraph]] = []
+    sections: list[TextSection | TextParagraph] = []
     for child in parent:
         if child.tag == "sec":
             sections.append(TextSection(child, ref_map=ref_map))
@@ -52,7 +51,7 @@ def _gather_sections(
     missing_warning: str,
     context: str,
     ref_map: BasicBiMap,
-) -> Optional[List[Union[TextSection, TextParagraph]]]:
+) -> list[TextSection | TextParagraph] | None:
     nodes = root.xpath(xpath)
     if not nodes:
         warnings.warn(missing_warning, UnexpectedZeroMatchWarning, stacklevel=2)
@@ -73,7 +72,7 @@ def _gather_sections(
 
 def gather_abstract(
     root: ET.Element, ref_map: BasicBiMap
-) -> Optional[List[Union[TextSection, TextParagraph]]]:
+) -> list[TextSection | TextParagraph] | None:
     """Parse the `<abstract>` element into structured text elements."""
     return _gather_sections(
         root,
@@ -86,7 +85,7 @@ def gather_abstract(
 
 def gather_body(
     root: ET.Element, ref_map: BasicBiMap
-) -> Optional[List[Union[TextSection, TextParagraph]]]:
+) -> list[TextSection | TextParagraph] | None:
     """Parse the `<body>` element into structured sections."""
     return _gather_sections(
         root,

@@ -8,7 +8,6 @@ from __future__ import annotations
 
 import xml.etree.ElementTree as ET
 from collections.abc import Generator, Iterator
-from typing import Dict, List, Optional
 
 from pmcgrab.http_utils import cached_get
 
@@ -32,11 +31,11 @@ def _request(verb: str, **params) -> ET.Element:
     return root
 
 
-def _extract_records(root: ET.Element) -> List[ET.Element]:
+def _extract_records(root: ET.Element) -> list[ET.Element]:
     return root.findall("{*}ListRecords/{*}record")
 
 
-def _get_resumption_token(root: ET.Element) -> Optional[str]:
+def _get_resumption_token(root: ET.Element) -> str | None:
     token = root.find(".//{*}resumptionToken")
     return token.text if token is not None and token.text else None
 
@@ -46,12 +45,12 @@ def _get_resumption_token(root: ET.Element) -> Optional[str]:
 
 def list_records(
     metadata_prefix: str = "pmc",
-    from_: Optional[str] = None,
-    until: Optional[str] = None,
-    set_: Optional[str] = None,
+    from_: str | None = None,
+    until: str | None = None,
+    set_: str | None = None,
 ) -> Iterator[ET.Element]:
     """Yield <record> elements lazily, transparently handling resumption tokens."""
-    params: Dict[str, str] = {"metadataPrefix": metadata_prefix}
+    params: dict[str, str] = {"metadataPrefix": metadata_prefix}
     if from_:
         params["from"] = from_
     if until:
@@ -61,8 +60,7 @@ def list_records(
 
     root = _request("ListRecords", **params)
     while True:
-        for rec in _extract_records(root):
-            yield rec
+        yield from _extract_records(root)
         token = _get_resumption_token(root)
         if not token:
             break
@@ -76,11 +74,11 @@ def get_record(identifier: str, metadata_prefix: str = "pmc") -> ET.Element:
 
 def list_identifiers(
     metadata_prefix: str = "pmc",
-    from_: Optional[str] = None,
-    until: Optional[str] = None,
-    set_: Optional[str] = None,
+    from_: str | None = None,
+    until: str | None = None,
+    set_: str | None = None,
 ) -> Generator[str, None, None]:
-    params: Dict[str, str] = {"metadataPrefix": metadata_prefix}
+    params: dict[str, str] = {"metadataPrefix": metadata_prefix}
     if from_:
         params["from"] = from_
     if until:
@@ -97,7 +95,7 @@ def list_identifiers(
         root = _request("ListIdentifiers", resumptionToken=token)
 
 
-def list_sets() -> List[Dict[str, str]]:
+def list_sets() -> list[dict[str, str]]:
     root = _request("ListSets")
     sets = []
     for s in root.findall("{*}ListSets/{*}set"):

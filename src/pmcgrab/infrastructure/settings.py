@@ -8,7 +8,6 @@ changed without modifying code (12-factor principle).
 
 import itertools
 import os
-from typing import List
 
 __all__: list[str] = [
     "EMAIL_POOL",
@@ -19,7 +18,7 @@ __all__: list[str] = [
 # Email pool – used when querying NCBI Entrez
 # ---------------------------------------------------------------------------
 
-_DEFAULT_EMAIL_POOL: List[str] = [
+_DEFAULT_EMAIL_POOL: list[str] = [
     "bk68g1gx@test.com",
     "wkv1h06c@sample.com",
     "m42touro@sample.com",
@@ -36,7 +35,7 @@ _DEFAULT_EMAIL_POOL: List[str] = [
 _env_emails = os.getenv("PMCGRAB_EMAILS")
 if _env_emails:
     _candidate = [e.strip() for e in _env_emails.split(",") if e.strip()]
-    EMAIL_POOL: List[str] = _candidate or _DEFAULT_EMAIL_POOL
+    EMAIL_POOL: list[str] = _candidate or _DEFAULT_EMAIL_POOL
 else:
     EMAIL_POOL = _DEFAULT_EMAIL_POOL
 

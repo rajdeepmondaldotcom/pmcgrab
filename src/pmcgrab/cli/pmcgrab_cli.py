@@ -10,7 +10,6 @@ Example usage:
 import argparse
 import json
 from pathlib import Path
-from typing import List
 
 from tqdm import tqdm
 
@@ -55,7 +54,7 @@ def _parse_args() -> argparse.Namespace:
 
 def main() -> None:
     args = _parse_args()
-    pmc_ids: List[str] = args.pmcids
+    pmc_ids: list[str] = args.pmcids
     out_dir = Path(args.output_dir)
     out_dir.mkdir(parents=True, exist_ok=True)
 

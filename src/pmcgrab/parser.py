@@ -59,22 +59,13 @@ DTD validation, HTML cleaning, and external service wrappers.
 
 import copy
 import warnings
-from typing import Dict, List, Optional, Union
 
 import lxml.etree as ET
 
 from pmcgrab.application.parsing import (
     content as _content,
-)
-
-# Cohesive parsing helpers ---------------------------------------------------
-from pmcgrab.application.parsing import (
     contributors as _contributors,
-)
-from pmcgrab.application.parsing import (
     metadata as _metadata,
-)
-from pmcgrab.application.parsing import (
     sections as _sections,
 )
 from pmcgrab.constants import (
@@ -115,13 +106,13 @@ gather_issue = _metadata.gather_issue
 # Pages (remain local – trivial one-liners)
 
 
-def gather_fpage(root: ET.Element) -> Optional[str]:
+def gather_fpage(root: ET.Element) -> str | None:
     """Return first page number if available."""
     fpage = root.xpath("//article-meta/fpage/text()")
     return fpage[0] if fpage else None
 
 
-def gather_lpage(root: ET.Element) -> Optional[str]:
+def gather_lpage(root: ET.Element) -> str | None:
     """Return last page number if available."""
     lpage = root.xpath("//article-meta/lpage/text()")
     return lpage[0] if lpage else None
@@ -146,7 +137,7 @@ gather_custom_metadata = _content.gather_custom_metadata
 
 def _parse_citation(
     citation_root: ET.Element,
-) -> Union[Dict[str, Union[List[str], str]], str]:
+) -> dict[str, list[str] | str] | str:
     """Parse a citation entry into a dictionary of reference details."""
     authors = citation_root.xpath('.//person-group[@person-group-type="author"]/name')
     if not authors:
@@ -188,16 +179,18 @@ def _extract_xpath_text(root: ET.Element, xpath: str, *, multiple: bool = False)
     return matches[0].text
 
 
-def process_reference_map(paper_root: ET.Element, ref_map: Optional[BasicBiMap] = None) -> BasicBiMap:
+def process_reference_map(
+    paper_root: ET.Element, ref_map: BasicBiMap | None = None
+) -> BasicBiMap:
     """Resolve reference map items to structured citation / table / figure objects."""
     if ref_map is None:
         ref_map = BasicBiMap()
-    cleaned: Dict[int, Union[TextTable, TextFigure, Dict[str, str], str]] = {}
+    cleaned: dict[int, TextTable | TextFigure | dict[str, str] | str] = {}
 
     # Fallback: if the ref_map is empty populate it from <ref> elements so that
     # downstream logic and tests receive *something* meaningful to work with.
     if not ref_map:
-        for idx, ref in enumerate(paper_root.xpath('//ref')):
+        for idx, ref in enumerate(paper_root.xpath("//ref")):
             cleaned[idx] = _parse_citation(ref)
         return BasicBiMap(cleaned)
 
@@ -210,17 +203,17 @@ def process_reference_map(paper_root: ET.Element, ref_map: Optional[BasicBiMap] 
             if rtype == "bibr":
                 if not rid:
                     warnings.warn(
-                        "Citation without reference id", UnmatchedCitationWarning
+                        "Citation without reference id", UnmatchedCitationWarning, stacklevel=2
                     )
                     continue
                 matches = paper_root.xpath(f"//ref[@id='{rid}']")
                 if not matches:
-                    warnings.warn("Citation id not found", UnmatchedCitationWarning)
+                    warnings.warn("Citation id not found", UnmatchedCitationWarning, stacklevel=2)
                     continue
                 cleaned[key] = _parse_citation(matches[0])
             elif rtype == "table":
                 if not rid:
-                    warnings.warn("Table ref without id", UnmatchedTableWarning)
+                    warnings.warn("Table ref without id", UnmatchedTableWarning, stacklevel=2)
                     continue
                 matches = paper_root.xpath(f"//table-wrap[@id='{rid}']")
                 if matches:
@@ -285,7 +278,7 @@ def paper_dict_from_pmc(
     verbose: bool = False,
     suppress_warnings: bool = False,
     suppress_errors: bool = False,
-) -> Dict[str, Union[str, int, Dict, List]]:
+) -> dict[str, str | int | dict | list]:
     if verbose:
         logger.info("Generating Paper object for PMCID=%s …", pmcid)
     tree = get_xml(pmcid, email, download, validate, verbose=verbose)
@@ -299,7 +292,7 @@ def generate_paper_dict(
     verbose: bool = False,
     suppress_warnings: bool = False,
     suppress_errors: bool = False,
-) -> Dict[str, Union[str, int, Dict, List]]:
+) -> dict[str, str | int | dict | list]:
     if suppress_warnings:
         warnings.simplefilter("ignore")
     try:
@@ -318,9 +311,9 @@ def _raise(exc):  # helper for EAFP pattern above
 
 def build_complete_paper_dict(
     pmcid: int, root: ET.Element, verbose: bool = False
-) -> Dict[str, Union[str, int, Dict, List]]:
+) -> dict[str, str | int | dict | list]:
     ref_map: BasicBiMap = BasicBiMap()
-    d: Dict[str, Union[str, int, Dict, List]] = {
+    d: dict[str, str | int | dict | list] = {
         "PMCID": pmcid,
         "Title": gather_title(root),
         "Authors": gather_authors(root),

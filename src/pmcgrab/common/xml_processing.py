@@ -8,7 +8,6 @@ from __future__ import annotations
 
 import re
 from itertools import chain
-from typing import Optional
 
 import lxml.etree as ET
 
@@ -57,7 +56,7 @@ def split_text_and_refs(
     tree_text: str | ET._Element,
     ref_map: BasicBiMap,
     *,
-    element_id: Optional[str] = None,
+    element_id: str | None = None,
     on_unknown: str = "keep",
 ) -> str:
     """Replace reference tags with internal placeholders and populate *ref_map*."""

@@ -10,8 +10,6 @@ from typing import Optional, Union
 from tqdm import tqdm
 
 # Deprecated – left for backwards compatibility. Delegates to application layer.
-from pmcgrab.application.processing import process_single_pmc
-from pmcgrab.application.paper_builder import build_paper_from_pmc  # Expose for mocking in tests
 from pmcgrab.common.serialization import normalize_value
 from pmcgrab.constants import TimeoutException
 
@@ -212,34 +210,33 @@ def process_pmc_ids_in_batches(
         unit="paper",
         bar_format=custom_bar_format,
         dynamic_ncols=True,
-    ) as pbar:
-        with ThreadPoolExecutor(max_workers=batch_size) as executor:
-            futures = {
-                executor.submit(process_single_pmc_wrapper, pmc_id): pmc_id
-                for pmc_id in pmc_ids
-            }
-            for future in as_completed(futures):
-                try:
-                    pmcid, success = future.result()
-                    results[pmcid] = success
-                    if success:
-                        successful += 1
-                    else:
-                        failed += 1
-                except Exception:
+    ) as pbar, ThreadPoolExecutor(max_workers=batch_size) as executor:
+        futures = {
+            executor.submit(process_single_pmc_wrapper, pmc_id): pmc_id
+            for pmc_id in pmc_ids
+        }
+        for future in as_completed(futures):
+            try:
+                pmcid, success = future.result()
+                results[pmcid] = success
+                if success:
+                    successful += 1
+                else:
                     failed += 1
-                total_processed += 1
-                elapsed = time.time() - start_time
-                avg_time = elapsed / total_processed if total_processed else 0
-                pbar.set_postfix(
-                    {
-                        "Success": f"{successful}",
-                        "Failed": f"{failed}",
-                        "Success Rate": f"{(successful / total_processed) * 100:.1f}%",
-                        "Avg Time": f"{avg_time:.2f}s",
-                    }
-                )
-                pbar.update(1)
+            except Exception:
+                failed += 1
+            total_processed += 1
+            elapsed = time.time() - start_time
+            avg_time = elapsed / total_processed if total_processed else 0
+            pbar.set_postfix(
+                {
+                    "Success": f"{successful}",
+                    "Failed": f"{failed}",
+                    "Success Rate": f"{(successful / total_processed) * 100:.1f}%",
+                    "Avg Time": f"{avg_time:.2f}s",
+                }
+            )
+            pbar.update(1)
 
     return results
 

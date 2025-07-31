@@ -1,5 +1,3 @@
-from __future__ import annotations
-
 """High-level helper that constructs a :class:`pmcgrab.model.Paper` from PMC.
 
 This lives in the *application* layer to keep the domain entity (`Paper`)
@@ -7,8 +5,9 @@ free of infrastructure details such as network calls, retries, or XML
 parsing.
 """
 
+from __future__ import annotations
+
 import time
-from typing import Optional
 from urllib.error import HTTPError
 
 from pmcgrab.model import Paper
@@ -31,13 +30,13 @@ def build_paper_from_pmc(
     suppress_warnings: bool = False,
     suppress_errors: bool = False,
     attempts: int = 3,
-) -> Optional[Paper]:
+) -> Paper | None:
     """Fetch XML, parse it, and build a :class:`Paper` instance.
 
     Parameters mirror the legacy `Paper.from_pmc` API so that callers can be
     migrated with a single import-level change.
     """
-    d: Optional[dict] = None
+    d: dict | None = None
     for _ in range(attempts):
         try:
             d = paper_dict_from_pmc(

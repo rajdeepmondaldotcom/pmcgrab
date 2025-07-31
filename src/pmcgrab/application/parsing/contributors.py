@@ -3,7 +3,6 @@ from __future__ import annotations
 """Contributor / author extraction helpers."""
 
 import warnings
-from typing import List, Optional, Tuple, Union
 
 import lxml.etree as ET
 import pandas as pd
@@ -21,8 +20,8 @@ __all__: list[str] = [
 
 
 def extract_contributor_info(
-    root: ET.Element, contributors: List[ET.Element]
-) -> List[Tuple]:
+    root: ET.Element, contributors: list[ET.Element]
+) -> list[tuple]:
     """Return list of contributor tuples with rich metadata."""
     result = []
     for contrib in contributors:
@@ -35,7 +34,7 @@ def extract_contributor_info(
         addr = addr.strip() if addr else None
 
         # affiliations ------------------------------------------------------
-        affils: List[str] = []
+        affils: list[str] = []
         for aff in contrib.xpath(".//xref[@ref-type='aff']"):
             aid = aff.get("rid")
             texts = root.xpath(
@@ -67,7 +66,7 @@ def extract_contributor_info(
     return result
 
 
-def gather_authors(root: ET.Element) -> Optional[pd.DataFrame]:
+def gather_authors(root: ET.Element) -> pd.DataFrame | None:
     authors = root.xpath(".//contrib[@contrib-type='author']")
     if not authors:
         warnings.warn("No authors found.", UnexpectedZeroMatchWarning, stacklevel=2)
@@ -88,7 +87,7 @@ def gather_authors(root: ET.Element) -> Optional[pd.DataFrame]:
     )
 
 
-def gather_non_author_contributors(root: ET.Element) -> Union[str, pd.DataFrame]:
+def gather_non_author_contributors(root: ET.Element) -> str | pd.DataFrame:
     non_auth = root.xpath(".//contrib[not(@contrib-type='author')]")
     if non_auth:
         data = extract_contributor_info(root, non_auth)

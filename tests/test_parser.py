@@ -88,7 +88,7 @@ def test_paper_dict_from_pmc(monkeypatch):
     assert isinstance(d["Abstract"][0], TextParagraph)
     assert {"author": ["Neuroscience", "Machine Learning"]} in d["Keywords"]
     assert d["Authors"].iloc[0]["ORCID"] == "0000-0001-2345-6789"
-    assert d["Authors"].iloc[0]["Equal_Contrib"] == True
+    assert d["Authors"].iloc[0]["Equal_Contrib"]
     assert d["Ethics"]["Conflicts of Interest"] == "No conflict"
     # The href extraction might fail due to namespace issues, just check structure
     assert len(d["Supplementary Material"]) > 0

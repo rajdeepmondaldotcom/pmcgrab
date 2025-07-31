@@ -9,7 +9,6 @@ free of side-effects so they can be unit-tested in isolation.
 
 import datetime
 import warnings
-from typing import Dict, List, Optional, Union
 
 import lxml.etree as ET
 
@@ -19,27 +18,27 @@ from pmcgrab.constants import (
 )
 
 __all__: list[str] = [
-    # article title
-    "gather_title",
-    # journal section
-    "gather_journal_id",
-    "gather_journal_title",
-    "gather_issn",
-    "gather_publisher_name",
-    "gather_publisher_location",
+    "gather_article_categories",
     # article identifiers / classification
     "gather_article_id",
     "gather_article_types",
-    "gather_article_categories",
+    "gather_history_dates",
+    "gather_issn",
+    "gather_issue",
+    # journal section
+    "gather_journal_id",
+    "gather_journal_title",
+    # keywords
+    "gather_keywords",
     # dates / versions
     "gather_published_date",
-    "gather_history_dates",
+    "gather_publisher_location",
+    "gather_publisher_name",
+    # article title
+    "gather_title",
     # "gather_version_history",  # moved to content.py
     # misc numeric
     "gather_volume",
-    "gather_issue",
-    # keywords
-    "gather_keywords",
 ]
 
 
@@ -48,9 +47,9 @@ __all__: list[str] = [
 # ---------------------------------------------------------------------------
 
 
-def gather_title(root: ET.Element) -> Optional[str]:
+def gather_title(root: ET.Element) -> str | None:
     """Return the article title if present."""
-    matches: List[str] = root.xpath("//article-title/text()")
+    matches: list[str] = root.xpath("//article-title/text()")
     if len(matches) > 1:
         warnings.warn(
             "Multiple titles found; using the first.",
@@ -70,12 +69,12 @@ def gather_title(root: ET.Element) -> Optional[str]:
 # ---------------------------------------------------------------------------
 
 
-def gather_journal_id(root: ET.Element) -> Dict[str, str]:
+def gather_journal_id(root: ET.Element) -> dict[str, str]:
     ids = root.xpath("//journal-meta/journal-id")
     return {jid.get("journal-id-type"): jid.text for jid in ids}
 
 
-def gather_journal_title(root: ET.Element) -> Optional[Union[List[str], str]]:
+def gather_journal_title(root: ET.Element) -> list[str] | str | None:
     titles = [t.text for t in root.xpath("//journal-title")]
     if not titles:
         warnings.warn(
@@ -85,21 +84,21 @@ def gather_journal_title(root: ET.Element) -> Optional[Union[List[str], str]]:
     return titles if len(titles) > 1 else titles[0]
 
 
-def gather_issn(root: ET.Element) -> Dict[str, str]:
+def gather_issn(root: ET.Element) -> dict[str, str]:
     issns = root.xpath("//journal-meta/issn")
     return {issn.get("pub-type"): issn.text for issn in issns}
 
 
-def gather_publisher_name(root: ET.Element) -> Union[str, List[str]]:
+def gather_publisher_name(root: ET.Element) -> str | list[str]:
     pubs = root.xpath("//journal-meta/publisher/publisher-name")
     return pubs[0].text if len(pubs) == 1 else [p.text for p in pubs]
 
 
-def gather_publisher_location(root: ET.Element) -> Union[str, List[str]]:
+def gather_publisher_location(root: ET.Element) -> str | list[str]:
     locs = root.xpath("//journal-meta/publisher/publisher-loc")
     if not locs:
         return None
-    return locs[0].text if len(locs) == 1 else [l.text for l in locs]
+    return locs[0].text if len(locs) == 1 else [loc.text for loc in locs]
 
 
 # ---------------------------------------------------------------------------
@@ -107,12 +106,12 @@ def gather_publisher_location(root: ET.Element) -> Union[str, List[str]]:
 # ---------------------------------------------------------------------------
 
 
-def gather_article_id(root: ET.Element) -> Dict[str, str]:
+def gather_article_id(root: ET.Element) -> dict[str, str]:
     ids = root.xpath("//article-meta/article-id")
     return {aid.get("pub-id-type"): aid.text for aid in ids}
 
 
-def gather_article_types(root: ET.Element) -> Optional[List[str]]:
+def gather_article_types(root: ET.Element) -> list[str] | None:
     cats = root.xpath("//article-meta/article-categories")
     if not cats:
         warnings.warn(
@@ -126,7 +125,7 @@ def gather_article_types(root: ET.Element) -> Optional[List[str]]:
     return texts
 
 
-def gather_article_categories(root: ET.Element) -> Optional[List[Dict[str, str]]]:
+def gather_article_categories(root: ET.Element) -> list[dict[str, str]] | None:
     cats = root.xpath("//article-meta/article-categories")
     if not cats:
         warnings.warn(
@@ -145,8 +144,8 @@ def gather_article_categories(root: ET.Element) -> Optional[List[Dict[str, str]]
 # ---------------------------------------------------------------------------
 
 
-def gather_published_date(root: ET.Element) -> Dict[str, datetime.date]:
-    dates: Dict[str, datetime.date] = {}
+def gather_published_date(root: ET.Element) -> dict[str, datetime.date]:
+    dates: dict[str, datetime.date] = {}
     for pd_elem in root.xpath("//article-meta/pub-date"):
         ptype = pd_elem.get("pub-type")
         year = (
@@ -162,8 +161,8 @@ def gather_published_date(root: ET.Element) -> Dict[str, datetime.date]:
     return dates
 
 
-def gather_history_dates(root: ET.Element) -> Optional[Dict[str, datetime.date]]:
-    dates: Dict[str, datetime.date] = {}
+def gather_history_dates(root: ET.Element) -> dict[str, datetime.date] | None:
+    dates: dict[str, datetime.date] = {}
     for h_elem in root.xpath("//article-meta/history/date"):
         dtype = h_elem.get("date-type") or "unknown"
         year = int(h_elem.xpath("year/text()")[0]) if h_elem.xpath("year/text()") else 1
@@ -182,7 +181,7 @@ def gather_history_dates(root: ET.Element) -> Optional[Dict[str, datetime.date]]
 # ---------------------------------------------------------------------------
 
 
-def gather_volume(root: ET.Element) -> Optional[str]:
+def gather_volume(root: ET.Element) -> str | None:
     vol = root.xpath("//article-meta/volume/text()")
     if not vol:
         warnings.warn("No volume found.", UnexpectedZeroMatchWarning, stacklevel=2)
@@ -190,7 +189,7 @@ def gather_volume(root: ET.Element) -> Optional[str]:
     return vol[0]
 
 
-def gather_issue(root: ET.Element) -> Optional[str]:
+def gather_issue(root: ET.Element) -> str | None:
     iss = root.xpath("//article-meta/issue/text()")
     if not iss:
         warnings.warn("No issue found.", UnexpectedZeroMatchWarning, stacklevel=2)
@@ -205,7 +204,7 @@ def gather_issue(root: ET.Element) -> Optional[str]:
 
 def gather_keywords(root: ET.Element):
     """Return keywords from <kwd-group> and article-categories keyword groups."""
-    keywords: list[Union[str, dict[str, list[str]]]] = []
+    keywords: list[str | dict[str, list[str]]] = []
 
     # kwd-group parsing
     for group in root.xpath("//kwd-group"):

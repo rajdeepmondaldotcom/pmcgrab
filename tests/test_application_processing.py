@@ -1,4 +1,4 @@
-from typing import Any, Dict
+from typing import Any, ClassVar
 
 from pmcgrab.application import processing as app_proc
 
@@ -24,9 +24,9 @@ def test_process_pmc_ids_success(monkeypatch):
 
     class DummyPaper:
         has_data = True
-        abstract = []
+        abstract: ClassVar[list] = []
         title = "Dummy"
-        body = [DummySection()]  # Non-empty body so it doesn't return None
+        body: ClassVar[list] = [DummySection()]  # Non-empty body so it doesn't return None
         authors = None
         non_author_contributors = None
         publisher_name = None
@@ -53,5 +53,5 @@ def test_process_pmc_ids_success(monkeypatch):
             return ""
 
     monkeypatch.setattr(app_proc, "build_paper_from_pmc", lambda *a, **kw: DummyPaper())
-    res: Dict[str, Any] = app_proc.process_pmc_ids(["1", "2"], workers=2)
+    res: dict[str, Any] = app_proc.process_pmc_ids(["1", "2"], workers=2)
     assert res == {"1": True, "2": True}

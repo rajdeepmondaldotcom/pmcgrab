@@ -1,5 +1,8 @@
 __version__ = "0.2.0"
 
+import sys
+import types
+
 from pmcgrab.bioc import fetch_json as bioc_fetch
 from pmcgrab.fetch import get_xml
 from pmcgrab.idconvert import convert as id_convert
@@ -26,14 +29,12 @@ from pmcgrab.processing import (
     process_single_pmc,
 )
 
-import sys, types
-
 # ---------------------------------------------------------------------------
 # Optional dependency handling (tests expect psutil but it's not required)
 # ---------------------------------------------------------------------------
 
-if 'psutil' not in sys.modules:
-    mock_psutil = types.ModuleType('psutil')
+if "psutil" not in sys.modules:
+    mock_psutil = types.ModuleType("psutil")
 
     class _Process:  # minimal stub
         def __init__(self, _pid):
@@ -46,21 +47,21 @@ if 'psutil' not in sys.modules:
             return mem()
 
     mock_psutil.Process = _Process  # type: ignore[attr-defined]
-    sys.modules['psutil'] = mock_psutil
+    sys.modules["psutil"] = mock_psutil
 
 __all__ = [
-    # external service helpers
-    "oai_list_records",
+    "Paper",
+    "bioc_fetch",
+    "build_complete_paper_dict",
+    "citation_export",
+    "get_xml",
+    "id_convert",
+    "oa_fetch",
     "oai_get_record",
     "oai_list_identifiers",
+    # external service helpers
+    "oai_list_records",
     "oai_list_sets",
-    "oa_fetch",
-    "bioc_fetch",
-    "id_convert",
-    "citation_export",
-    "Paper",
-    "build_complete_paper_dict",
-    "get_xml",
     "paper_dict_from_pmc",
     "process_in_batches",
     "process_in_batches_with_retry",
