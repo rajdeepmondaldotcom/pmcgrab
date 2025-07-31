@@ -154,6 +154,55 @@ uv build
 
 This creates distributions in the `dist/` directory.
 
+### Publishing Workflow
+
+#### 1. Version bump
+
+Update `__version__` in `src/pmcgrab/__init__.py` and the `version` field in `pyproject.toml` (use semantic versioning).
+
+```bash
+# bump version numbers
+uv bump 0.3.7   # or edit files manually
+```
+
+Commit the change:
+
+```bash
+git commit -am "chore(release): bump version to 0.3.7"
+```
+
+#### 2. Tag the release
+
+Create an annotated tag that matches the version. GitHub Actions release workflow triggers on tags prefixed with `v`:
+
+```bash
+git tag -a v0.3.7 -m "Release 0.3.7"
+git push origin v0.3.7
+```
+
+> Tip: If you forget the `-a` message, you can add one later with `git tag -a v0.3.7 -f -m "..." && git push --force origin v0.3.7`.
+
+#### 3. GitHub Actions release
+
+Pushing the tag starts `.github/workflows/release.yml` which:
+
+1. Checks out the tagged commit.
+2. Runs `uv build` (or `python -m build`) to create `wheel` and `sdist`.
+3. Uploads artefacts to PyPI with `twine upload dist/*` using `PYPI_TOKEN` secret.
+4. Creates a GitHub release pointing to the tag.
+
+Verify the workflow under "Actions → Release". If it fails, click the job for logs.
+
+#### 4. Manual publish (fallback)
+
+If you need to publish locally:
+
+```bash
+rm -rf dist/*
+uv build          # or python -m build
+uv publish        # or twine upload dist/*
+```
+
 ### Publishing to PyPI
 
 ```bash
