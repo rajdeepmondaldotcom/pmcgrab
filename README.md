@@ -62,14 +62,14 @@ Put simply, `PMCGrab` turns _pubmed central_ papers into _AI-centric_ assets.
 ### From PyPI
 
 ```bash
-pip install PMCGrab
+pip install pmcgrab
 ```
 
 ### From Source
 
 ```bash
-git clone https://github.com/rajdeepmondaldotcom/PMCGrab.git
-cd PMCGrab
+git clone https://github.com/rajdeepmondaldotcom/pmcgrab.git
+cd pmcgrab
 pip install .
 ```
 
@@ -86,7 +86,7 @@ pip install .[dev,test,docs]
 Fetch and inspect a single article:
 
 ```python
-from PMCGrab import Paper
+from pmcgrab import Paper
 
 # NCBI requires an email for identification
 paper = Paper.from_pmc("7181753", email="rajdeep@rajdeepmondal.com")
@@ -116,7 +116,7 @@ The script will:
 Batch-process multiple PMCIDs directly from the shell:
 
 ```bash
-python -m PMCGrab.cli.PMCGrab_cli \
+python -m pmcgrab.cli.pmcgrab_cli \
   --pmcids 7181753 3539614 5454911 \
   --output-dir ./pmc_output \
   --batch-size 8
@@ -220,9 +220,9 @@ Switch to `DEBUG` for verbose network and parsing diagnostics.
 1. Clone the repository and install the dev extras:
    `pip install -e .[dev,test,docs]`
 2. Run the test-suite (100 % coverage):
-   `pytest -n auto --cov=PMCGrab`
+   `pytest -n auto --cov=pmcgrab`
 3. Lint & type-check:
-   `ruff check . && mypy src/PMCGrab`
+   `ruff check . && mypy src/pmcgrab`
 4. Build documentation (MkDocs):
    `mkdocs serve`
 
@@ -256,8 +256,7 @@ If this project contributes to your research, please consider citing it:
   author       = {Rajdeep Mondal},
   title        = {PMCGrab: AI-ready retrieval of PubMed Central articles},
   year         = {2025},
-  url          = {https://github.com/rajdeepmondaldotcom/PMCGrab},
-  version      = {0.2.3},
+  url          = {https://github.com/rajdeepmondaldotcom/pmcgrab},
 }
 ```
 
