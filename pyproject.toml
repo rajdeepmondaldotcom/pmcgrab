@@ -121,7 +121,7 @@ ignore = [
     "RUF003",  # ambiguous unicode character in comment
     "SIM105",  # use contextlib.suppress instead of try-except-pass
     "SIM117",  # combine with statements
-    "I001",    # allow unsorted import blocks
+    "I",       # ignore all isort import order issues
 ]
 
 [tool.ruff.lint.per-file-ignores]
