@@ -13,6 +13,11 @@ from tqdm import tqdm
 from pmcgrab.common.serialization import normalize_value
 from pmcgrab.constants import TimeoutException
 
+# Re-export the legacy function with the expected name for backwards compatibility
+def process_single_pmc(pmc_id: str) -> Optional[dict[str, Union[str, dict, list]]]:
+    """Legacy wrapper - delegates to _legacy_process_single_pmc for backwards compatibility."""
+    return _legacy_process_single_pmc(pmc_id)
+
 
 def _legacy_process_single_pmc(
     pmc_id: str,
