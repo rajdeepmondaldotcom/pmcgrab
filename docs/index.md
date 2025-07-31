@@ -41,26 +41,19 @@ While the NCBI Entrez API already provides raw XML, consuming it directly is bur
 pip install pmcgrab
 ```
 
-### Basic Usage
+### Example: Process five PMC articles
 
-```python
-from pmcgrab import Paper
+Run the helper script included in the repository:
 
-# Retrieve and parse a single paper
-paper = Paper.from_pmc("7181753", email="your-email@example.com")
-print(paper.title)
-print(paper.body["Introduction"][:500])
+```bash
+python examples/run_five_pmcs.py
 ```
 
-### Batch Processing
+The script will:
 
-```python
-from pmcgrab import process_pmc_ids_in_batches
-
-# Process multiple papers concurrently
-pmc_ids = ["7181753", "3539614", "5454911"]
-process_pmc_ids_in_batches(pmc_ids, "./output", batch_size=8)
-```
+1. Download the five predefined PMCIDs.
+2. Print a short summary for each article (title, abstract snippet, author count).
+3. Save the complete JSON output to `pmc_output/PMC<id>.json` so you can inspect it later.
 
 ### Command Line Interface
 

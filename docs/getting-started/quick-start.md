@@ -14,22 +14,21 @@ You'll need:
 PMC IDs are numerical identifiers like `7181753`. You can find them in PMC URLs:
 `https://www.ncbi.nlm.nih.gov/pmc/articles/PMC7181753/`
 
-## Your First Paper
+## Quick Demo – Process Five Articles
 
-Let's retrieve and parse a single paper:
+Run the helper script shipped with PMCGrab. It processes five predefined PMCIDs and shows a concise summary for each one:
 
-```python
-from pmcgrab import Paper
-
-# Replace with your email and a valid PMC ID
-paper = Paper.from_pmc("7181753", email="your-email@example.com")
-
-# Explore the paper
-print(f"Title: {paper.title}")
-print(f"Authors: {len(paper.authors)} authors")
-print(f"Abstract sections: {list(paper.abstract.keys())}")
-print(f"Body sections: {list(paper.body.keys())}")
+```bash
+python examples/run_five_pmcs.py
 ```
+
+What the script does:
+
+1. Downloads each article
+2. Prints title, first 120 characters of the abstract and author count
+3. Writes full JSON into `pmc_output/PMC<id>.json`
+
+Feel free to edit the `PMC_IDS` list in `examples/run_five_pmcs.py` to include any number of IDs (one or many – the script works the same).
 
 ## Understanding the Output
 

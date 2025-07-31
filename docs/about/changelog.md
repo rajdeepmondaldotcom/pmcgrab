@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.3.3] - 2024-12-15
+
+### Changed
+
+- Examples and documentation now focus on the helper script `examples/run_five_pmcs.py`.
+- Removed single-article examples that required manual email input.
+- Updated Quick Start and homepage to use the batch helper script.
+
 ## [0.3.2] - 2024-12-15
 
 ### Added
@@ -70,7 +78,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Core Paper model
 - XML processing capabilities
 
-[Unreleased]: https://github.com/rajdeepmondaldotcom/pmcgrab/compare/v0.3.2...HEAD
+[Unreleased]: https://github.com/rajdeepmondaldotcom/pmcgrab/compare/v0.3.3...HEAD
+[0.3.3]: https://github.com/rajdeepmondaldotcom/pmcgrab/compare/v0.3.2...v0.3.3
 [0.3.2]: https://github.com/rajdeepmondaldotcom/pmcgrab/compare/v0.3.1...v0.3.2
 [0.3.1]: https://github.com/rajdeepmondaldotcom/pmcgrab/compare/v0.3.0...v0.3.1
 [0.3.0]: https://github.com/rajdeepmondaldotcom/pmcgrab/compare/v0.2.0...v0.3.0
