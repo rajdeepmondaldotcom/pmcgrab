@@ -1,0 +1,20 @@
+{% extends "main.html" %}
+{% block content %}
+
+<section class="mdx-hero">
+  <div class="mdx-hero__content">
+    <h1 class="mdx-hero__title">PMCGrab</h1>
+    <p class="mdx-hero__subtitle">From PMCID to clean, section-aware JSON for your AI pipelines.</p>
+    <p class="mdx-hero__buttons">
+      <a class="md-button md-button--primary" href="getting-started/installation/">Get started</a>
+      <a class="md-button" href="https://pypi.org/project/pmcgrab/">pip install pmcgrab</a>
+    </p>
+  </div>
+  <div class="mdx-hero__image">
+    <img src="{{ 'assets/hero.svg' | url }}" alt="Hero illustration" />
+  </div>
+</section>
+
+{{ super() }}
+
+{% endblock %}

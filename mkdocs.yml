@@ -173,6 +173,7 @@ extra:
 
 # Additional CSS and JS
 extra_css:
+  - stylesheets/hero.css
   - stylesheets/extra.css
 
 extra_javascript:
