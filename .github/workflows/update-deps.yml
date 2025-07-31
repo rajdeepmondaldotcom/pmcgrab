@@ -2,8 +2,8 @@ name: Update Dependencies
 
 on:
   schedule:
-    - cron: '0 8 * * 1'  # Weekly on Mondays at 8 AM UTC
-  workflow_dispatch:  # Allow manual triggering
+    - cron: "0 8 * * 1" # Weekly on Mondays at 8 AM UTC
+  workflow_dispatch: # Allow manual triggering
 
 jobs:
   update-dependencies:
@@ -28,7 +28,7 @@ jobs:
         run: |
           # Update uv.lock file
           uv lock --upgrade
-          
+
           # Check if there are changes
           if git diff --quiet uv.lock; then
             echo "No dependency updates available"
@@ -47,16 +47,16 @@ jobs:
           title: "chore: update dependencies"
           body: |
             ## Dependency Updates
-            
+
             This PR updates project dependencies to their latest compatible versions.
-            
+
             ### Changes
             - Updated `uv.lock` with latest dependency versions
-            
+
             ### Testing
             - [ ] All tests pass
             - [ ] No breaking changes detected
-            
+
             **This PR was created automatically by the dependency update workflow.**
           branch: chore/update-dependencies
           delete-branch: true

@@ -10,12 +10,14 @@ This document provides information on how to develop and contribute to pmcgrab.
 ## Installation for Development
 
 1. Clone the repository:
+
 ```bash
 git clone https://github.com/rajdeepmondaldotcom/pmcgrab.git
 cd pmcgrab
 ```
 
 2. Install dependencies with uv:
+
 ```bash
 uv sync --all-extras
 ```
@@ -167,6 +169,7 @@ uv publish
 ### pyproject.toml
 
 The main configuration file containing:
+
 - Project metadata
 - Dependencies
 - Build configuration
@@ -175,6 +178,7 @@ The main configuration file containing:
 ### .pre-commit-config.yaml
 
 Configures pre-commit hooks for:
+
 - Code formatting with ruff
 - Linting with ruff
 - Type checking with mypy

@@ -2,7 +2,7 @@ name: Create Release
 
 on:
   push:
-    branches: [ "main" ]
+    branches: ["main"]
 
 jobs:
   check-version:
@@ -28,10 +28,10 @@ jobs:
           # Get current and previous version
           CURRENT_VERSION=$(grep '^version = ' pyproject.toml | sed 's/version = "\(.*\)"/\1/')
           PREVIOUS_VERSION=$(git show HEAD~1:pyproject.toml | grep '^version = ' | sed 's/version = "\(.*\)"/\1/' || echo "")
-          
+
           echo "Current version: $CURRENT_VERSION"
           echo "Previous version: $PREVIOUS_VERSION"
-          
+
           if [ "$CURRENT_VERSION" != "$PREVIOUS_VERSION" ] && [ -n "$PREVIOUS_VERSION" ]; then
             echo "changed=true" >> $GITHUB_OUTPUT
             echo "Version changed from $PREVIOUS_VERSION to $CURRENT_VERSION"

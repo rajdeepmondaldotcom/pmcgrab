@@ -2,11 +2,11 @@ name: CodeQL Security Analysis
 
 on:
   push:
-    branches: [ "main" ]
+    branches: ["main"]
   pull_request:
-    branches: [ "main" ]
+    branches: ["main"]
   schedule:
-    - cron: '0 6 * * 1'  # Weekly on Mondays
+    - cron: "0 6 * * 1" # Weekly on Mondays
 
 jobs:
   analyze:
@@ -21,7 +21,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        language: [ 'python' ]
+        language: ["python"]
 
     steps:
       - name: Checkout repository

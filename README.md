@@ -1,4 +1,5 @@
 # PMCGrab
+
 From PMCID to structured JSON - bridge PubMed Central and your AI pipeline.
 
 [![PyPI](https://img.shields.io/pypi/v/PMCGrab.svg)](https://pypi.org/project/PMCGrab/)
@@ -9,6 +10,7 @@ From PMCID to structured JSON - bridge PubMed Central and your AI pipeline.
 ---
 
 ## Table of Contents
+
 1. [Key Features](#key-features)
 2. [Why PMCGrab?](#why-PMCGrab)
 3. [Installation](#installation)
@@ -27,38 +29,44 @@ From PMCID to structured JSON - bridge PubMed Central and your AI pipeline.
 ---
 
 ## Key Features
-* **Effortless Retrieval** – Fetch full-text articles with a single PMCID using NCBI Entrez.
-* **AI-Optimised JSON** – Output is pre-segmented into `Introduction`, `Methods`, `Results`, `Discussion`, etc., dramatically improving context relevance in RAG pipelines.
-* **Highly Concurrent** – Multithreaded batch downloader with configurable worker count, retries and timeouts.
-* **HTML & Reference Cleaning** – Utilities to strip or normalise embedded HTML, citations and footnotes.
+
+- **Effortless Retrieval** – Fetch full-text articles with a single PMCID using NCBI Entrez.
+- **AI-Optimised JSON** – Output is pre-segmented into `Introduction`, `Methods`, `Results`, `Discussion`, etc., dramatically improving context relevance in RAG pipelines.
+- **Highly Concurrent** – Multithreaded batch downloader with configurable worker count, retries and timeouts.
+- **HTML & Reference Cleaning** – Utilities to strip or normalise embedded HTML, citations and footnotes.
 
 ---
 
 ## Why PMCGrab?
+
 While the NCBI Entrez API already provides raw XML, consuming it directly is burdensome:
 
-|                     | Entrez XML | PMCGrab JSON |
-|---------------------|-----------:|-------------:|
-| Section delineation | ❌          | ✅ |
-| Straightforward to embed in vector DB | ❌ | ✅ |
-| Ready for LLM chunking | ❌ | ✅ |
-| Batch parallelism | Limited | Automatic |
+|                                       | Entrez XML | PMCGrab JSON |
+| ------------------------------------- | ---------: | -----------: |
+| Section delineation                   |         ❌ |           ✅ |
+| Straightforward to embed in vector DB |         ❌ |           ✅ |
+| Ready for LLM chunking                |         ❌ |           ✅ |
+| Batch parallelism                     |    Limited |    Automatic |
 
-Put simply, `PMCGrab` turns *pubmed central* papers into *AI-centric* assets.
+Put simply, `PMCGrab` turns _pubmed central_ papers into _AI-centric_ assets.
 
 ---
 
 ## Installation
+
 ### Requirements
-* Python ≥ 3.9
-* GCC or compatible compiler for `lxml` wheels on some platforms
+
+- Python ≥ 3.9
+- GCC or compatible compiler for `lxml` wheels on some platforms
 
 ### From PyPI
+
 ```bash
 pip install PMCGrab
 ```
 
 ### From Source
+
 ```bash
 git clone https://github.com/rajdeepmondaldotcom/PMCGrab.git
 cd PMCGrab
@@ -74,6 +82,7 @@ pip install .[dev,test,docs]
 ---
 
 ## Quick Start (Python)
+
 Fetch and inspect a single article:
 
 ```python
@@ -100,10 +109,10 @@ The script will:
 2. Print a brief summary for each article (title, abstract snippet, author count).
 3. Persist the full JSON output into `pmc_output/PMC<id>.json` for further inspection.
 
-
 ---
 
 ## Command-Line Interface
+
 Batch-process multiple PMCIDs directly from the shell:
 
 ```bash
@@ -114,6 +123,7 @@ python -m PMCGrab.cli.PMCGrab_cli \
 ```
 
 After completion you will find:
+
 ```
 pmc_output/
 ├── PMC7181753.json
@@ -126,6 +136,7 @@ A `summary.json` file captures success/failure for each ID.
 ---
 
 ## Batch Processing & Scaling
+
 Programmatic interface for large experiments:
 
 ```python
@@ -143,6 +154,7 @@ Internally, downloads are sharded across a thread pool and guarded by per-articl
 ---
 
 ## Output Schema
+
 Below is an abridged view of the generated JSON (actual output contains >30 fields):
 
 ```json
@@ -151,7 +163,11 @@ Below is an abridged view of the generated JSON (actual output contains >30 fiel
   "title": "...",
   "abstract": "...",
   "authors": [
-    {"Contributor_Type": "Author", "First_Name": "Llorenç", "Last_Name": "Solé-Boldo"}
+    {
+      "Contributor_Type": "Author",
+      "First_Name": "Llorenç",
+      "Last_Name": "Solé-Boldo"
+    }
   ],
   "body": {
     "Introduction": "The skin is the outermost protective barrier...",
@@ -159,7 +175,7 @@ Below is an abridged view of the generated JSON (actual output contains >30 fiel
     "Results": "...",
     "Discussion": "..."
   },
-  "published_date": {"epub": "2020-04-23"},
+  "published_date": { "epub": "2020-04-23" },
   "journal_title": "Communications Biology"
 }
 ```
@@ -169,12 +185,13 @@ This shape maps cleanly to embeddings or vector stores where section titles beco
 ---
 
 ## Configuration
+
 `PMCGrab` follows the 12-factor methodology: **environment variables override defaults**.
 
-| Variable            | Purpose                                                  | Default |
-|---------------------|----------------------------------------------------------|---------|
-| `PMCGrab_EMAILS`    | Comma-separated pool of email addresses rotated for API  | Internal sample list |
-| `PMCGrab_WORKERS`   | Default worker count for batch processing (if not set programmatically) | `16` |
+| Variable          | Purpose                                                                 | Default              |
+| ----------------- | ----------------------------------------------------------------------- | -------------------- |
+| `PMCGrab_EMAILS`  | Comma-separated pool of email addresses rotated for API                 | Internal sample list |
+| `PMCGrab_WORKERS` | Default worker count for batch processing (if not set programmatically) | `16`                 |
 
 Set them in your shell or orchestrator:
 
@@ -186,6 +203,7 @@ export PMCGrab_WORKERS=32
 ---
 
 ## Logging
+
 `PMCGrab` uses the standard Python `logging` library and leaves configuration to the host application:
 
 ```python
@@ -198,6 +216,7 @@ Switch to `DEBUG` for verbose network and parsing diagnostics.
 ---
 
 ## Development
+
 1. Clone the repository and install the dev extras:
    `pip install -e .[dev,test,docs]`
 2. Run the test-suite (100 % coverage):
@@ -212,21 +231,24 @@ Continuous Integration replicates the above on every pull request.
 ---
 
 ## Contributing
-Contributions are welcome!  Please read the [CONTRIBUTING.md](.github/CONTRIBUTING.md) for details on:
 
-* Code style and commit guidelines
-* Branching and release process
-* Reporting bugs or suggesting enhancements
-* Security disclosures (please email the maintainer directly)
+Contributions are welcome! Please read the [CONTRIBUTING.md](.github/CONTRIBUTING.md) for details on:
+
+- Code style and commit guidelines
+- Branching and release process
+- Reporting bugs or suggesting enhancements
+- Security disclosures (please email the maintainer directly)
 
 ---
 
 ## License
+
 `PMCGrab` is licensed under the [Apache 2.0](LICENSE) License.
 
 ---
 
 ## Citation
+
 If this project contributes to your research, please consider citing it:
 
 ```bibtex
@@ -242,5 +264,6 @@ If this project contributes to your research, please consider citing it:
 ---
 
 ## Acknowledgements
-* The National Center for Biotechnology Information (NCBI) for maintaining PubMed Central.
-* The open-source community behind **Biopython**, **BeautifulSoup**, **lxml** and other dependencies that make this project possible.
+
+- The National Center for Biotechnology Information (NCBI) for maintaining PubMed Central.
+- The open-source community behind **Biopython**, **BeautifulSoup**, **lxml** and other dependencies that make this project possible.

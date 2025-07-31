@@ -2,14 +2,14 @@ name: Documentation
 
 on:
   push:
-    branches: [ "main" ]
+    branches: ["main"]
     paths:
       - "docs/**"
       - "src/**"
       - "README.md"
       - "mkdocs.yml"
   pull_request:
-    branches: [ "main" ]
+    branches: ["main"]
     paths:
       - "docs/**"
       - "src/**"
@@ -55,7 +55,7 @@ jobs:
           site_url: https://rajdeepmondaldotcom.github.io/pmcgrab/
           repo_url: https://github.com/rajdeepmondaldotcom/pmcgrab
           repo_name: rajdeepmondaldotcom/pmcgrab
-          
+
           theme:
             name: material
             palette:
@@ -75,18 +75,18 @@ jobs:
               - navigation.top
               - search.highlight
               - content.code.copy
-          
+
           plugins:
             - search
             - mkdocstrings:
                 handlers:
                   python:
                     paths: [src]
-          
+
           nav:
             - Home: README.md
             - API Reference: api.md
-          
+
           markdown_extensions:
             - pymdownx.highlight
             - pymdownx.superfences
@@ -94,19 +94,19 @@ jobs:
             - pymdownx.details
           EOF
           fi
-          
+
           # Create docs directory if it doesn't exist
           mkdir -p docs
-          
+
           # Create API documentation
           if [ ! -f docs/api.md ]; then
             cat > docs/api.md << EOF
           # API Reference
-          
+
           ::: pmcgrab
           EOF
           fi
-          
+
           # Build docs
           uv run mkdocs build
 

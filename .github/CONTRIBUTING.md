@@ -18,17 +18,20 @@ By participating in this project, you agree to abide by our Code of Conduct (to 
 
 1. Fork the repository on GitHub
 2. Clone your fork locally:
+
    ```bash
    git clone https://github.com/your-username/pmcgrab.git
    cd pmcgrab
    ```
 
 3. Install development dependencies:
+
    ```bash
    uv sync --all-groups
    ```
 
 4. Install pre-commit hooks:
+
    ```bash
    uv run pre-commit install
    ```
@@ -141,6 +144,7 @@ uv run mkdocs build
 ### Bug Reports
 
 When filing bug reports, please include:
+
 - pmcgrab version
 - Python version
 - Operating system
@@ -151,6 +155,7 @@ When filing bug reports, please include:
 ### Feature Requests
 
 For feature requests, please provide:
+
 - Clear description of the problem
 - Proposed solution
 - Use cases and examples
@@ -159,6 +164,7 @@ For feature requests, please provide:
 ### Code Contributions
 
 We welcome contributions for:
+
 - Bug fixes
 - New features
 - Performance improvements
@@ -168,6 +174,7 @@ We welcome contributions for:
 ## Release Process
 
 Releases are automated:
+
 1. Version is bumped in `pyproject.toml`
 2. Changes are merged to `main`
 3. GitHub release is created automatically
@@ -182,6 +189,7 @@ Releases are automated:
 ## Recognition
 
 Contributors will be recognized in:
+
 - CHANGELOG.md
 - GitHub contributors page
 - Release notes

@@ -18,12 +18,14 @@ We take security vulnerabilities seriously. If you discover a security vulnerabi
 **Please do NOT report security vulnerabilities through public GitHub issues.**
 
 Instead, please report security vulnerabilities by emailing:
+
 - **Email**: rajdeep@rajdeepmondal.com
 - **Subject**: [SECURITY] pmcgrab vulnerability report
 
 ### What to Include
 
 Please include the following information in your report:
+
 - Description of the vulnerability
 - Steps to reproduce the issue
 - Potential impact of the vulnerability
@@ -65,6 +67,7 @@ pmcgrab includes several security features:
 ## Dependencies
 
 We regularly monitor our dependencies for security vulnerabilities using:
+
 - Automated dependency scanning
 - Regular dependency updates
 - Security advisories monitoring
@@ -72,6 +75,7 @@ We regularly monitor our dependencies for security vulnerabilities using:
 ## Contact
 
 For general security questions or concerns, please contact:
+
 - **Email**: rajdeep@rajdeepmondal.com
 - **GitHub**: [@rajdeepmondaldotcom](https://github.com/rajdeepmondaldotcom)
 
