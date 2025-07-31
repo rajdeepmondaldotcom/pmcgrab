@@ -43,6 +43,7 @@ else:
 # Cycle provides thread-safe round-robin iteration (no shared counter required)
 _email_cycle = itertools.cycle(EMAIL_POOL)
 
+
 def next_email() -> str:
     """Return the next email address in round-robin order."""
     return next(_email_cycle)

@@ -1,7 +1,4 @@
-import importlib
-from typing import Dict, Any
-
-import pytest
+from typing import Any, Dict
 
 from pmcgrab.application import processing as app_proc
 
@@ -18,10 +15,10 @@ def test_process_pmc_ids_success(monkeypatch):
 
     class DummySection:
         title = "Test Section"
-        
+
         def get_section_text(self):
             return "Test content"
-        
+
         def __str__(self):
             return "Test content"
 

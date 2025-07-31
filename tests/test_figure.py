@@ -1,6 +1,5 @@
 """Tests for pmcgrab.figure module."""
 
-import pytest
 import lxml.etree as ET
 
 from pmcgrab.figure import TextFigure
@@ -16,9 +15,9 @@ class TestTextFigure:
             <caption><p>Test figure caption</p></caption>
         </fig>"""
         element = ET.fromstring(xml)
-        
+
         figure = TextFigure(element)
-        
+
         assert figure.fig_dict["Label"] == "Figure 1"
         assert "Test figure caption" in figure.fig_dict["Caption"]
 
@@ -28,9 +27,9 @@ class TestTextFigure:
             <caption><p>Caption without label</p></caption>
         </fig>"""
         element = ET.fromstring(xml)
-        
+
         figure = TextFigure(element)
-        
+
         assert figure.fig_dict["Label"] is None
         assert "Caption without label" in figure.fig_dict["Caption"]
 
@@ -40,9 +39,9 @@ class TestTextFigure:
             <label>Figure 1</label>
         </fig>"""
         element = ET.fromstring(xml)
-        
+
         figure = TextFigure(element)
-        
+
         assert figure.fig_dict["Label"] == "Figure 1"
         assert figure.fig_dict["Caption"] is None
 
@@ -53,9 +52,9 @@ class TestTextFigure:
             <caption><p>Test caption</p></caption>
         </fig>"""
         element = ET.fromstring(xml)
-        
+
         figure = TextFigure(element)
-        
+
         # TextFigure doesn't store figure ID separately, just test it was created
         assert isinstance(figure, TextFigure)
 
@@ -67,9 +66,9 @@ class TestTextFigure:
             <graphic xlink:href="figure1.jpg"/>
         </fig>"""
         element = ET.fromstring(xml)
-        
+
         figure = TextFigure(element)
-        
+
         assert figure.fig_dict["Label"] == "Figure 1"
         assert "Figure with graphic" in figure.fig_dict["Caption"]
         assert figure.fig_dict["Link"] == "figure1.jpg"
@@ -85,9 +84,9 @@ class TestTextFigure:
             </caption>
         </fig>"""
         element = ET.fromstring(xml)
-        
+
         figure = TextFigure(element)
-        
+
         assert figure.fig_dict["Label"] == "Figure 1"
         assert "Complex Caption" in figure.fig_dict["Caption"]
         assert "First paragraph" in figure.fig_dict["Caption"]
@@ -100,10 +99,10 @@ class TestTextFigure:
             <caption><p>Test caption</p></caption>
         </fig>"""
         element = ET.fromstring(xml)
-        
+
         figure = TextFigure(element)
         fig_dict = figure.fig_dict
-        
+
         assert isinstance(fig_dict, dict)
         assert fig_dict["Label"] == "Figure 1"
         assert "Test caption" in fig_dict["Caption"]
@@ -113,10 +112,10 @@ class TestTextFigure:
         """Test fig_dict property with empty values."""
         xml = """<fig></fig>"""
         element = ET.fromstring(xml)
-        
+
         figure = TextFigure(element)
         fig_dict = figure.fig_dict
-        
+
         assert isinstance(fig_dict, dict)
         assert fig_dict["Label"] is None
         assert fig_dict["Caption"] is None
@@ -129,10 +128,10 @@ class TestTextFigure:
             <caption><p>Test figure for string representation</p></caption>
         </fig>"""
         element = ET.fromstring(xml)
-        
+
         figure = TextFigure(element)
         str_repr = str(figure)
-        
+
         assert isinstance(str_repr, str)
         assert "Figure 1" in str_repr
         assert "Test figure for string representation" in str_repr
@@ -141,13 +140,13 @@ class TestTextFigure:
         """Test TextFigure with minimal XML."""
         xml = """<fig></fig>"""
         element = ET.fromstring(xml)
-        
+
         figure = TextFigure(element)
-        
+
         assert figure.fig_dict["Label"] is None
         assert figure.fig_dict["Caption"] is None
         assert figure.fig_dict["Link"] is None
-        
+
         # Should still be able to create fig_dict
         fig_dict = figure.fig_dict
         assert isinstance(fig_dict, dict)
@@ -162,9 +161,9 @@ class TestTextFigure:
             </caption>
         </fig>"""
         element = ET.fromstring(xml)
-        
+
         figure = TextFigure(element)
-        
+
         assert figure.fig_dict["Label"] == "Figure 1"
         # Caption should contain the text content, possibly with formatting removed
         assert "bold" in figure.fig_dict["Caption"]

@@ -2,6 +2,7 @@
 
 Example: https://api.ncbi.nlm.nih.gov/lit/ctxp/v1/pmc/?format=medline&id=PMC12345
 """
+
 from __future__ import annotations
 
 from typing import Dict

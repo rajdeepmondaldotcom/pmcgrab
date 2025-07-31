@@ -2,10 +2,9 @@
 
 import lxml.etree as ET
 import pandas as pd
-import pytest
 
-from pmcgrab.model import Paper, TextSection, TextParagraph, TextTable
 from pmcgrab.figure import TextFigure
+from pmcgrab.model import Paper, TextParagraph, TextSection, TextTable
 from pmcgrab.utils import BasicBiMap
 
 
@@ -19,7 +18,7 @@ class TestPaper:
             "Title": "Test Title",
             "Authors": None,
             "Abstract": None,
-            "Body": None
+            "Body": None,
         }
         paper = Paper(paper_dict)
         assert paper.pmcid == 12345
@@ -30,6 +29,7 @@ class TestPaper:
 
     def test_paper_from_builder_with_mock(self, monkeypatch):
         """Test building Paper with mocked dependencies."""
+
         def mock_paper_dict_from_pmc(*args, **kwargs):
             return {
                 "PMCID": 12345,
@@ -42,10 +42,13 @@ class TestPaper:
                 "Volume": "1",
                 "Issue": "1",
             }
-        
+
         from pmcgrab.application import paper_builder
-        monkeypatch.setattr(paper_builder, "paper_dict_from_pmc", mock_paper_dict_from_pmc)
-        
+
+        monkeypatch.setattr(
+            paper_builder, "paper_dict_from_pmc", mock_paper_dict_from_pmc
+        )
+
         paper = paper_builder.build_paper_from_pmc(12345, email="test@example.com")
         assert paper.pmcid == 12345
         assert paper.title == "Test Title"
@@ -56,7 +59,7 @@ class TestPaper:
         # Empty dict should result in no data
         paper = Paper({})
         assert not paper.has_data  # No data initially
-        
+
         # Non-empty dict should have data
         paper_with_data = Paper({"PMCID": 12345, "Title": "Test Title"})
         assert paper_with_data.has_data  # Has data now
@@ -73,7 +76,7 @@ class TestTextSection:
         </sec>"""
         element = ET.fromstring(xml)
         ref_map = BasicBiMap()
-        
+
         section = TextSection(element, ref_map=ref_map)
         assert section.title == "Introduction"
         assert len(section.children) > 0
@@ -85,7 +88,7 @@ class TestTextSection:
         </sec>"""
         element = ET.fromstring(xml)
         ref_map = BasicBiMap()
-        
+
         section = TextSection(element, ref_map=ref_map)
         assert section.title is None
 
@@ -97,7 +100,7 @@ class TestTextSection:
         </sec>"""
         element = ET.fromstring(xml)
         ref_map = BasicBiMap()
-        
+
         section = TextSection(element, ref_map=ref_map)
         str_repr = str(section)
         assert "Test" in str_repr
@@ -112,7 +115,7 @@ class TestTextParagraph:
         xml = """<p>This is a simple paragraph.</p>"""
         element = ET.fromstring(xml)
         ref_map = BasicBiMap()
-        
+
         paragraph = TextParagraph(element, ref_map=ref_map)
         assert "simple paragraph" in str(paragraph)
 
@@ -121,7 +124,7 @@ class TestTextParagraph:
         xml = """<p>This has a <xref ref-type="bibr" rid="ref1">citation</xref>.</p>"""
         element = ET.fromstring(xml)
         ref_map = BasicBiMap()
-        
+
         paragraph = TextParagraph(element, ref_map=ref_map)
         # Should handle the reference gracefully
         assert isinstance(str(paragraph), str)
@@ -145,12 +148,12 @@ class TestTextTable:
             </table>
         </table-wrap>"""
         element = ET.fromstring(xml)
-        
+
         table = TextTable(element)
         # TextTable may or may not successfully parse the HTML table
         # Just check that it was created without error
         assert isinstance(table, TextTable)
-        assert hasattr(table, 'df')
+        assert hasattr(table, "df")
 
     def test_text_table_without_caption(self):
         """Test TextTable without caption."""
@@ -162,7 +165,7 @@ class TestTextTable:
             </table>
         </table-wrap>"""
         element = ET.fromstring(xml)
-        
+
         table = TextTable(element)
         # Just check it was created successfully
         assert isinstance(table, TextTable)
@@ -179,7 +182,7 @@ class TestTextFigure:
             <graphic xlink:href="figure1.jpg" xmlns:xlink="http://www.w3.org/1999/xlink"/>
         </fig>"""
         element = ET.fromstring(xml)
-        
+
         figure = TextFigure(element)
         assert figure.fig_dict["Label"] == "Figure 1"
         assert "Test figure caption" in figure.fig_dict["Caption"]
@@ -191,7 +194,7 @@ class TestTextFigure:
             <caption><p>Caption text</p></caption>
         </fig>"""
         element = ET.fromstring(xml)
-        
+
         figure = TextFigure(element)
         fig_dict = figure.fig_dict
         assert isinstance(fig_dict, dict)
@@ -204,6 +207,6 @@ class TestTextFigure:
             <caption><p>Caption only</p></caption>
         </fig>"""
         element = ET.fromstring(xml)
-        
+
         figure = TextFigure(element)
         assert figure.fig_dict["Label"] is None

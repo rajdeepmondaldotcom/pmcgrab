@@ -1,7 +1,7 @@
 """Common HTTP helper utilities for pmcgrab external service wrappers."""
+
 from __future__ import annotations
 
-import functools
 import time
 from typing import Any, Dict, Optional
 
@@ -11,13 +11,16 @@ __all__ = [
     "cached_get",
 ]
 
+
 def _backoff_sleep(retry: int) -> None:
     # Exponential back-off: 1, 2, 4, 8 … seconds (cap at 32)
-    sleep = min(2 ** retry, 32)
+    sleep = min(2**retry, 32)
     time.sleep(sleep)
 
 
-def cached_get(url: str, params: Optional[Dict[str, Any]] = None, **kwargs) -> requests.Response:
+def cached_get(
+    url: str, params: Optional[Dict[str, Any]] = None, **kwargs
+) -> requests.Response:
     """GET with retry + basic in-memory cache.
 
     Keeps a simple module-level dict so repeated calls in a single process hit the

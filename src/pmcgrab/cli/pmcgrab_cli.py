@@ -9,7 +9,6 @@ Example usage:
 
 import argparse
 import json
-import os
 from pathlib import Path
 from typing import List
 
@@ -21,7 +20,9 @@ from pmcgrab.application.processing import process_pmc_ids
 def _parse_args() -> argparse.Namespace:
     p = argparse.ArgumentParser(description="Batch download & parse PMC articles")
     p.add_argument("--ids", nargs="+", help="List of PMCIDs to process", required=True)
-    p.add_argument("--out", default="./pmc_output", help="Output directory for JSON files")
+    p.add_argument(
+        "--out", default="./pmc_output", help="Output directory for JSON files"
+    )
     p.add_argument("--workers", type=int, default=16, help="Thread-pool size")
     return p.parse_args()
 

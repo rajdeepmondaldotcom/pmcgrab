@@ -2,24 +2,19 @@ from __future__ import annotations
 
 """Miscellaneous content extraction helpers (permissions, funding, etc.)."""
 
-import datetime
 import textwrap
 import uuid
 import warnings
-from typing import List, Optional, Union, Dict
+from typing import Dict, List, Optional, Union
 
 import lxml.etree as ET
-import pandas as pd  # Required only for type hints – no heavy ops here
 
 from pmcgrab.constants import (
     UnexpectedMultipleMatchWarning,
     UnexpectedZeroMatchWarning,
     UnhandledTextTagWarning,
-    UnmatchedCitationWarning,
-    UnmatchedTableWarning,
 )
-from pmcgrab.model import TextParagraph, TextTable, TextFigure
-from pmcgrab.utils import BasicBiMap
+from pmcgrab.model import TextParagraph
 
 __all__: list[str] = [
     "gather_permissions",
@@ -39,6 +34,7 @@ __all__: list[str] = [
 # ----------------------------------------------------------------------------
 # Permissions / funding / versions
 # ----------------------------------------------------------------------------
+
 
 def gather_permissions(root: ET.Element) -> Optional[Dict[str, str]]:
     cp = root.xpath("//article-meta/permissions/copyright-statement/text()")
@@ -87,9 +83,11 @@ def gather_version_history(root: ET.Element) -> Optional[List[Dict[str, str]]]:
         versions.append({"Version": ver_num, "Date": date_str})
     return versions or None
 
+
 # ----------------------------------------------------------------------------
 # Equations & supplementary material
 # ----------------------------------------------------------------------------
+
 
 def gather_equations(root: ET.Element) -> Optional[List[str]]:
     eqs = []
@@ -113,17 +111,21 @@ def gather_supplementary_material(root: ET.Element) -> Optional[List[Dict[str, s
             ext = supp.find("ext-link")
             if ext is not None and ext.get("xlink:href"):
                 href = ext.get("xlink:href")
-        items.append({
-            "Label": label,
-            "Caption": caption,
-            "Href": href,
-            "Tag": supp.tag,
-        })
+        items.append(
+            {
+                "Label": label,
+                "Caption": caption,
+                "Href": href,
+                "Tag": supp.tag,
+            }
+        )
     return items or None
+
 
 # ----------------------------------------------------------------------------
 # Ethics / footnotes / acknowledgements / notes
 # ----------------------------------------------------------------------------
+
 
 def gather_ethics_disclosures(root: ET.Element) -> Optional[Dict[str, str]]:
     fields: Dict[str, tuple[str, list[str]]] = {
@@ -144,7 +146,8 @@ def gather_ethics_disclosures(root: ET.Element) -> Optional[Dict[str, str]]:
             result[key] = "\n".join(texts)
     if "Conflicts of Interest" not in result:
         texts = [
-            " ".join(fn.itertext()).strip() for fn in root.xpath("//fn[@fn-type='conflict']")
+            " ".join(fn.itertext()).strip()
+            for fn in root.xpath("//fn[@fn-type='conflict']")
         ]
         if texts:
             result["Conflicts of Interest"] = "\n".join(texts)
@@ -189,9 +192,11 @@ def gather_notes(root: ET.Element) -> List[str]:
         if note.getparent().tag != "notes"
     ]
 
+
 # ----------------------------------------------------------------------------
 # Custom meta
 # ----------------------------------------------------------------------------
+
 
 def gather_custom_metadata(root: ET.Element) -> Optional[Dict[str, str]]:
     custom: Dict[str, str] = {}

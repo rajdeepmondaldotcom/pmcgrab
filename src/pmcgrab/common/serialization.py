@@ -1,6 +1,7 @@
 """Serialization helpers – kept free of framework dependencies so they can be
 used from *any* layer.
 """
+
 from __future__ import annotations
 
 import datetime
@@ -25,7 +26,7 @@ def clean_doc(text: str) -> str:
     return cleandoc(text).replace("\n", "")
 
 
-def normalize_value(val: Any):  # noqa: ANN001 – *Any* is exactly what we want here
+def normalize_value(val: Any):
     """Recursively normalise data into JSON-serialisable primitives.
 
     * ``datetime`` objects → ISO-8601 strings.

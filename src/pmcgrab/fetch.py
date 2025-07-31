@@ -15,7 +15,8 @@ from pmcgrab.constants import (
     ValidationWarning,
     logger,
 )
-from pmcgrab.utils import clean_doc, strip_html_text_styling
+from pmcgrab.common.html_cleaning import strip_html_text_styling
+from pmcgrab.common.serialization import clean_doc
 
 
 def fetch_pmc_xml_string(
@@ -81,7 +82,7 @@ def clean_xml_string(
         Cleaned XML string suitable for ``lxml`` parsing.
     """
     return (
-        strip_html_text_styling(xml_string, verbose)
+        strip_html_text_styling(xml_string, verbose=verbose)
         if strip_text_styling
         else xml_string
     )

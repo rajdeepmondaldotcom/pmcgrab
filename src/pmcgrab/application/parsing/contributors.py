@@ -3,7 +3,7 @@ from __future__ import annotations
 """Contributor / author extraction helpers."""
 
 import warnings
-from typing import List, Tuple, Union, Optional
+from typing import List, Optional, Tuple, Union
 
 import lxml.etree as ET
 import pandas as pd
@@ -54,7 +54,9 @@ def extract_contributor_info(
             )
             inst_str = " ".join(str(i) for i in inst)
             affils.append(
-                f"{aid.strip()}: {inst_str}{texts[0].strip()}" if inst_str else f"{aid.strip()}: {texts[0].strip()}"
+                f"{aid.strip()}: {inst_str}{texts[0].strip()}"
+                if inst_str
+                else f"{aid.strip()}: {texts[0].strip()}"
             )
 
         orcid = contrib.findtext(".//contrib-id[@contrib-id-type='orcid']")

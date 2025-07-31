@@ -14,8 +14,8 @@ from typing import Any
 from pmcgrab.constants import ReversedBiMapComparisonWarning
 
 __all__: list[str] = [
-    "make_hashable",
     "BasicBiMap",
+    "make_hashable",
 ]
 
 

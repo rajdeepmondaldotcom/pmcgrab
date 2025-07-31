@@ -9,22 +9,25 @@ The sub-modules are intentionally small and focused:
 • **xml_processing** – XML/HTML text extraction and reference handling.
 """
 
-from pmcgrab.common.serialization import clean_doc, normalize_value  # noqa: F401
-from pmcgrab.common.html_cleaning import remove_html_tags, strip_html_text_styling  # noqa: F401
+from pmcgrab.common.html_cleaning import (
+    remove_html_tags,
+    strip_html_text_styling,
+)
+from pmcgrab.common.serialization import clean_doc, normalize_value
 from pmcgrab.common.xml_processing import (
-    stringify_children,
-    split_text_and_refs,
     generate_typed_mhtml_tag,
     remove_mhtml_tags,
-)  # noqa: F401
+    split_text_and_refs,
+    stringify_children,
+)
 
 __all__: list[str] = [
     "clean_doc",
+    "generate_typed_mhtml_tag",
     "normalize_value",
     "remove_html_tags",
-    "strip_html_text_styling",
-    "stringify_children",
-    "split_text_and_refs",
-    "generate_typed_mhtml_tag",
     "remove_mhtml_tags",
+    "split_text_and_refs",
+    "stringify_children",
+    "strip_html_text_styling",
 ]

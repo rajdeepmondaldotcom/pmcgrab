@@ -1,7 +1,8 @@
-import lxml.etree as ET
 from typing import Optional
 
-from pmcgrab.utils import BasicBiMap
+import lxml.etree as ET
+
+from pmcgrab.domain.value_objects import BasicBiMap
 
 
 class TextFigure:
@@ -33,7 +34,9 @@ class TextFigure:
         graphic_el = fig_root.find(".//graphic")
 
         label = label_el.text if label_el is not None else None
-        caption = ("".join(caption_el.itertext()).strip() if caption_el is not None else None)
+        caption = (
+            "".join(caption_el.itertext()).strip() if caption_el is not None else None
+        )
 
         graphic_href: Optional[str] = None
         if graphic_el is not None:

@@ -1,29 +1,25 @@
 import datetime
 import textwrap
-import time
 import warnings
 from typing import Optional, Union
-from urllib.error import HTTPError
 
 import lxml.etree as ET
 import pandas as pd
 
-from pmcgrab.figure import TextFigure
-
 from pmcgrab.constants import (
     MultipleTitleWarning,
-    PubmedHTTPError,
     ReadHTMLFailure,
     UnhandledTextTagWarning,
 )
-from pmcgrab.utils import (
-    BasicBiMap,
-    define_data_dict,
-    normalize_value,
+from pmcgrab.figure import TextFigure
+from pmcgrab.common.serialization import normalize_value
+from pmcgrab.common.xml_processing import (
     remove_mhtml_tags,
     split_text_and_refs,
     stringify_children,
 )
+from pmcgrab.domain.value_objects import BasicBiMap
+from pmcgrab.utils import define_data_dict
 
 
 class Paper:
@@ -84,7 +80,6 @@ class Paper:
         self.data_dict = define_data_dict()
         self.vector_collection = None
 
-
     def abstract_as_str(self) -> str:
         """Return the abstract as plain text."""
         return "\n".join(str(sec) for sec in self.abstract) if self.abstract else ""
@@ -128,7 +123,7 @@ class TextParagraph(TextElement):
         self.id = p_root.get("id")
         p_subtree = stringify_children(self.root)
         self.text_with_refs = split_text_and_refs(
-            p_subtree, self.get_ref_map(), id=self.id, on_unknown="keep"
+            p_subtree, self.get_ref_map(), element_id=self.id, on_unknown="keep"
         )
         self.text = remove_mhtml_tags(self.text_with_refs)
 

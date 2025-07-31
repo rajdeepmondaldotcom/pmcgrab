@@ -1,7 +1,9 @@
-import lxml.etree as ET
 import datetime
+
+import lxml.etree as ET
+
 from pmcgrab import parser
-from pmcgrab.model import TextSection, TextParagraph
+from pmcgrab.model import TextParagraph, TextSection
 
 SAMPLE_XML = """<?xml version='1.0' encoding='utf-8'?>
 <!DOCTYPE pmc-articleset SYSTEM 'https://dtd.nlm.nih.gov/ncbi/pmc/articleset/nlm-articleset-2.0.dtd'>
@@ -68,8 +70,10 @@ SAMPLE_XML = """<?xml version='1.0' encoding='utf-8'?>
 </pmc-articleset>
 """
 
+
 def fake_get_xml(*args, **kwargs):
     return ET.ElementTree(ET.fromstring(SAMPLE_XML.encode()))
+
 
 def test_paper_dict_from_pmc(monkeypatch):
     monkeypatch.setattr(parser, "get_xml", fake_get_xml)

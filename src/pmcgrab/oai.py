@@ -3,11 +3,12 @@
 The PMC endpoint: https://www.ncbi.nlm.nih.gov/pmc/oai/oai.cgi
 Implements minimal verbs required for harvesting.
 """
+
 from __future__ import annotations
 
 import xml.etree.ElementTree as ET
-from typing import Dict, Generator, Iterator, List, Optional
-from urllib.parse import urlencode
+from collections.abc import Generator, Iterator
+from typing import Dict, List, Optional
 
 from pmcgrab.http_utils import cached_get
 
@@ -19,6 +20,7 @@ class OAIPMHError(RuntimeError):
 
 
 # ---------------------- Low-level helpers -----------------------------
+
 
 def _request(verb: str, **params) -> ET.Element:
     q = {"verb": verb, **params}
@@ -41,8 +43,13 @@ def _get_resumption_token(root: ET.Element) -> Optional[str]:
 
 # ---------------------- Public API ------------------------------------
 
-def list_records(metadata_prefix: str = "pmc", from_: Optional[str] = None, until: Optional[str] = None,
-                 set_: Optional[str] = None) -> Iterator[ET.Element]:
+
+def list_records(
+    metadata_prefix: str = "pmc",
+    from_: Optional[str] = None,
+    until: Optional[str] = None,
+    set_: Optional[str] = None,
+) -> Iterator[ET.Element]:
     """Yield <record> elements lazily, transparently handling resumption tokens."""
     params: Dict[str, str] = {"metadataPrefix": metadata_prefix}
     if from_:
@@ -67,8 +74,12 @@ def get_record(identifier: str, metadata_prefix: str = "pmc") -> ET.Element:
     return root.find("{*}GetRecord/{*}record")  # type: ignore
 
 
-def list_identifiers(metadata_prefix: str = "pmc", from_: Optional[str] = None,
-                     until: Optional[str] = None, set_: Optional[str] = None) -> Generator[str, None, None]:
+def list_identifiers(
+    metadata_prefix: str = "pmc",
+    from_: Optional[str] = None,
+    until: Optional[str] = None,
+    set_: Optional[str] = None,
+) -> Generator[str, None, None]:
     params: Dict[str, str] = {"metadataPrefix": metadata_prefix}
     if from_:
         params["from"] = from_
@@ -90,8 +101,10 @@ def list_sets() -> List[Dict[str, str]]:
     root = _request("ListSets")
     sets = []
     for s in root.findall("{*}ListSets/{*}set"):
-        sets.append({
-            "setSpec": s.findtext("{*}setSpec"),
-            "setName": s.findtext("{*}setName"),
-        })
+        sets.append(
+            {
+                "setSpec": s.findtext("{*}setSpec"),
+                "setName": s.findtext("{*}setName"),
+            }
+        )
     return sets

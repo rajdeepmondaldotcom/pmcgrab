@@ -1,7 +1,7 @@
 """Tests for pmcgrab.application.parsing modules."""
 
 import datetime
-import pytest
+
 import lxml.etree as ET
 import pandas as pd
 
@@ -25,9 +25,9 @@ class TestContentParsing:
             </article-meta>
         </article>"""
         root = ET.fromstring(xml)
-        
+
         result = content.gather_permissions(root)
-        
+
         assert isinstance(result, dict)
         assert "Copyright Statement" in result
         assert "License Type" in result
@@ -39,9 +39,9 @@ class TestContentParsing:
         """Test permissions gathering with no permissions."""
         xml = "<article><article-meta></article-meta></article>"
         root = ET.fromstring(xml)
-        
+
         result = content.gather_permissions(root)
-        
+
         assert result is None
 
     def test_gather_funding(self):
@@ -63,9 +63,9 @@ class TestContentParsing:
             </article-meta>
         </article>"""
         root = ET.fromstring(xml)
-        
+
         result = content.gather_funding(root)
-        
+
         assert isinstance(result, list)
         assert "NIH" in result
         assert "NSF" in result
@@ -74,9 +74,9 @@ class TestContentParsing:
         """Test funding gathering with no funding info."""
         xml = "<article><article-meta></article-meta></article>"
         root = ET.fromstring(xml)
-        
+
         result = content.gather_funding(root)
-        
+
         assert result is None
 
     def test_gather_equations(self):
@@ -91,9 +91,9 @@ class TestContentParsing:
             </body>
         </article>"""
         root = ET.fromstring(xml)
-        
+
         result = content.gather_equations(root)
-        
+
         assert isinstance(result, list)
         assert len(result) > 0
         # Should contain MathML content
@@ -103,9 +103,9 @@ class TestContentParsing:
         """Test equation gathering with no equations."""
         xml = "<article><body><p>No equations here</p></body></article>"
         root = ET.fromstring(xml)
-        
+
         result = content.gather_equations(root)
-        
+
         assert result is None
 
     def test_gather_supplementary_material(self):
@@ -119,9 +119,9 @@ class TestContentParsing:
             </body>
         </article>"""
         root = ET.fromstring(xml)
-        
+
         result = content.gather_supplementary_material(root)
-        
+
         assert isinstance(result, list)
         assert len(result) == 1
         assert result[0]["Label"] == "Supplementary Material"
@@ -132,9 +132,9 @@ class TestContentParsing:
         """Test supplementary material gathering with none present."""
         xml = "<article><body><p>No supplementary material</p></body></article>"
         root = ET.fromstring(xml)
-        
+
         result = content.gather_supplementary_material(root)
-        
+
         assert result is None
 
 
@@ -161,9 +161,9 @@ class TestContributorsParsing:
             </contrib-group>
         </article>"""
         root = ET.fromstring(xml)
-        
+
         result = contributors.gather_authors(root)
-        
+
         assert isinstance(result, pd.DataFrame)
         assert len(result) == 1
         assert result.iloc[0]["First_Name"] == "Jane"
@@ -176,9 +176,9 @@ class TestContributorsParsing:
         """Test author gathering with no authors."""
         xml = "<article><contrib-group></contrib-group></article>"
         root = ET.fromstring(xml)
-        
+
         result = contributors.gather_authors(root)
-        
+
         assert result is None
 
     def test_gather_non_author_contributors(self):
@@ -194,9 +194,9 @@ class TestContributorsParsing:
             </contrib-group>
         </article>"""
         root = ET.fromstring(xml)
-        
+
         result = contributors.gather_non_author_contributors(root)
-        
+
         assert isinstance(result, pd.DataFrame)
         assert len(result) == 1
         assert result.iloc[0]["Contributor_Type"] == "Editor"
@@ -213,9 +213,9 @@ class TestContributorsParsing:
             </contrib-group>
         </article>"""
         root = ET.fromstring(xml)
-        
+
         result = contributors.gather_non_author_contributors(root)
-        
+
         assert isinstance(result, str)
         assert "No non-author contributors found" in result
 
@@ -235,18 +235,18 @@ class TestMetadataParsing:
             </front>
         </article>"""
         root = ET.fromstring(xml)
-        
+
         result = metadata.gather_title(root)
-        
+
         assert result == "Test Article Title"
 
     def test_gather_title_no_title(self):
         """Test title gathering with no title."""
         xml = "<article><front><article-meta></article-meta></front></article>"
         root = ET.fromstring(xml)
-        
+
         result = metadata.gather_title(root)
-        
+
         assert result is None
 
     def test_gather_journal_title(self):
@@ -259,9 +259,9 @@ class TestMetadataParsing:
             </front>
         </article>"""
         root = ET.fromstring(xml)
-        
+
         result = metadata.gather_journal_title(root)
-        
+
         assert result == "Test Journal"
 
     def test_gather_journal_id(self):
@@ -275,9 +275,9 @@ class TestMetadataParsing:
             </front>
         </article>"""
         root = ET.fromstring(xml)
-        
+
         result = metadata.gather_journal_id(root)
-        
+
         assert isinstance(result, dict)
         assert result["pmc"] == "testjournal"
         assert result["issn"] == "1234-5678"
@@ -296,9 +296,9 @@ class TestMetadataParsing:
             </front>
         </article>"""
         root = ET.fromstring(xml)
-        
+
         result = metadata.gather_published_date(root)
-        
+
         assert isinstance(result, dict)
         assert "epub" in result
         assert result["epub"] == datetime.date(2024, 1, 15)
@@ -316,9 +316,9 @@ class TestMetadataParsing:
             </front>
         </article>"""
         root = ET.fromstring(xml)
-        
+
         result = metadata.gather_keywords(root)
-        
+
         assert isinstance(result, list)
         assert len(result) == 1
         assert isinstance(result[0], dict)
@@ -337,10 +337,10 @@ class TestMetadataParsing:
             </front>
         </article>"""
         root = ET.fromstring(xml)
-        
+
         volume = metadata.gather_volume(root)
         issue = metadata.gather_issue(root)
-        
+
         assert volume == "10"
         assert issue == "3"
 
@@ -361,22 +361,22 @@ class TestSectionsParsing:
         </article>"""
         root = ET.fromstring(xml)
         ref_map = BasicBiMap()
-        
+
         result = sections.gather_abstract(root, ref_map)
-        
+
         assert isinstance(result, list)
         assert len(result) > 0
         # Should contain paragraph objects
-        assert hasattr(result[0], '__str__')
+        assert hasattr(result[0], "__str__")
 
     def test_gather_abstract_no_abstract(self):
         """Test abstract gathering with no abstract."""
         xml = "<article><front><article-meta></article-meta></front></article>"
         root = ET.fromstring(xml)
         ref_map = BasicBiMap()
-        
+
         result = sections.gather_abstract(root, ref_map)
-        
+
         assert result is None
 
     def test_gather_body(self):
@@ -395,21 +395,21 @@ class TestSectionsParsing:
         </article>"""
         root = ET.fromstring(xml)
         ref_map = BasicBiMap()
-        
+
         result = sections.gather_body(root, ref_map)
-        
+
         assert isinstance(result, list)
         assert len(result) == 2
         # Should contain section objects
-        assert hasattr(result[0], 'title')
-        assert hasattr(result[1], 'title')
+        assert hasattr(result[0], "title")
+        assert hasattr(result[1], "title")
 
     def test_gather_body_no_body(self):
         """Test body gathering with no body."""
         xml = "<article><front></front></article>"
         root = ET.fromstring(xml)
         ref_map = BasicBiMap()
-        
+
         result = sections.gather_body(root, ref_map)
-        
+
         assert result is None

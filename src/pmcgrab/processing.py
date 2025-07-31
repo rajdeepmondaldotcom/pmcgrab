@@ -9,16 +9,15 @@ from typing import Optional, Union
 
 from tqdm import tqdm
 
-from pmcgrab import constants
-from pmcgrab.constants import TimeoutException
-from pmcgrab.model import Paper
-from pmcgrab.utils import normalize_value
-
-
 # Deprecated – left for backwards compatibility. Delegates to application layer.
-from pmcgrab.application.processing import process_single_pmc  # noqa: F401
+from pmcgrab.application.processing import process_single_pmc
+from pmcgrab.constants import TimeoutException
+from pmcgrab.common.serialization import normalize_value
 
-def _legacy_process_single_pmc(pmc_id: str) -> Optional[dict[str, Union[str, dict, list]]]:
+
+def _legacy_process_single_pmc(
+    pmc_id: str,
+) -> Optional[dict[str, Union[str, dict, list]]]:
     """Download and parse one PMC article.
 
     Args:
@@ -34,10 +33,12 @@ def _legacy_process_single_pmc(pmc_id: str) -> Optional[dict[str, Union[str, dic
     try:
         pmc_id_num = int(pmc_id)
         from pmcgrab.infrastructure.settings import next_email
+
         current_email = next_email()
         signal.alarm(60)
         try:
             from pmcgrab.application.paper_builder import build_paper_from_pmc
+
             p_obj = build_paper_from_pmc(
                 pmc_id_num, email=current_email, download=True, validate=False
             )

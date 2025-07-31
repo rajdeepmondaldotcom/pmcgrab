@@ -1,4 +1,5 @@
 from __future__ import annotations
+
 """
 pmcgrab.parser
 ==============
@@ -58,26 +59,32 @@ DTD validation, HTML cleaning, and external service wrappers.
 
 import copy
 import warnings
-from typing import Optional, Union, Dict, List
+from typing import Dict, List, Optional, Union
 
 import lxml.etree as ET
 
+from pmcgrab.application.parsing import (
+    content as _content,
+)
+
+# Cohesive parsing helpers ---------------------------------------------------
+from pmcgrab.application.parsing import (
+    contributors as _contributors,
+)
+from pmcgrab.application.parsing import (
+    metadata as _metadata,
+)
+from pmcgrab.application.parsing import (
+    sections as _sections,
+)
 from pmcgrab.constants import (
     UnmatchedCitationWarning,
     UnmatchedTableWarning,
     logger,
 )
 from pmcgrab.fetch import get_xml
-from pmcgrab.model import TextParagraph, TextTable, TextFigure
-from pmcgrab.utils import BasicBiMap
-
-# Cohesive parsing helpers ---------------------------------------------------
-from pmcgrab.application.parsing import (
-    contributors as _contributors,
-    content as _content,
-    metadata as _metadata,
-    sections as _sections,
-)
+from pmcgrab.model import TextFigure, TextTable
+from pmcgrab.domain.value_objects import BasicBiMap
 
 # ---------------------------------------------------------------------------
 # Public helper re-exports (thin aliases)
@@ -107,6 +114,7 @@ gather_issue = _metadata.gather_issue
 
 # Pages (remain local – trivial one-liners)
 
+
 def gather_fpage(root: ET.Element) -> Optional[str]:
     """Return first page number if available."""
     fpage = root.xpath("//article-meta/fpage/text()")
@@ -117,6 +125,7 @@ def gather_lpage(root: ET.Element) -> Optional[str]:
     """Return last page number if available."""
     lpage = root.xpath("//article-meta/lpage/text()")
     return lpage[0] if lpage else None
+
 
 # Permissions / funding / misc content ---------------------------------------
 gather_permissions = _content.gather_permissions
@@ -134,7 +143,10 @@ gather_custom_metadata = _content.gather_custom_metadata
 # Internal helpers
 # ---------------------------------------------------------------------------
 
-def _parse_citation(citation_root: ET.Element) -> Union[Dict[str, Union[List[str], str]], str]:
+
+def _parse_citation(
+    citation_root: ET.Element,
+) -> Union[Dict[str, Union[List[str], str]], str]:
     """Parse a citation entry into a dictionary of reference details."""
     authors = citation_root.xpath('.//person-group[@person-group-type="author"]/name')
     if not authors:
@@ -178,7 +190,9 @@ def process_reference_map(paper_root: ET.Element, ref_map: BasicBiMap) -> BasicB
             rid = root.get("rid")
             if rtype == "bibr":
                 if not rid:
-                    warnings.warn("Citation without reference id", UnmatchedCitationWarning)
+                    warnings.warn(
+                        "Citation without reference id", UnmatchedCitationWarning
+                    )
                     continue
                 matches = paper_root.xpath(f"//ref[@id='{rid}']")
                 if not matches:
@@ -214,6 +228,7 @@ def process_reference_map(paper_root: ET.Element, ref_map: BasicBiMap) -> BasicB
 
 # Helper for build_complete_paper_dict ---------------------------------------
 
+
 def _get_ref_type(value):
     if isinstance(value, TextTable):
         return "table"
@@ -236,9 +251,11 @@ def _split_citations_tables_figs(ref_map: BasicBiMap):
             figures.append(item if isinstance(item, dict) else item.fig_dict)
     return citations, tables, figures
 
+
 # ---------------------------------------------------------------------------
 # Public orchestrators
 # ---------------------------------------------------------------------------
+
 
 def paper_dict_from_pmc(
     pmcid: int,
@@ -322,7 +339,14 @@ def build_complete_paper_dict(
     }
 
     citations, tables, figures = _split_citations_tables_figs(d["Ref Map"])
-    d.update({"Citations": citations, "Tables": tables, "Figures": figures, "Equations": gather_equations(root)})
+    d.update(
+        {
+            "Citations": citations,
+            "Tables": tables,
+            "Figures": figures,
+            "Equations": gather_equations(root),
+        }
+    )
 
     if verbose:
         logger.info("Finished generating Paper object for PMCID=%s", pmcid)

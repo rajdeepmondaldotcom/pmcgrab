@@ -1,8 +1,8 @@
 import lxml.etree as ET
 import pytest
 
-from pmcgrab.fetch import validate_xml
 from pmcgrab.constants import NoDTDFoundError
+from pmcgrab.fetch import validate_xml
 
 SUPPORTED_DTD = "https://dtd.nlm.nih.gov/ncbi/pmc/articleset/nlm-articleset-2.0.dtd"
 
@@ -20,6 +20,7 @@ UNSUPPORTED_XML = """<?xml version='1.0' encoding='utf-8'?>
 
 NO_DOCTYPE_XML = "<root/>"
 
+
 class DummyDTD:
     def __init__(self, *args, **kwargs):
         pass
@@ -33,10 +34,12 @@ def test_validate_xml_with_supported_dtd_returns_false(monkeypatch):
     tree = ET.ElementTree(ET.fromstring(SIMPLE_XML.encode()))
     assert validate_xml(tree) is False
 
+
 def test_validate_xml_unsupported_dtd_raises_error():
     tree = ET.ElementTree(ET.fromstring(UNSUPPORTED_XML.encode()))
     with pytest.raises(NoDTDFoundError):
         validate_xml(tree)
+
 
 def test_validate_xml_missing_doctype_raises_error():
     tree = ET.ElementTree(ET.fromstring(NO_DOCTYPE_XML.encode()))

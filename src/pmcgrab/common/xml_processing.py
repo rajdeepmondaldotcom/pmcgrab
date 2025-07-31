@@ -12,15 +12,15 @@ from typing import Optional
 
 import lxml.etree as ET
 
-from pmcgrab.domain.value_objects import BasicBiMap
 from pmcgrab.common.html_cleaning import strip_html_text_styling
-from pmcgrab.constants import UnexpectedTagWarning, logger
+from pmcgrab.constants import logger
+from pmcgrab.domain.value_objects import BasicBiMap
 
 __all__: list[str] = [
-    "stringify_children",
-    "split_text_and_refs",
     "generate_typed_mhtml_tag",
     "remove_mhtml_tags",
+    "split_text_and_refs",
+    "stringify_children",
 ]
 
 
@@ -30,7 +30,9 @@ def stringify_children(node: ET.Element, *, encoding: str = "utf-8") -> str:
         c
         for c in chain(
             (node.text,),
-            chain(*((ET.tostring(child, with_tail=False), child.tail) for child in node)),
+            chain(
+                *((ET.tostring(child, with_tail=False), child.tail) for child in node)
+            ),
             (node.tail,),
         )
         if c
@@ -76,7 +78,9 @@ def split_text_and_refs(
         cleaned.append(text[: match.start()])
 
         if tag_name not in _ALLOWED_TAGS:
-            logger.debug("Encountered disallowed tag '%s' in element %s", tag_name, element_id)
+            logger.debug(
+                "Encountered disallowed tag '%s' in element %s", tag_name, element_id
+            )
             if on_unknown == "keep":
                 cleaned.append(tag_contents)
             text = text[match.end() :]

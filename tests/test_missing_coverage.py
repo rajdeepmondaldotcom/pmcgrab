@@ -1,45 +1,58 @@
 """Tests targeting specific missing coverage areas to reach 100%."""
 
-import os
-import tempfile
-import warnings
-import pytest
-from unittest.mock import patch, MagicMock, mock_open
+from unittest.mock import MagicMock, mock_open, patch
+
 import lxml.etree as ET
 import pandas as pd
-from urllib.error import HTTPError
+import pytest
+
+from pmcgrab.common.html_cleaning import remove_html_tags as common_remove_html_tags
+from pmcgrab.common.xml_processing import (
+    generate_typed_mhtml_tag as common_generate_typed_mhtml_tag,
+)
+from pmcgrab.common.xml_processing import (
+    remove_mhtml_tags as common_remove_mhtml_tags,
+)
+from pmcgrab.common.xml_processing import (
+    split_text_and_refs as common_split_text_and_refs,
+)
+from pmcgrab.common.xml_processing import (
+    stringify_children as common_stringify_children,
+)
+from pmcgrab.fetch import fetch_pmc_xml_string, get_xml
+from pmcgrab.oa_service import fetch as oa_fetch
+from pmcgrab.oai import list_records, list_sets
+from pmcgrab.parser import (
+    _extract_xpath_text,
+    _parse_citation,
+    gather_fpage,
+    gather_lpage,
+    paper_dict_from_pmc,
+    process_reference_map,
+)
 
 # Import modules with missing coverage
 from pmcgrab.processing import (
-    _legacy_process_single_pmc, process_pmc_ids_in_batches, 
-    process_in_batches, process_in_batches_with_retry
+    _legacy_process_single_pmc,
+    process_pmc_ids_in_batches,
 )
-from pmcgrab.parser import (
-    paper_dict_from_pmc, generate_paper_dict, build_complete_paper_dict,
-    gather_fpage, gather_lpage, _parse_citation, _extract_xpath_text, 
-    process_reference_map
-)
-from pmcgrab.oai import list_sets, list_records, get_record, list_identifiers
-from pmcgrab.oa_service import fetch as oa_fetch
-from pmcgrab.fetch import get_xml, fetch_pmc_xml_string
 from pmcgrab.utils import (
-    clean_doc, normalize_value as utils_normalize_value, 
-    stringify_children, split_text_and_refs, generate_typed_mhtml_tag, 
-    remove_mhtml_tags, BasicBiMap
+    BasicBiMap,
+    clean_doc,
+    generate_typed_mhtml_tag,
+    remove_mhtml_tags,
+    split_text_and_refs,
+    stringify_children,
 )
-from pmcgrab.common.html_cleaning import remove_html_tags as common_remove_html_tags
-from pmcgrab.common.xml_processing import (
-    stringify_children as common_stringify_children,
-    split_text_and_refs as common_split_text_and_refs,
-    generate_typed_mhtml_tag as common_generate_typed_mhtml_tag,
-    remove_mhtml_tags as common_remove_mhtml_tags
+from pmcgrab.utils import (
+    normalize_value as utils_normalize_value,
 )
 
 
 class TestProcessingLegacyModule:
     """Test legacy processing module thoroughly."""
-    
-    @patch('pmcgrab.processing.build_paper_from_pmc')
+
+    @patch("pmcgrab.processing.build_paper_from_pmc")
     def test_legacy_process_single_pmc_workflow(self, mock_build_paper):
         """Test complete workflow of _legacy_process_single_pmc."""
         # Mock Paper.from_pmc to return a paper with all attributes
@@ -47,79 +60,97 @@ class TestProcessingLegacyModule:
         mock_paper.has_data = True
         mock_paper.abstract = "Test abstract"
         mock_paper.title = "Test title"
-        
+
         # Mock body with sections that have get_section_text method
         mock_section = MagicMock()
         mock_section.title = "Introduction"
         mock_section.get_section_text.return_value = "Introduction text"
         mock_paper.body = [mock_section]
-        
+
         # Mock all other attributes
-        for attr in ['authors', 'non_author_contributors', 'publisher_name', 
-                    'publisher_location', 'article_id', 'journal_title', 
-                    'journal_id', 'issn', 'article_types', 'article_categories',
-                    'published_date', 'volume', 'issue', 'permissions', 
-                    'copyright', 'license', 'funding', 'footnote', 
-                    'acknowledgements', 'notes', 'custom_meta']:
+        for attr in [
+            "authors",
+            "non_author_contributors",
+            "publisher_name",
+            "publisher_location",
+            "article_id",
+            "journal_title",
+            "journal_id",
+            "issn",
+            "article_types",
+            "article_categories",
+            "published_date",
+            "volume",
+            "issue",
+            "permissions",
+            "copyright",
+            "license",
+            "funding",
+            "footnote",
+            "acknowledgements",
+            "notes",
+            "custom_meta",
+        ]:
             setattr(mock_paper, attr, f"mock_{attr}")
-        
+
         mock_build_paper.return_value = mock_paper
-        
+
         result = _legacy_process_single_pmc("12345")
-        
+
         assert isinstance(result, dict)
         assert result["pmc_id"] == "12345"
         assert result["title"] == "Test title"
         assert "Introduction" in result["body"]
 
-    @patch('signal.alarm')
+    @patch("signal.alarm")
     def test_legacy_process_single_pmc_timeout_handling(self, mock_alarm):
         """Test timeout handling in _legacy_process_single_pmc."""
-        with patch('pmcgrab.processing.build_paper_from_pmc') as mock_build_paper:
+        with patch("pmcgrab.processing.build_paper_from_pmc") as mock_build_paper:
             from pmcgrab.constants import TimeoutException
+
             mock_build_paper.side_effect = TimeoutException("Timeout")
-            
+
             result = _legacy_process_single_pmc("12345")
-            
+
             assert result is None
             # Verify alarm was set and cleared
             assert mock_alarm.call_count >= 2
 
     def test_process_pmc_ids_in_batches(self):
         """Test batch processing of multiple PMCs."""
-        with patch('pmcgrab.processing._legacy_process_single_pmc') as mock_process:
+        with patch("pmcgrab.processing._legacy_process_single_pmc") as mock_process:
             # Mock some successes and failures
             mock_process.side_effect = [
                 {"pmc_id": "1", "title": "Paper 1"},
                 None,  # Failed
-                {"pmc_id": "3", "title": "Paper 3"}
+                {"pmc_id": "3", "title": "Paper 3"},
             ]
-            
+
             result = process_pmc_ids_in_batches(["1", "2", "3"], batch_size=2)
-            
+
             # Should return a dict of results
             assert isinstance(result, dict)
 
     def test_utils_normalize_value_comprehensive(self):
         """Test utils normalize_value with all supported types."""
         import datetime
-        
+
         # Test all datetime types
         dt = datetime.datetime(2024, 1, 15, 10, 30, 45)
         assert utils_normalize_value(dt) == "2024-01-15T10:30:45"
-        
+
         date = datetime.date(2024, 1, 15)
         assert utils_normalize_value(date) == "2024-01-15"
-        
+
         # Test DataFrame
         df = pd.DataFrame({"a": [1, 2], "b": ["x", "y"]})
         result = utils_normalize_value(df)
         assert result == [{"a": 1, "b": "x"}, {"a": 2, "b": "y"}]
-        
+
         # Test nested structures
         nested = {
             "date": datetime.date(2024, 1, 15),
-            "list": [1, 2, {"inner_date": datetime.datetime(2024, 1, 15, 12, 0)}]
+            "list": [1, 2, {"inner_date": datetime.datetime(2024, 1, 15, 12, 0)}],
         }
         result = utils_normalize_value(nested)
         assert result["date"] == "2024-01-15"
@@ -128,7 +159,7 @@ class TestProcessingLegacyModule:
 
 class TestParserModule:
     """Test parser module missing coverage."""
-    
+
     def test_gather_pages_functions(self):
         """Test page gathering functions."""
         xml = """<article>
@@ -140,7 +171,7 @@ class TestParserModule:
             </front>
         </article>"""
         root = ET.fromstring(xml)
-        
+
         assert gather_fpage(root) == "123"
         assert gather_lpage(root) == "145"
 
@@ -148,7 +179,7 @@ class TestParserModule:
         """Test page gathering with missing data."""
         xml = "<article><front><article-meta></article-meta></front></article>"
         root = ET.fromstring(xml)
-        
+
         assert gather_fpage(root) is None
         assert gather_lpage(root) is None
 
@@ -165,9 +196,9 @@ class TestParserModule:
             </element-citation>
         </ref>"""
         ref_element = ET.fromstring(xml)
-        
+
         result = _parse_citation(ref_element)
-        
+
         assert isinstance(result, dict)
         assert "authors" in result or "title" in result  # Should extract some info
 
@@ -179,11 +210,11 @@ class TestParserModule:
             <nested><item>Nested</item></nested>
         </root>"""
         element = ET.fromstring(xml)
-        
+
         # Test single match
         result = _extract_xpath_text(element, ".//item[1]")
         assert result == "First"
-        
+
         # Test multiple matches
         result = _extract_xpath_text(element, ".//item", multiple=True)
         assert isinstance(result, list)
@@ -208,13 +239,13 @@ class TestParserModule:
             </back>
         </article>"""
         root = ET.fromstring(xml)
-        
+
         ref_map = process_reference_map(root)
-        
+
         assert isinstance(ref_map, BasicBiMap)
         assert len(ref_map) >= 2
 
-    @patch('pmcgrab.parser.get_xml')
+    @patch("pmcgrab.parser.get_xml")
     def test_paper_dict_from_pmc_with_errors(self, mock_get_xml):
         """Test paper_dict_from_pmc with error handling."""
         # Mock XML that will cause parsing errors
@@ -230,23 +261,25 @@ class TestParserModule:
                 </front>
             </article>
         </pmc-articleset>"""
-        
+
         mock_tree = ET.ElementTree(ET.fromstring(problematic_xml))
         mock_get_xml.return_value = mock_tree
-        
+
         # Test with suppress_errors=False (should raise)
         with pytest.raises(Exception):
             paper_dict_from_pmc(12345, email="test@example.com", suppress_errors=False)
-        
+
         # Test with suppress_errors=True (should return empty dict)
-        result = paper_dict_from_pmc(12345, email="test@example.com", suppress_errors=True)
+        result = paper_dict_from_pmc(
+            12345, email="test@example.com", suppress_errors=True
+        )
         assert result == {}
 
 
 class TestOaiModule:
     """Test OAI-PMH module missing coverage."""
-    
-    @patch('pmcgrab.http_utils.cached_get')
+
+    @patch("pmcgrab.http_utils.cached_get")
     def test_list_sets_with_real_response(self, mock_get):
         """Test list_sets with realistic OAI response."""
         oai_response = """<?xml version="1.0" encoding="UTF-8"?>
@@ -269,19 +302,19 @@ class TestOaiModule:
                 </set>
             </ListSets>
         </OAI-PMH>"""
-        
+
         mock_response = MagicMock()
         mock_response.text = oai_response
         mock_response.raise_for_status = MagicMock()
         mock_get.return_value = mock_response
-        
+
         result = list_sets()
-        
+
         # Should parse the XML and extract sets
         assert isinstance(result, list)
         # The actual function might call real API, so just verify it returns data
 
-    @patch('pmcgrab.http_utils.cached_get')
+    @patch("pmcgrab.http_utils.cached_get")
     def test_list_records_functionality(self, mock_get):
         """Test list_records function."""
         oai_response = """<?xml version="1.0" encoding="UTF-8"?>
@@ -300,12 +333,12 @@ class TestOaiModule:
                 </record>
             </ListRecords>
         </OAI-PMH>"""
-        
+
         mock_response = MagicMock()
         mock_response.text = oai_response
         mock_response.raise_for_status = MagicMock()
         mock_get.return_value = mock_response
-        
+
         try:
             result = list_records()
             assert isinstance(result, (list, type(None)))
@@ -316,8 +349,8 @@ class TestOaiModule:
 
 class TestOaServiceModule:
     """Test OA service module missing coverage."""
-    
-    @patch('pmcgrab.http_utils.cached_get')
+
+    @patch("pmcgrab.http_utils.cached_get")
     def test_oa_fetch_with_valid_response(self, mock_get):
         """Test OA fetch with valid XML response."""
         oa_response = """<?xml version="1.0"?>
@@ -328,72 +361,76 @@ class TestOaServiceModule:
                 <link format="xml">http://example.com/paper.xml</link>
             </record>
         </records>"""
-        
+
         mock_response = MagicMock()
         mock_response.text = oa_response
         mock_response.raise_for_status = MagicMock()
         mock_get.return_value = mock_response
-        
+
         result = oa_fetch("PMC12345")
-        
+
         # Function might return None if parsing fails, just check it doesn't crash
         assert result is None or isinstance(result, dict)
 
-    @patch('pmcgrab.http_utils.cached_get')
+    @patch("pmcgrab.http_utils.cached_get")
     def test_oa_fetch_with_empty_response(self, mock_get):
         """Test OA fetch with empty response."""
         oa_response = """<?xml version="1.0"?>
         <records retrieved="0">
         </records>"""
-        
+
         mock_response = MagicMock()
         mock_response.text = oa_response
         mock_response.raise_for_status = MagicMock()
         mock_get.return_value = mock_response
-        
+
         result = oa_fetch("PMC99999")
-        
+
         assert result is None
 
 
 class TestFetchModuleAdvanced:
     """Test advanced fetch module scenarios."""
-    
-    @patch('pmcgrab.fetch.Entrez.efetch')
-    @patch('pmcgrab.fetch.os.path.exists')
+
+    @patch("pmcgrab.fetch.Entrez.efetch")
+    @patch("pmcgrab.fetch.os.path.exists")
     def test_fetch_pmc_xml_string_caching(self, mock_exists, mock_efetch):
         """Test XML string fetching with caching."""
         # Test cache hit
         mock_exists.return_value = True
-        cached_xml = "<pmc-articleset><article><title>Cached</title></article></pmc-articleset>"
-        
-        with patch('builtins.open', mock_open(read_data=cached_xml)):
-            result = fetch_pmc_xml_string(12345, "test@example.com", download=True, verbose=True)
+        cached_xml = (
+            "<pmc-articleset><article><title>Cached</title></article></pmc-articleset>"
+        )
+
+        with patch("builtins.open", mock_open(read_data=cached_xml)):
+            result = fetch_pmc_xml_string(
+                12345, "test@example.com", download=True, verbose=True
+            )
             assert "Cached" in result
             mock_efetch.assert_not_called()
 
-    @patch('pmcgrab.fetch.get_xml')
+    @patch("pmcgrab.fetch.get_xml")
     def test_get_xml_with_validation_failure(self, mock_get_xml):
         """Test get_xml when validation fails."""
         mock_tree = MagicMock()
         mock_get_xml.return_value = mock_tree
-        
-        with patch('pmcgrab.fetch.validate_xml') as mock_validate:
+
+        with patch("pmcgrab.fetch.validate_xml") as mock_validate:
             mock_validate.side_effect = ValueError("Validation failed")
-            
+
             with pytest.raises(ValueError):
                 get_xml(12345, "test@example.com", validate=True)
 
 
 class TestUtilsModuleAdvanced:
     """Test advanced utils module scenarios."""
-    
+
     def test_clean_doc_edge_cases(self):
         """Test clean_doc with edge cases."""
         # Test with only whitespace
         result = clean_doc("   \n\t  \n  ")
         assert result == ""
-        
+
         # Test with mixed indentation
         text = """
             Line 1
@@ -418,9 +455,9 @@ class TestUtilsModuleAdvanced:
             Text after
         </parent>"""
         element = ET.fromstring(xml)
-        
+
         result = stringify_children(element)
-        
+
         assert "Text before" in result
         assert "Child text" in result
         assert "Grandchild text" in result
@@ -440,9 +477,9 @@ class TestUtilsModuleAdvanced:
         </p>"""
         element = ET.fromstring(xml)
         ref_map = BasicBiMap()
-        
+
         result = split_text_and_refs(element, ref_map)
-        
+
         assert isinstance(result, str)
         assert "This text has multiple" in result
 
@@ -456,17 +493,17 @@ class TestUtilsModuleAdvanced:
                 tags.append(tag)
                 assert tag_type.upper() in tag
                 assert str(i) in tag
-        
+
         # Create text with all tags
         text_with_tags = "This is text with " + " and ".join(tags) + " references."
-        
+
         # Remove all tags
         clean_text = remove_mhtml_tags(text_with_tags)
-        
+
         # Verify all tags are removed
         for tag in tags:
             assert tag not in clean_text
-        
+
         # Verify original text remains
         assert "This is text with" in clean_text
         assert "references." in clean_text
@@ -474,7 +511,7 @@ class TestUtilsModuleAdvanced:
 
 class TestCommonModulesAdvanced:
     """Test common modules with advanced scenarios."""
-    
+
     def test_common_html_cleaning_comprehensive(self):
         """Test common HTML cleaning with comprehensive scenarios."""
         # Test with complex nested HTML
@@ -491,12 +528,12 @@ class TestCommonModulesAdvanced:
             </table>
         </div>
         """
-        
+
         removals = ["<div>", "<h1>", "<ul>", "<table>", "<tr>"]
         replaces = {"<strong>": "**", "<em>": "*", "<li>": "• ", "<td>": "| "}
-        
+
         result = common_remove_html_tags(html, removals, replaces)
-        
+
         assert "**bold**" in result
         assert "*italic*" in result
         assert "• Item 1" in result
@@ -513,12 +550,12 @@ class TestCommonModulesAdvanced:
             </child2>
         </parent>"""
         element = ET.fromstring(xml)
-        
+
         result = common_stringify_children(element)
         assert "Child 1 text" in result
         assert "Text between children" in result
         assert "Nested text" in result
-        
+
         # Test split_text_and_refs
         ref_xml = """<p>
             Text with <xref rid="ref1">reference</xref> 
@@ -526,16 +563,16 @@ class TestCommonModulesAdvanced:
         </p>"""
         ref_element = ET.fromstring(ref_xml)
         ref_map = BasicBiMap()
-        
+
         ref_result = common_split_text_and_refs(ref_element, ref_map)
         assert isinstance(ref_result, str)
         assert "Text with" in ref_result
-        
+
         # Test MHTML tag operations
         tag = common_generate_typed_mhtml_tag("test", 1)
         assert "TEST" in tag
         assert "1" in tag
-        
+
         text_with_tag = f"Text with {tag} in it."
         clean_text = common_remove_mhtml_tags(text_with_tag)
         assert tag not in clean_text

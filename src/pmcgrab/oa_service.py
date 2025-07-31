@@ -3,6 +3,7 @@
 Returns dicts keyed by PMCID/PMID.
 Documentation: https://www.ncbi.nlm.nih.gov/pmc/tools/oa-service/
 """
+
 from __future__ import annotations
 
 import xml.etree.ElementTree as ET
@@ -25,7 +26,9 @@ def fetch(article_id: str, id_type: str = "pmcid") -> Optional[Dict[str, str]]:
 
     id_type is one of pmcid|pmid|doi.
     """
-    resp = cached_get(_BASE_URL, params={id_type: article_id}, headers={"User-Agent": "pmcgrab/0.1"})
+    resp = cached_get(
+        _BASE_URL, params={id_type: article_id}, headers={"User-Agent": "pmcgrab/0.1"}
+    )
     root = ET.fromstring(resp.content)
     rec = root.find("record")
     if rec is None:

@@ -12,8 +12,8 @@ from pmcgrab.constants import (
     UnexpectedZeroMatchWarning,
     UnhandledTextTagWarning,
 )
-from pmcgrab.model import TextSection, TextParagraph
-from pmcgrab.utils import BasicBiMap
+from pmcgrab.model import TextParagraph, TextSection
+from pmcgrab.domain.value_objects import BasicBiMap
 
 __all__: list[str] = [
     "gather_abstract",
@@ -24,6 +24,7 @@ __all__: list[str] = [
 # ----------------------------------------------------------------------------
 # Internal helpers (kept private)
 # ----------------------------------------------------------------------------
+
 
 def _collect_sections(
     parent: ET.Element, context: str, ref_map: BasicBiMap
@@ -68,6 +69,7 @@ def _gather_sections(
 # ----------------------------------------------------------------------------
 # Public gatherers
 # ----------------------------------------------------------------------------
+
 
 def gather_abstract(
     root: ET.Element, ref_map: BasicBiMap

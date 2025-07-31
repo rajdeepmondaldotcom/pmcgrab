@@ -1,10 +1,9 @@
 """Tests for pmcgrab.domain.value_objects module."""
 
 import warnings
-import pytest
 
-from pmcgrab.domain.value_objects import make_hashable, BasicBiMap
 from pmcgrab.constants import ReversedBiMapComparisonWarning
+from pmcgrab.domain.value_objects import BasicBiMap, make_hashable
 
 
 class TestMakeHashable:
@@ -77,7 +76,7 @@ class TestBasicBiMap:
         bm1 = BasicBiMap({"a": 1, "b": 2})
         bm2 = BasicBiMap({"a": 1, "b": 2})
         regular_dict = {"a": 1, "b": 2}
-        
+
         assert bm1 == bm2
         assert bm1 == regular_dict
 
@@ -85,7 +84,7 @@ class TestBasicBiMap:
         """Test BasicBiMap inequality."""
         bm1 = BasicBiMap({"a": 1})
         bm2 = BasicBiMap({"a": 2})
-        
+
         assert bm1 != bm2
         assert bm1 != "not a dict"
 
@@ -93,11 +92,11 @@ class TestBasicBiMap:
         """Test BasicBiMap reverse comparison warning."""
         bm1 = BasicBiMap({"a": 1, "b": 2})
         bm2 = BasicBiMap({1: "a", 2: "b"})  # Reversed mapping
-        
+
         with warnings.catch_warnings(record=True) as w:
             warnings.simplefilter("always")
             result = bm1 == bm2
-            
+
             # Should warn about reversed comparison
             assert len(w) == 1
             assert issubclass(w[0].category, ReversedBiMapComparisonWarning)
@@ -106,16 +105,16 @@ class TestBasicBiMap:
     def test_basic_bimap_dict_methods(self):
         """Test that BasicBiMap inherits dict methods."""
         bm = BasicBiMap({"a": 1, "b": 2, "c": 3})
-        
+
         # Test keys, values, items
         assert set(bm.keys()) == {"a", "b", "c"}
         assert set(bm.values()) == {1, 2, 3}
         assert set(bm.items()) == {("a", 1), ("b", 2), ("c", 3)}
-        
+
         # Test get method
         assert bm.get("a") == 1
         assert bm.get("d", "default") == "default"
-        
+
         # Test len
         assert len(bm) == 3
 
@@ -124,10 +123,10 @@ class TestBasicBiMap:
         bm = BasicBiMap()
         bm["first"] = "value1"
         bm["second"] = "value2"
-        
+
         # Update existing key
         bm["first"] = "updated_value"
-        
+
         assert bm["first"] == "updated_value"
         assert bm.reverse["updated_value"] == "first"
         # Old reverse mapping should be replaced
@@ -138,7 +137,7 @@ class TestBasicBiMap:
         bm = BasicBiMap()
         bm["key1"] = "same_value"
         bm["key2"] = "same_value"  # This will overwrite reverse mapping
-        
+
         assert bm["key1"] == "same_value"
         assert bm["key2"] == "same_value"
         # Reverse map will point to the last key that had this value

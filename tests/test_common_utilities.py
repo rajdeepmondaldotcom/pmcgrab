@@ -1,17 +1,17 @@
 """Tests for pmcgrab.common utilities."""
 
 import datetime
-import pandas as pd
-import pytest
+
 import lxml.etree as ET
+import pandas as pd
 
 from pmcgrab.common.html_cleaning import remove_html_tags, strip_html_text_styling
 from pmcgrab.common.serialization import clean_doc, normalize_value
 from pmcgrab.common.xml_processing import (
-    stringify_children,
-    split_text_and_refs,
     generate_typed_mhtml_tag,
     remove_mhtml_tags,
+    split_text_and_refs,
+    stringify_children,
 )
 
 
@@ -113,21 +113,14 @@ class TestSerialization:
 
     def test_normalize_value_dict(self):
         """Test normalizing dictionary with nested values."""
-        data = {
-            "date": datetime.date(2024, 1, 15),
-            "nested": {"value": "test"}
-        }
+        data = {"date": datetime.date(2024, 1, 15), "nested": {"value": "test"}}
         result = normalize_value(data)
         assert result["date"] == "2024-01-15"
         assert result["nested"]["value"] == "test"
 
     def test_normalize_value_list(self):
         """Test normalizing list with mixed types."""
-        data = [
-            "string",
-            datetime.date(2024, 1, 15),
-            {"key": "value"}
-        ]
+        data = ["string", datetime.date(2024, 1, 15), {"key": "value"}]
         result = normalize_value(data)
         assert result[0] == "string"
         assert result[1] == "2024-01-15"
@@ -163,8 +156,9 @@ class TestXmlProcessing:
         xml = "<p>Simple text without references</p>"
         element = ET.fromstring(xml)
         from pmcgrab.utils import BasicBiMap
+
         ref_map = BasicBiMap()
-        
+
         result = split_text_and_refs(element, ref_map)
         assert "Simple text" in result
 
@@ -173,8 +167,9 @@ class TestXmlProcessing:
         xml = '<p>Text with <xref ref-type="bibr" rid="ref1">citation</xref></p>'
         element = ET.fromstring(xml)
         from pmcgrab.utils import BasicBiMap
+
         ref_map = BasicBiMap()
-        
+
         result = split_text_and_refs(element, ref_map)
         assert "Text with" in result
         # Should handle reference appropriately
