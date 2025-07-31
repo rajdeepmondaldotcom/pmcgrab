@@ -16,11 +16,20 @@ def test_process_single_pmc_returns_none_for_invalid(monkeypatch):
 def test_process_pmc_ids_success(monkeypatch):
     # Fake builder returns minimal Paper-like object
 
+    class DummySection:
+        title = "Test Section"
+        
+        def get_section_text(self):
+            return "Test content"
+        
+        def __str__(self):
+            return "Test content"
+
     class DummyPaper:
         has_data = True
         abstract = []
         title = "Dummy"
-        body = []
+        body = [DummySection()]  # Non-empty body so it doesn't return None
         authors = None
         non_author_contributors = None
         publisher_name = None
