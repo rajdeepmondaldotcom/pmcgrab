@@ -3,8 +3,6 @@ name: Create Release
 on:
   push:
     branches: [ "main" ]
-    paths:
-      - "pyproject.toml"
 
 jobs:
   check-version:
@@ -27,14 +25,19 @@ jobs:
       - name: Check if version changed
         id: check-version
         run: |
-          if git diff HEAD~1 HEAD --name-only | grep -q "pyproject.toml"; then
-            if git diff HEAD~1 HEAD pyproject.toml | grep -q "^+version = "; then
-              echo "changed=true" >> $GITHUB_OUTPUT
-            else
-              echo "changed=false" >> $GITHUB_OUTPUT
-            fi
+          # Get current and previous version
+          CURRENT_VERSION=$(grep '^version = ' pyproject.toml | sed 's/version = "\(.*\)"/\1/')
+          PREVIOUS_VERSION=$(git show HEAD~1:pyproject.toml | grep '^version = ' | sed 's/version = "\(.*\)"/\1/' || echo "")
+          
+          echo "Current version: $CURRENT_VERSION"
+          echo "Previous version: $PREVIOUS_VERSION"
+          
+          if [ "$CURRENT_VERSION" != "$PREVIOUS_VERSION" ] && [ -n "$PREVIOUS_VERSION" ]; then
+            echo "changed=true" >> $GITHUB_OUTPUT
+            echo "Version changed from $PREVIOUS_VERSION to $CURRENT_VERSION"
           else
             echo "changed=false" >> $GITHUB_OUTPUT
+            echo "No version change detected"
           fi
 
   create-release:
