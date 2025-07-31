@@ -249,6 +249,50 @@ The project uses GitHub Actions for CI/CD:
 5. **Commits**: Use conventional commit messages
 6. **Versioning**: Follow semantic versioning
 
+## CI/CD Secrets
+
+The release workflow expects certain secrets:
+
+| Secret       | Purpose                                                                    |
+| ------------ | -------------------------------------------------------------------------- |
+| `PYPI_TOKEN` | PyPI API token with _upload_ scope. Used by `uv publish` / `twine upload`. |
+| `GH_TOKEN`   | (Optional) GitHub token to create releases or comment on PRs.              |
+
+Add them in **Settings → Secrets → Actions**.
+
+## Branching model
+
+- **`main`** – always releasable. All feature branches must be merged via PR.
+- **`feature/…`** – regular work.
+- **`hotfix/…`** – emergency fixes; tag a patch release right after merge.
+
+We follow [Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/) so the changelog can be auto-generated (see `commitizen`).
+
+## Changelog generation
+
+```bash
+uv run cz changelog             # updates CHANGELOG.md from commits
+```
+
+## Environment variables used by pmcgrab
+
+| Variable          | Description                                                     | Default                |
+| ----------------- | --------------------------------------------------------------- | ---------------------- |
+| `PMCGRAB_EMAILS`  | Comma-separated list of email addresses rotated for NCBI Entrez | built-in sample emails |
+| `PMCGRAB_WORKERS` | Default worker count for batch jobs                             | 16                     |
+
+## Debugging CI failures
+
+1. Click the failed job → **“Run failed”** → expand failing step.
+2. For `uv publish` failures:
+   - 403 – bad or missing `PYPI_TOKEN`.
+   - 400 filename exists – version already on PyPI; bump version.
+3. For flake/lint errors run locally:
+   ```bash
+   uv run ruff check --fix
+   uv run mypy src/pmcgrab
+   ```
+
 ## Troubleshooting
 
 ### Common Issues
