@@ -24,25 +24,49 @@ def main():
     
     try:
         # Fetch and parse the paper
+        print("🔍 Creating Paper object...")
         paper = Paper.from_pmc(pmc_id, email)
+        print("✅ Paper object created successfully!")
         
         # Display basic information
         print(f"📄 Title: {paper.title}")
         print(f"📰 Journal: {paper.journal_title}")
-        print(f"📅 Published: {paper.published_date.get('epub', 'N/A')}")
-        print(f"👥 Authors: {len(paper.authors) if paper.authors else 0}")
-        print(f"📝 Abstract length: {len(paper.abstract) if paper.abstract else 0} characters")
+        print(f"📅 Published: {paper.published_date.get('epub', 'N/A') if paper.published_date else 'N/A'}")
+        
+        print("🔍 Checking authors...")
+        try:
+            authors_count = len(paper.authors) if paper.authors is not None else 0
+            print(f"👥 Authors: {authors_count}")
+        except Exception as e:
+            print(f"⚠️  Error accessing authors: {e}")
+        
+        print("🔍 Checking abstract...")
+        try:
+            abstract_len = len(paper.abstract) if paper.abstract is not None else 0
+            print(f"📝 Abstract length: {abstract_len} characters")
+        except Exception as e:
+            print(f"⚠️  Error accessing abstract: {e}")
         
         # Show available sections
-        if paper.body:
-            print(f"📚 Available sections: {list(paper.body.keys())}")
-            
-            # Show a snippet from the introduction
-            if "Introduction" in paper.body:
-                intro_text = paper.body["Introduction"]
-                print(f"\n📖 Introduction snippet:")
-                print("-" * 30)
-                print(intro_text[:300] + "..." if len(intro_text) > 300 else intro_text)
+        print("🔍 Checking body...")
+        try:
+            if paper.body is not None:
+                print(f"📚 Body type: {type(paper.body)}")
+                if hasattr(paper.body, 'keys'):
+                    print(f"📚 Available sections: {list(paper.body.keys())}")
+                    
+                    # Show a snippet from the introduction
+                    if "Introduction" in paper.body:
+                        intro_text = paper.body["Introduction"]
+                        print(f"\n📖 Introduction snippet:")
+                        print("-" * 30)
+                        print(intro_text[:300] + "..." if len(intro_text) > 300 else intro_text)
+                else:
+                    print(f"📚 Body is iterable with {len(paper.body)} items")
+            else:
+                print("📚 No body content available")
+        except Exception as e:
+            print(f"⚠️  Error accessing body: {e}")
         
         print("\n✅ Success! Paper processed successfully.")
         

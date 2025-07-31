@@ -45,20 +45,28 @@ def process_single_pmc(pmc_id: str) -> Optional[dict[str, Union[str, dict, list]
             signal.alarm(0)
         if p_obj is None:
             return None
-        if p_obj.body is not None:
-            sec_counter = 1
-            for section in p_obj.body:
-                try:
-                    text = getattr(section, "get_section_text", lambda: str(section))()
-                    title = (
-                        section.title
-                        if (hasattr(section, "title") and section.title is not None)
-                        else f"Section {sec_counter}"
-                    )
-                    sec_counter += 1
-                    body_info[title] = text
-                except Exception:
-                    pass
+        # Handle body sections safely to avoid pandas DataFrame boolean evaluation issues
+        body_sections = p_obj.body
+        if body_sections is not None:
+            try:
+                # Test if we can iterate over it (handles pandas objects)
+                body_iter = iter(body_sections)
+                sec_counter = 1
+                for section in body_sections:
+                    try:
+                        text = getattr(section, "get_section_text", lambda: str(section))()
+                        title = (
+                            section.title
+                            if (hasattr(section, "title") and section.title is not None)
+                            else f"Section {sec_counter}"
+                        )
+                        sec_counter += 1
+                        body_info[title] = text
+                    except Exception:
+                        pass
+            except (TypeError, ValueError):
+                # Skip body processing if it's not iterable
+                pass
         paper_info["pmc_id"] = str(pmc_id_num)
         paper_info["abstract"] = (
             p_obj.abstract_as_str() if p_obj.abstract is not None else ""
