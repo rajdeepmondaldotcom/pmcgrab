@@ -5,14 +5,14 @@ build-backend = "hatchling.build"
 [project]
 name = "pmcgrab"
 version = "0.2.1"
-description = "Utilities for fetching and processing PubMed Central articles"
+description = "AI-ready retrieval and parsing of PubMed Central articles for RAG applications"
 readme = "README.md"
 license = "Apache-2.0"
 authors = [
-    {name = "Rajdeep Mondal", email = "rajdeepmondal@example.com"},
+    {name = "Rajdeep Mondal", email = "rajdeep@rajdeepmondal.com"},
 ]
 maintainers = [
-    {name = "Rajdeep Mondal", email = "rajdeepmondal@example.com"},
+    {name = "Rajdeep Mondal", email = "rajdeep@rajdeepmondal.com"},
 ]
 requires-python = ">=3.9"
 dependencies = [
@@ -26,10 +26,25 @@ dependencies = [
     "requests>=2.28.0",
     "tqdm>=4.64.0",
 ]
-keywords = ["pubmed", "pmc", "text mining", "rag", "bioinformatics"]
+keywords = [
+    "pubmed", 
+    "pmc", 
+    "text mining", 
+    "rag", 
+    "bioinformatics", 
+    "scientific literature", 
+    "xml parsing", 
+    "research papers", 
+    "llm", 
+    "ai",
+    "retrieval augmented generation",
+    "ncbi",
+    "entrez"
+]
 classifiers = [
     "Development Status :: 4 - Beta",
     "Intended Audience :: Science/Research",
+    "Intended Audience :: Developers",
     "License :: OSI Approved :: Apache Software License",
     "Programming Language :: Python :: 3",
     "Programming Language :: Python :: 3.9",
@@ -38,8 +53,13 @@ classifiers = [
     "Programming Language :: Python :: 3.12",
     "Programming Language :: Python :: 3.13",
     "Topic :: Scientific/Engineering :: Bio-Informatics",
+    "Topic :: Scientific/Engineering :: Information Analysis",
     "Topic :: Text Processing :: Markup :: XML",
+    "Topic :: Text Processing :: Linguistic",
+    "Topic :: Software Development :: Libraries :: Python Modules",
     "Operating System :: OS Independent",
+    "Environment :: Console",
+    "Natural Language :: English",
 ]
 
 [project.urls]
@@ -48,6 +68,9 @@ Documentation = "https://github.com/rajdeepmondaldotcom/pmcgrab#readme"
 Repository = "https://github.com/rajdeepmondaldotcom/pmcgrab.git"
 Issues = "https://github.com/rajdeepmondaldotcom/pmcgrab/issues"
 Changelog = "https://github.com/rajdeepmondaldotcom/pmcgrab/releases"
+"Bug Reports" = "https://github.com/rajdeepmondaldotcom/pmcgrab/issues"
+"Source Code" = "https://github.com/rajdeepmondaldotcom/pmcgrab"
+"Download" = "https://pypi.org/project/pmcgrab/"
 
 [project.optional-dependencies]
 dev = [

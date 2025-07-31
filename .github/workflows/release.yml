@@ -1,33 +1,89 @@
-name: Release
+name: Create Release
 
 on:
-  release:
-    types: [published]
-  workflow_dispatch:
+  push:
+    branches: [ "main" ]
+    paths:
+      - "pyproject.toml"
 
 jobs:
-  build-and-publish:
-    name: Build and publish to PyPI
+  check-version:
     runs-on: ubuntu-latest
-    environment: release
-
+    outputs:
+      version: ${{ steps.get-version.outputs.version }}
+      version-changed: ${{ steps.check-version.outputs.changed }}
     steps:
-      - name: Checkout code
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+
+      - name: Get current version
+        id: get-version
+        run: |
+          VERSION=$(grep '^version = ' pyproject.toml | sed 's/version = "\(.*\)"/\1/')
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+
+      - name: Check if version changed
+        id: check-version
+        run: |
+          if git diff HEAD~1 HEAD --name-only | grep -q "pyproject.toml"; then
+            if git diff HEAD~1 HEAD pyproject.toml | grep -q "^+version = "; then
+              echo "changed=true" >> $GITHUB_OUTPUT
+            else
+              echo "changed=false" >> $GITHUB_OUTPUT
+            fi
+          else
+            echo "changed=false" >> $GITHUB_OUTPUT
+          fi
+
+  create-release:
+    needs: check-version
+    if: needs.check-version.outputs.version-changed == 'true'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Install uv
-        uses: astral-sh/setup-uv@v3
-        with:
-          version: "latest"
-
       - name: Set up Python
-        run: uv python install 3.11
-
-      - name: Build package
-        run: |
-          uv build
-
-      - name: Publish to PyPI
-        uses: pypa/gh-action-pypi-publish@release/v1
+        uses: actions/setup-python@v5
         with:
-          password: ${{ secrets.PYPI_API_TOKEN }}
+          python-version: "3.x"
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+
+      - name: Build distributions
+        run: uv build
+
+      - name: Generate changelog
+        id: changelog
+        run: |
+          VERSION="${{ needs.check-version.outputs.version }}"
+          echo "## What's Changed in v$VERSION" > CHANGELOG.md
+          echo "" >> CHANGELOG.md
+          echo "### Features & Improvements" >> CHANGELOG.md
+          echo "- Updated pmcgrab to version $VERSION" >> CHANGELOG.md
+          echo "- See commit history for detailed changes" >> CHANGELOG.md
+          echo "" >> CHANGELOG.md
+          echo "### Installation" >> CHANGELOG.md
+          echo "\`\`\`bash" >> CHANGELOG.md
+          echo "pip install pmcgrab==$VERSION" >> CHANGELOG.md
+          echo "\`\`\`" >> CHANGELOG.md
+          echo "" >> CHANGELOG.md
+          echo "**Full Changelog**: https://github.com/rajdeepmondaldotcom/pmcgrab/commits/v$VERSION" >> CHANGELOG.md
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: "v${{ needs.check-version.outputs.version }}"
+          name: "Release v${{ needs.check-version.outputs.version }}"
+          body_path: CHANGELOG.md
+          files: |
+            dist/*.whl
+            dist/*.tar.gz
+          draft: false
+          prerelease: false
+          generate_release_notes: true
