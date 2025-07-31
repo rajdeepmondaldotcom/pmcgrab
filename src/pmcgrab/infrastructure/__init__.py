@@ -35,10 +35,10 @@ Key Components:
 Configuration Management:
     The settings module provides centralized configuration management with
     support for environment variables, default values, and runtime configuration:
-    
+
     ```python
     from pmcgrab.infrastructure.settings import next_email
-    
+
     # Get email for NCBI API requests with round-robin rotation
     email = next_email()
     ```
@@ -57,7 +57,7 @@ Error Handling:
 
 Performance Optimization:
     * **Connection Pooling**: Reuse HTTP connections for better performance
-    * **Request Caching**: Cache responses to reduce external API calls  
+    * **Request Caching**: Cache responses to reduce external API calls
     * **Batch Operations**: Optimize external API usage with batching
     * **Resource Cleanup**: Proper cleanup of system resources
 
@@ -69,7 +69,7 @@ Testing Support:
 
 External Service Integration:
     PMCGrab integrates with multiple external services through this layer:
-    
+
     * **NCBI Entrez**: Article metadata and XML retrieval
     * **PMC OAI-PMH**: Large-scale metadata harvesting
     * **PMC OA Service**: Open access article information
@@ -81,12 +81,12 @@ Example Usage:
     # Infrastructure layer provides concrete implementations
     from pmcgrab.infrastructure.settings import next_email
     from pmcgrab.http_utils import cached_get
-    
+
     # Configuration management
     email = next_email()
-    
+
     # Robust HTTP communication
-    response = cached_get("https://api.example.com/data", 
+    response = cached_get("https://api.example.com/data",
                          params={"email": email})
     ```
 

@@ -85,7 +85,7 @@ def next_email() -> str:
         str: Next email address from the configured pool
 
     Examples:
-        >>> # Get email for NCBI Entrez request  
+        >>> # Get email for NCBI Entrez request
         >>> email = next_email()
         >>> print(f"Using email: {email}")
         >>>

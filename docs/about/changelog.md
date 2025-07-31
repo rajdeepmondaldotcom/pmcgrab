@@ -7,19 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-
 ## [0.3.4] - 2024-12-15
 
 ### Changed
+
 - Documentation streamlined for brevity and clarity.
-- README and landing pages now focus on the five-paper demo script.
+- README and landing pages now focus on the three-paper demo script.
 - Removed all single-article examples from docs.
 
 ## [0.3.3] - 2024-12-15
 
 ### Changed
 
-- Examples and documentation now focus on the helper script `examples/run_five_pmcs.py`.
+- Examples and documentation now focus on the helper script `examples/run_three_pmcs.py`.
 - Removed single-article examples that required manual email input.
 - Updated Quick Start and homepage to use the batch helper script.
 

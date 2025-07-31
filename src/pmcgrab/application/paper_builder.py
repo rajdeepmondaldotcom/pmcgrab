@@ -62,10 +62,10 @@ def build_paper_from_pmc(
         >>> if paper:
         ...     print(f"Title: {paper.title}")
         ...     print(f"Authors: {len(paper.authors)}")
-        >>> 
+        >>>
         >>> # With error handling and retries
         >>> paper = build_paper_from_pmc(
-        ...     7181753, 
+        ...     7181753,
         ...     email="user@example.com",
         ...     attempts=5,
         ...     suppress_errors=True,

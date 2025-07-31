@@ -127,7 +127,7 @@ def remove_html_tags(
         >>> # Combined removal and replacement
         >>> text = "<p><b>Bold</b> text with H<sub>2</sub>O</p>"
         >>> clean = remove_html_tags(
-        ...     text, 
+        ...     text,
         ...     removals=["<p>", "<b>"],
         ...     replaces={"<sub>": "_"}
         ... )
@@ -198,7 +198,7 @@ def strip_html_text_styling(
     Default Processing Rules:
         Removed tags (styling only):
             * <italic>, <i>: Italic formatting
-            * <bold>, <b>: Bold formatting  
+            * <bold>, <b>: Bold formatting
             * <underline>, <u>: Underline formatting
 
         Converted tags (structural meaning preserved):
@@ -230,7 +230,7 @@ def strip_html_text_styling(
 
     Customization:
         Override or extend default replacements by providing a replacements dict:
-        
+
         >>> custom_rules = {"<ext-link>": "[See: ", "<sub>": "_{", "<sup>": "^{"}
         >>> clean = strip_html_text_styling(text, custom_rules)
 

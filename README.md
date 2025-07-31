@@ -81,17 +81,17 @@ pip install .[dev,test,docs]
 
 ---
 
-### Example: Process five PMC articles
+### Example: Process three PMC articles
 
-Run the helper script located in `examples/run_five_pmcs.py`:
+Run the helper script located in `examples/run_three_pmcs.py`:
 
 ```bash
-python examples/run_five_pmcs.py
+python examples/run_three_pmcs.py
 ```
 
 The script will:
 
-1. Download five predefined PMCIDs (see the source). (Please Replace with your choice of PMC IDs)
+1. Download three predefined PMCIDs (see the source). (Please Replace with your choice of PMC IDs)
 2. Print a brief summary for each article (title, abstract snippet, author count).
 3. Persist the full JSON output into `pmc_output/PMC<id>.json` for further inspection.
 

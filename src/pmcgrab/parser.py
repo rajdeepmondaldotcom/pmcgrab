@@ -102,13 +102,13 @@ gather_issue = _metadata.gather_issue
 
 def gather_fpage(root: ET.Element) -> str | None:
     """Extract the first page number from PMC article metadata.
-    
+
     Args:
         root: Root element of the PMC article XML document
-        
+
     Returns:
         str | None: First page number as string, or None if not found
-        
+
     Examples:
         >>> root = ET.fromstring(xml_content)
         >>> first_page = gather_fpage(root)
@@ -120,13 +120,13 @@ def gather_fpage(root: ET.Element) -> str | None:
 
 def gather_lpage(root: ET.Element) -> str | None:
     """Extract the last page number from PMC article metadata.
-    
+
     Args:
         root: Root element of the PMC article XML document
-        
+
     Returns:
         str | None: Last page number as string, or None if not found
-        
+
     Examples:
         >>> root = ET.fromstring(xml_content)
         >>> last_page = gather_lpage(root)
@@ -157,14 +157,14 @@ def _parse_citation(
     citation_root: ET.Element,
 ) -> dict[str, list[str] | str] | str:
     """Parse a citation XML element into structured reference information.
-    
+
     Extracts bibliographic information from a PMC citation element, including
     authors, title, source, publication details, and identifiers. Handles
     both structured citations and mixed-citation formats.
-    
+
     Args:
         citation_root: XML element containing citation information (<ref>)
-        
+
     Returns:
         dict[str, list[str] | str] | str: Structured citation dictionary with keys:
             - authors: List of author names as "Given Surname"
@@ -173,14 +173,14 @@ def _parse_citation(
             - year: Publication year
             - volume: Journal volume
             - first_page: First page number
-            - last_page: Last page number  
+            - last_page: Last page number
             - doi: DOI identifier
             - pmid: PubMed ID
         If structured parsing fails, returns raw mixed-citation text as string.
-        
+
     Warns:
         RuntimeWarning: If no authors are found in citation
-        
+
     Examples:
         >>> citation_elem = root.xpath("//ref[@id='B1']")[0]
         >>> citation_data = _parse_citation(citation_elem)
@@ -215,26 +215,26 @@ def _parse_citation(
 
 def _extract_xpath_text(root: ET.Element, xpath: str, *, multiple: bool = False):
     """Extract text content from XML elements matching the given XPath.
-    
+
     Utility function for safely extracting text from XML elements with
     support for both single and multiple matches. Handles missing elements
     gracefully by returning None or empty list as appropriate.
-    
+
     Args:
         root: Root XML element to search within
         xpath: XPath expression to locate target elements
         multiple: If False (default), return first match text only.
                  If True, return list of all matching element texts.
-                 
+
     Returns:
-        str | None | list[str]: 
+        str | None | list[str]:
             - If multiple=False: First matching element's text or None if no matches
             - If multiple=True: List of all matching element texts (empty list if no matches)
-            
+
     Examples:
         >>> # Extract single value
         >>> title = _extract_xpath_text(root, ".//article-title")
-        >>> 
+        >>>
         >>> # Extract multiple values
         >>> keywords = _extract_xpath_text(root, ".//kwd", multiple=True)
     """
@@ -250,34 +250,34 @@ def process_reference_map(
     paper_root: ET.Element, ref_map: BasicBiMap | None = None
 ) -> BasicBiMap:
     """Resolve cross-reference map items to structured objects.
-    
+
     Takes a reference map containing XML snippets and resolves them to
     structured objects (citations, tables, figures) by looking up the
     actual target elements in the full document. This enables linking
     between text references and their definitions.
-    
+
     Args:
         paper_root: Root element of the complete PMC article XML
         ref_map: Bidirectional map containing reference placeholders.
                 If None, creates a new map from document <ref> elements.
-                
+
     Returns:
         BasicBiMap: Resolved reference map where values are structured objects:
             - Citations: Dictionaries with author, title, year, etc.
             - Tables: TextTable objects with parsed DataFrame
             - Figures: TextFigure objects with metadata
             - Other: String representations of unhandled elements
-            
+
     Warns:
         UnmatchedCitationWarning: When citation references cannot be resolved
         UnmatchedTableWarning: When table references cannot be resolved
-        
+
     Examples:
         >>> # Process references from existing map
         >>> resolved_map = process_reference_map(root, ref_map)
         >>> citation = resolved_map[1]  # Get first citation
         >>> print(citation['title'])
-        >>> 
+        >>>
         >>> # Auto-generate from document refs
         >>> ref_map = process_reference_map(root, None)
     """
@@ -347,20 +347,20 @@ def process_reference_map(
 
 def _get_ref_type(value):
     """Determine the type of reference based on object type and content.
-    
+
     Classifies reference objects into categories (citation, table, figure)
     based on their Python type and content characteristics. This enables
     proper categorization and processing of different reference types.
-    
+
     Args:
         value: Reference object to classify (TextTable, TextFigure, dict, or other)
-        
+
     Returns:
         str: Reference type classification:
             - "table": For TextTable instances
             - "fig": For TextFigure instances or dicts with "Caption" key
             - "citation": For all other references (default)
-            
+
     Examples:
         >>> table_obj = TextTable(table_element)
         >>> _get_ref_type(table_obj)
@@ -380,20 +380,20 @@ def _get_ref_type(value):
 
 def _split_citations_tables_figs(ref_map: BasicBiMap):
     """Categorize references from reference map into citations, tables, and figures.
-    
+
     Processes all items in the reference map and separates them into different
     categories based on their type and content. This enables type-specific
     processing and output formatting.
-    
+
     Args:
         ref_map: Bidirectional map containing resolved reference objects
-        
+
     Returns:
         tuple[list, list, list]: A tuple containing:
             - citations: List of citation dictionaries
             - tables: List of pandas DataFrames from resolved tables
             - figures: List of figure dictionaries with metadata
-            
+
     Examples:
         >>> citations, tables, figures = _split_citations_tables_figs(ref_map)
         >>> print(f"Found {len(citations)} citations, {len(tables)} tables, {len(figures)} figures")
@@ -426,15 +426,15 @@ def paper_dict_from_pmc(
     suppress_errors: bool = False,
 ) -> dict[str, str | int | dict | list]:
     """Download and parse a PMC article into a structured dictionary.
-    
+
     One-shot convenience function that downloads PMC article XML from NCBI,
     validates it, and parses it into a comprehensive dictionary containing
     all article metadata, content sections, references, tables, and figures.
-    
+
     This is the main entry point for converting PMC articles into AI-ready
     structured data suitable for downstream processing, RAG applications,
     and machine learning pipelines.
-    
+
     Args:
         pmcid: PubMed Central ID (numeric)
         email: Contact email required by NCBI Entrez API
@@ -443,7 +443,7 @@ def paper_dict_from_pmc(
         verbose: If True, emit progress logging messages
         suppress_warnings: If True, suppress parsing warnings
         suppress_errors: If True, return empty dict on errors instead of raising
-        
+
     Returns:
         dict[str, str | int | dict | list]: Comprehensive article dictionary with keys:
             - PMCID: Article identifier
@@ -457,21 +457,21 @@ def paper_dict_from_pmc(
             - Journal metadata (title, ISSN, publisher, etc.)
             - Publication metadata (dates, volume, issue, pages, etc.)
             - Content metadata (keywords, funding, ethics, etc.)
-            
+
     Raises:
         HTTPError: If article download fails after retries
         ValidationError: If XML validation fails (when validate=True)
         Various XML parsing errors: If suppress_errors=False
-        
+
     Examples:
         >>> # Basic usage
         >>> article = paper_dict_from_pmc(7181753, email="user@example.com")
         >>> print(article['Title'])
         >>> print(len(article['Body']))
-        >>> 
+        >>>
         >>> # With caching and validation
         >>> article = paper_dict_from_pmc(
-        ...     7181753, 
+        ...     7181753,
         ...     email="user@example.com",
         ...     download=True,
         ...     validate=True,
@@ -493,32 +493,32 @@ def generate_paper_dict(
     suppress_errors: bool = False,
 ) -> dict[str, str | int | dict | list]:
     """Parse PMC article XML into structured dictionary with error handling.
-    
+
     Wrapper around build_complete_paper_dict() that provides configurable
     warning suppression and error handling. Accepts pre-parsed XML root
     element rather than downloading, giving callers control over the XML
     acquisition process.
-    
+
     Args:
         pmcid: PubMed Central ID for identification
         root: Root element of parsed PMC article XML document
         verbose: If True, emit progress logging messages
         suppress_warnings: If True, suppress all warnings during parsing
         suppress_errors: If True, return empty dict on errors instead of raising
-        
+
     Returns:
         dict[str, str | int | dict | list]: Complete article dictionary structure,
                                            or empty dict if suppress_errors=True and parsing fails
-                                           
+
     Examples:
         >>> tree = ET.parse("article.xml")
         >>> root = tree.getroot()
         >>> article = generate_paper_dict(7181753, root, verbose=True)
-        >>> 
+        >>>
         >>> # With error suppression for batch processing
         >>> article = generate_paper_dict(
-        ...     pmcid, root, 
-        ...     suppress_warnings=True, 
+        ...     pmcid, root,
+        ...     suppress_warnings=True,
         ...     suppress_errors=True
         ... )
         >>> if article:  # Check if parsing succeeded
@@ -538,10 +538,10 @@ def generate_paper_dict(
 
 def _raise(exc):
     """Helper function for EAFP (Easier to Ask for Forgiveness than Permission) pattern.
-    
+
     Args:
         exc: Exception to re-raise
-        
+
     Raises:
         The provided exception
     """
@@ -552,21 +552,21 @@ def build_complete_paper_dict(
     pmcid: int, root: ET.Element, verbose: bool = False
 ) -> dict[str, str | int | dict | list]:
     """Low-level orchestrator that coordinates all parsing operations.
-    
+
     Core function that coordinates all the specialized gather_* functions
     to extract every piece of information from a PMC article XML document.
     Builds reference maps, resolves cross-references, and assembles the
     complete structured representation.
-    
+
     This function represents the main parsing pipeline that transforms
     raw XML into the structured dictionary format expected by the Paper
     class and downstream applications.
-    
+
     Args:
         pmcid: PubMed Central ID for identification and logging
         root: Root element of the PMC article XML document
         verbose: If True, emit progress logging messages
-        
+
     Returns:
         dict[str, str | int | dict | list]: Complete article dictionary containing:
             - Metadata: PMCID, title, authors, journal info, publication details
@@ -574,11 +574,11 @@ def build_complete_paper_dict(
             - References: Citations, cross-reference mappings
             - Data: Tables (as DataFrames), figures, equations
             - Supplementary: Permissions, funding, ethics, notes, custom metadata
-            
+
     The returned dictionary structure matches the format expected by the
     Paper class constructor and contains all information needed for
     comprehensive article analysis.
-    
+
     Examples:
         >>> tree = ET.parse("pmc_article.xml")
         >>> root = tree.getroot()

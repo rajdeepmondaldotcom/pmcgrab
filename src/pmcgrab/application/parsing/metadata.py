@@ -5,7 +5,7 @@ metadata from PMC XML documents. All functions are side-effect-free and
 designed for easy unit testing and reliable metadata extraction.
 
 The module focuses on core scholarly metadata that is standardized across
-most scientific articles: journal information, article identifiers,  
+most scientific articles: journal information, article identifiers,
 publication dates, author information, and classification schemes.
 
 Key Features:

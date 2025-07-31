@@ -260,11 +260,11 @@ def gather_non_author_contributors(root: ET.Element) -> str | pd.DataFrame:
         str | pd.DataFrame: DataFrame containing non-author contributor information
                            with the same column structure as gather_authors(),
                            or string message if no non-author contributors exist.
-                           
+
         DataFrame columns (when contributors exist):
             - Contributor_Type: Role type (e.g., "Editor", "Reviewer", "Translator")
             - First_Name: Given names
-            - Last_Name: Surname  
+            - Last_Name: Surname
             - Email_Address: Contact email
             - Affiliations: List of institutional affiliations
             - ORCID: ORCID identifier

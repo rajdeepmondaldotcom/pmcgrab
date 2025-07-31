@@ -55,11 +55,11 @@ _BASE_URL = "https://www.ncbi.nlm.nih.gov/pmc/oai/oai.cgi"
 
 class OAIPMHError(RuntimeError):
     """Exception raised when OAI-PMH protocol errors occur.
-    
+
     This exception is raised when the OAI-PMH service returns an error
     response, such as invalid parameters, unsupported verbs, or repository
     errors. The exception message contains the error details from the service.
-    
+
     Common error scenarios:
         * badArgument: Invalid or missing required arguments
         * badVerb: Unsupported or misspelled OAI-PMH verb
@@ -74,18 +74,18 @@ class OAIPMHError(RuntimeError):
 
 def _request(verb: str, **params) -> ET.Element:
     """Execute OAI-PMH request with error handling.
-    
+
     Internal helper function that constructs and executes OAI-PMH requests
     to the PMC service. Handles parameter formatting, HTTP communication,
     and OAI-PMH error response parsing.
-    
+
     Args:
         verb: OAI-PMH verb (ListRecords, GetRecord, etc.)
         **params: Additional OAI-PMH parameters for the request
-        
+
     Returns:
         ET.Element: Parsed XML response root element
-        
+
     Raises:
         OAIPMHError: If the OAI-PMH service returns an error response
         requests.RequestException: If HTTP request fails
@@ -102,13 +102,13 @@ def _request(verb: str, **params) -> ET.Element:
 
 def _extract_records(root: ET.Element) -> list[ET.Element]:
     """Extract record elements from ListRecords response.
-    
+
     Internal helper that parses ListRecords XML responses to extract
     individual record elements for processing.
-    
+
     Args:
         root: Root element of OAI-PMH ListRecords response
-        
+
     Returns:
         list[ET.Element]: List of record elements found in the response
     """
@@ -117,14 +117,14 @@ def _extract_records(root: ET.Element) -> list[ET.Element]:
 
 def _get_resumption_token(root: ET.Element) -> str | None:
     """Extract resumption token from OAI-PMH response if present.
-    
+
     OAI-PMH uses resumption tokens to handle large result sets by
     breaking them into manageable chunks. This function extracts
     the token needed to request the next batch of results.
-    
+
     Args:
         root: Root element of OAI-PMH response
-        
+
     Returns:
         str | None: Resumption token for next batch, or None if no more results
     """
@@ -257,7 +257,7 @@ def get_record(identifier: str, metadata_prefix: str = "pmc") -> ET.Element:
         >>>
         >>> # Get record in Dublin Core format
         >>> record = get_record(
-        ...     "oai:pubmedcentral.nih.gov:PMC7181753", 
+        ...     "oai:pubmedcentral.nih.gov:PMC7181753",
         ...     metadata_prefix="oai_dc"
         ... )
         >>> title = record.find(".//{*}title").text
@@ -266,9 +266,9 @@ def get_record(identifier: str, metadata_prefix: str = "pmc") -> ET.Element:
     OAI Identifier Format:
         PMC OAI identifiers have the format:
         oai:pubmedcentral.nih.gov:PMC{PMCID}
-        
+
         Example: oai:pubmedcentral.nih.gov:PMC7181753
-        
+
         Use list_identifiers() to discover available identifiers.
 
     Note:

@@ -35,16 +35,16 @@ __all__ = [
 
 def _backoff_sleep(retry: int) -> None:
     """Sleep for exponentially increasing duration based on retry count.
-    
+
     Implements exponential backoff with a maximum cap to avoid excessive
     wait times. Used internally by cached_get for retry logic.
-    
+
     Args:
         retry: Current retry attempt number (0-based)
-        
+
     Sleep Duration:
         * Retry 0: 1 second
-        * Retry 1: 2 seconds  
+        * Retry 1: 2 seconds
         * Retry 2: 4 seconds
         * Retry 3: 8 seconds
         * Retry 4+: 32 seconds (capped)

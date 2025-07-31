@@ -2,28 +2,17 @@
 
 PMCGrab is designed for **batch-first** workflows – pass one or many PMCIDs and receive clean, section-aware JSON suitable for RAG pipelines or downstream analytics.
 
-## TL;DR – Five-Paper Demo
+## TL;DR – Three-Paper Demo
 
 ```bash
-python examples/run_five_pmcs.py
+python examples/run_three_pmcs.py
 ```
 
-- Downloads five sample PMC articles
+- Downloads three sample PMC articles
 - Prints a one-line summary for each (title, abstract snippet, author count)
 - Writes full JSON to `pmc_output/PMC<id>.json`
 
 Edit the `PMC_IDS` list in the script to use any IDs you need – one or one-thousand, no other changes required.
-
-## Minimal API Example (Single Function)
-
-```python
-from pmcgrab.application.processing import process_single_pmc
-
-paper_json = process_single_pmc("7181753")  # returns a dict
-print(paper_json["title"])
-```
-
-The helper handles XML retrieval, parsing, and validation – you get back ready-to-use JSON.
 
 ## Batch Processing in Code
 

@@ -14,12 +14,12 @@ You'll need:
 PMC IDs are numerical identifiers like `7181753`. You can find them in PMC URLs:
 `https://www.ncbi.nlm.nih.gov/pmc/articles/PMC7181753/`
 
-## Quick Demo – Process Five Articles
+## Quick Demo – Process Three Articles
 
-Run the helper script shipped with PMCGrab. It processes five predefined PMCIDs and shows a concise summary for each one:
+Run the helper script shipped with PMCGrab. It processes three predefined PMCIDs and shows a concise summary for each one:
 
 ```bash
-python examples/run_five_pmcs.py
+python examples/run_three_pmcs.py
 ```
 
 What the script does:
@@ -28,7 +28,7 @@ What the script does:
 2. Prints title, first 120 characters of the abstract and author count
 3. Writes full JSON into `pmc_output/PMC<id>.json`
 
-Feel free to edit the `PMC_IDS` list in `examples/run_five_pmcs.py` to include any number of IDs (one or many – the script works the same).
+Feel free to edit the `PMC_IDS` list in `examples/run_three_pmcs.py` to include any number of IDs (one or many – the script works the same).
 
 ## Understanding the Output
 

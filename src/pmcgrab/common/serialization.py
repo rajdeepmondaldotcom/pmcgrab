@@ -65,12 +65,12 @@ def normalize_value(val: Any):
 
     Returns:
         JSON-serializable primitive: Normalized representation using only
-                                   basic Python types (str, int, float, bool, 
+                                   basic Python types (str, int, float, bool,
                                    list, dict, None)
 
     Transformations:
         * datetime objects → ISO-8601 strings
-        * pandas DataFrame → list of record dictionaries  
+        * pandas DataFrame → list of record dictionaries
         * pandas Series → list of values
         * dict → recursively normalized dict
         * list → recursively normalized list
@@ -79,16 +79,16 @@ def normalize_value(val: Any):
     Examples:
         >>> import datetime
         >>> import pandas as pd
-        >>> 
+        >>>
         >>> # DateTime normalization
         >>> normalize_value(datetime.date(2023, 1, 15))
         '2023-01-15'
-        >>> 
+        >>>
         >>> # DataFrame normalization
         >>> df = pd.DataFrame({'a': [1, 2], 'b': [3, 4]})
         >>> normalize_value(df)
         [{'a': 1, 'b': 3}, {'a': 2, 'b': 4}]
-        >>> 
+        >>>
         >>> # Nested structure normalization
         >>> complex_data = {'date': datetime.date(2023, 1, 15), 'values': [1, 2, 3]}
         >>> normalize_value(complex_data)

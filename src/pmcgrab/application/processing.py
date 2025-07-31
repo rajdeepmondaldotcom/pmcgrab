@@ -30,15 +30,15 @@ __all__: list[str] = [
 
 def process_single_pmc(pmc_id: str) -> dict[str, str | dict | list] | None:
     """Download and parse a single PMC article into normalized dictionary format.
-    
+
     Application-layer function that handles the complete processing pipeline
     for a single PMC article: fetching XML, parsing content, extracting
     structured data, and normalizing for JSON serialization. Includes
     timeout protection and robust error handling.
-    
+
     Args:
         pmc_id: String representation of the PMC ID (e.g., "7181753")
-        
+
     Returns:
         dict[str, str | dict | list] | None: Normalized article dictionary with keys:
             - pmc_id: Article identifier
@@ -49,14 +49,14 @@ def process_single_pmc(pmc_id: str) -> dict[str, str | dict | list] | None:
             - Journal and publication metadata
             - Content metadata (funding, ethics, etc.)
         Returns None if processing fails or article has no usable content.
-        
+
     Examples:
         >>> article_data = process_single_pmc("7181753")
         >>> if article_data:
         ...     print(f"Title: {article_data['title']}")
         ...     print(f"Sections: {list(article_data['body'].keys())}")
         ...     print(f"Authors: {len(article_data['authors'])}")
-        
+
     Note:
         This function includes a 60-second timeout for network/parsing operations
         and performs garbage collection for memory management in batch scenarios.
@@ -213,30 +213,30 @@ def process_single_pmc(pmc_id: str) -> dict[str, str | dict | list] | None:
 
 def process_pmc_ids(pmc_ids: list[str], *, workers: int = 16) -> dict[str, bool]:
     """Process multiple PMC IDs concurrently and return success mapping.
-    
+
     Application-layer batch processing function that handles concurrent
     article processing without user interaction (no progress bars or print
     statements). Designed for integration into various interfaces (CLI, web, API).
-    
+
     Args:
         pmc_ids: List of PMC ID strings to process
         workers: Number of concurrent worker threads (default: 16)
-        
+
     Returns:
         dict[str, bool]: Mapping from PMC ID to processing success status.
                         True indicates successful processing, False indicates failure.
-                        
+
     Examples:
         >>> ids = ["7181753", "3539614", "5454911"]
         >>> results = process_pmc_ids(ids, workers=8)
         >>> successful = [pid for pid, success in results.items() if success]
         >>> print(f"Successfully processed {len(successful)} articles")
-        >>> 
+        >>>
         >>> # Check individual results
         >>> for pid, success in results.items():
         ...     status = "SUCCESS" if success else "FAILED"
         ...     print(f"PMC{pid}: {status}")
-        
+
     Note:
         This function is pure application logic with no UI concerns.
         Individual article processing is delegated to process_single_pmc().

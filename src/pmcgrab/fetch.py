@@ -63,10 +63,10 @@ def fetch_pmc_xml_string(
         >>> # Basic download
         >>> xml_content = fetch_pmc_xml_string(7181753, "user@example.com")
         >>> print(xml_content[:100])
-        >>> 
+        >>>
         >>> # With caching and verbose output
         >>> xml_content = fetch_pmc_xml_string(
-        ...     7181753, "user@example.com", 
+        ...     7181753, "user@example.com",
         ...     download=True, verbose=True
         ... )
 
@@ -300,15 +300,15 @@ def get_xml(
         >>> tree = get_xml(7181753, "user@example.com")
         >>> root = tree.getroot()
         >>> title = root.xpath("//article-title/text()")[0]
-        >>> 
+        >>>
         >>> # With caching and verbose output
         >>> tree = get_xml(
         ...     7181753, "user@example.com",
-        ...     download=True, 
-        ...     validate=True, 
+        ...     download=True,
+        ...     validate=True,
         ...     verbose=True
         ... )
-        >>> 
+        >>>
         >>> # Fast processing without validation
         >>> tree = get_xml(
         ...     7181753, "user@example.com",

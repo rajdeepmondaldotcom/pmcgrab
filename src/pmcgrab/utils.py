@@ -21,30 +21,29 @@ Note:
 
 # normalize_value is imported from common.serialization below
 
-
 from pmcgrab.common.serialization import clean_doc
 
 
 def define_data_dict() -> dict[str, str]:
     """Return comprehensive documentation dictionary for Paper class fields.
-    
+
     Creates a mapping from Paper attribute names to human-readable
     documentation strings explaining what each field contains and
     how it should be interpreted. This serves as the definitive
     reference for Paper class field semantics.
-    
+
     Returns:
         dict[str, str]: Dictionary mapping field names to documentation strings.
                        Each string explains the field's purpose, data type,
                        and usage patterns.
-                       
+
     Examples:
         >>> data_dict = define_data_dict()
         >>> print(data_dict['Title'])
         Title of the PMC article.
         >>> print(data_dict['Authors'])
         DataFrame of PMC Authors including names, emails, and affiliations.
-        
+
     Note:
         This function is used internally by the Paper class to populate
         the data_dict attribute, providing self-documenting capabilities

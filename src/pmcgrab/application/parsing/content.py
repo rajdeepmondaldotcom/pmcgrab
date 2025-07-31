@@ -542,7 +542,7 @@ def gather_acknowledgements(root: ET.Element) -> list[str] | str:
         ...         print(f"  {ack}")
         >>>
         >>> # Search for specific acknowledgements
-        >>> funding_acks = [ack for ack in acknowledgements 
+        >>> funding_acks = [ack for ack in acknowledgements
         ...                 if "fund" in ack.lower()]
 
     Acknowledgement Content:

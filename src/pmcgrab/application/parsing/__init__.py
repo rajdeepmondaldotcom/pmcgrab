@@ -47,14 +47,14 @@ Example Usage:
     ```python
     from pmcgrab.application.parsing import metadata, content, contributors, sections
     from pmcgrab.domain.value_objects import BasicBiMap
-    
+
     # Parse different aspects of an article
     root = ET.fromstring(pmc_xml)
     ref_map = BasicBiMap()
-    
+
     title = metadata.gather_title(root)
     authors = contributors.gather_authors(root)
-    abstract = sections.gather_abstract(root, ref_map)  
+    abstract = sections.gather_abstract(root, ref_map)
     funding = content.gather_funding(root)
     ```
 

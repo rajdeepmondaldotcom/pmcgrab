@@ -16,17 +16,21 @@ theme:
     - media: "(prefers-color-scheme: light)"
       scheme: default
       primary: blue
-      accent: blue
+      accent: "#006778"
       toggle:
         icon: material/brightness-7
         name: Switch to dark mode
     - media: "(prefers-color-scheme: dark)"
       scheme: slate
       primary: blue
-      accent: blue
+      accent: "#006778"
       toggle:
         icon: material/brightness-4
         name: Switch to light mode
+
+  announcement:
+    type: info
+    text: "🚀 v0.3.4 released — try the new three-paper demo!"
 
   # Features
   features:

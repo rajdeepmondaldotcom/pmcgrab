@@ -24,17 +24,17 @@ Key Components:
 
 Command-Line Interface:
     The CLI provides a simple but powerful interface for PMC processing:
-    
+
     ```bash
     # Process single PMC article
     python -m pmcgrab PMC7181753
-    
+
     # Batch process multiple articles
     python -m pmcgrab PMC7181753 PMC3539614 PMC5454911
-    
+
     # Custom output directory and parallel workers
     python -m pmcgrab --output-dir ./results --workers 8 PMC7181753
-    
+
     # Process from file with retry logic
     python -m pmcgrab --input-file pmc_ids.txt --max-retries 3
     ```
@@ -68,7 +68,7 @@ Use Cases:
 Example Integration:
     ```python
     from pmcgrab.cli.pmcgrab_cli import main
-    
+
     # Programmatic CLI usage
     import sys
     sys.argv = ['pmcgrab', 'PMC7181753', '--output-dir', './output']

@@ -435,9 +435,9 @@ def process_in_batches_with_retry(
         >>> # Process with retry for maximum reliability
         >>> pmc_ids = ["7181753", "3539614", "5454911", "invalid_id"]
         >>> process_in_batches_with_retry(
-        ...     pmc_ids, "./output", 
-        ...     chunk_size=50, 
-        ...     parallel_workers=8, 
+        ...     pmc_ids, "./output",
+        ...     chunk_size=50,
+        ...     parallel_workers=8,
         ...     max_retries=5
         ... )
         # Output:

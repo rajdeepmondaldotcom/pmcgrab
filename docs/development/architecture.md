@@ -90,7 +90,7 @@ sequenceDiagram
     participant Fetcher
 
     User->>CLI: pmcgrab PMC123456
-    CLI->>App: process_single_pmc()
+    CLI->>App: process_pmc_ids()
     App->>Fetcher: get_xml()
     Fetcher-->>App: XML content
     App->>Parser: parse_paper()

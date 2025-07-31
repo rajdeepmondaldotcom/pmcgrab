@@ -8,6 +8,12 @@
 
 PMCGrab is a specialized Python toolkit for **retrieving, validating and restructuring PubMed Central (PMC) articles into clean, section-aware JSON** that large-language-model (LLM) pipelines can ingest directly for Retrieval-Augmented Generation (RAG), question-answering, summarization and other downstream tasks.
 
+!!! tip "Get started in two commands"
+    ```bash
+    pip install pmcgrab
+    python examples/run_three_pmcs.py
+    ```
+
 ## Key Features
 
 :material-download: **Effortless Retrieval**
@@ -41,17 +47,17 @@ While the NCBI Entrez API already provides raw XML, consuming it directly is bur
 pip install pmcgrab
 ```
 
-### Example: Process five PMC articles
+### Example: Process three PMC articles
 
 Run the helper script included in the repository:
 
 ```bash
-python examples/run_five_pmcs.py
+python examples/run_three_pmcs.py
 ```
 
 The script will:
 
-1. Download the five predefined PMCIDs.
+1. Download the three predefined PMCIDs.
 2. Print a short summary for each article (title, abstract snippet, author count).
 3. Save the complete JSON output to `pmc_output/PMC<id>.json` so you can inspect it later.
 

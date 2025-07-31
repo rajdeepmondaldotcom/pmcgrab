@@ -44,11 +44,11 @@ Usage Patterns:
 Example Usage:
     ```python
     from pmcgrab.domain import BasicBiMap
-    
+
     # Create bidirectional reference map
     ref_map = BasicBiMap()
     ref_map[0] = "<xref>Figure 1</xref>"
-    
+
     # Efficient bidirectional lookup
     xml_element = ref_map[0]
     reference_id = ref_map.reverse["<xref>Figure 1</xref>"]

@@ -31,19 +31,19 @@ Key Capabilities:
 Serialization Module:
     Functions for converting complex Python objects to clean, JSON-serializable
     formats suitable for storage and transmission:
-    
+
     * `normalize_value()`: Convert various data types to JSON-compatible formats
     * `clean_doc()`: Clean and normalize documentation strings
 
 HTML Cleaning Module:
     Safe and efficient HTML/XML tag processing for scientific content:
-    
+
     * `remove_html_tags()`: Remove or replace HTML/XML tags with custom rules
     * `strip_html_text_styling()`: Remove text formatting while preserving content
 
 XML Processing Module:
     Specialized functions for PMC XML content processing:
-    
+
     * `stringify_children()`: Extract text content from XML elements
     * `split_text_and_refs()`: Separate text from cross-references
     * `generate_typed_mhtml_tag()`: Create internal markup tags
@@ -52,13 +52,13 @@ XML Processing Module:
 Common Usage Patterns:
     ```python
     from pmcgrab.common import remove_html_tags, normalize_value, split_text_and_refs
-    
+
     # Clean HTML content
     clean_text = remove_html_tags(raw_html, removals=["<i>", "<b>"])
-    
+
     # Normalize data for JSON serialization
     json_data = normalize_value(complex_python_object)
-    
+
     # Process XML with cross-references
     clean_text = split_text_and_refs(xml_element, ref_map)
     ```

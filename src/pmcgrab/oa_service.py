@@ -47,14 +47,14 @@ _BASE_URL = "https://www.ncbi.nlm.nih.gov/pmc/utils/oa/oa.fcgi"
 
 def _parse_oa_record(rec: ET.Element) -> dict[str, str]:
     """Parse Open Access service XML record into dictionary format.
-    
+
     Internal helper function that extracts information from the XML record
     element returned by the PMC OA Web Service API. Combines element
     attributes with child element text content.
-    
+
     Args:
         rec: XML record element from OA service response
-        
+
     Returns:
         dict[str, str]: Parsed record data with attribute and element information
     """
@@ -77,7 +77,7 @@ def fetch(article_id: str, id_type: str = "pmcid") -> dict[str, str] | None:
                    Examples: "PMC7181753", "33087749", "10.1038/s41586-020-2832-5"
         id_type: Type of identifier provided. Supported values:
                 - "pmcid": PubMed Central ID (default)
-                - "pmid": PubMed ID  
+                - "pmid": PubMed ID
                 - "doi": Digital Object Identifier
 
     Returns:

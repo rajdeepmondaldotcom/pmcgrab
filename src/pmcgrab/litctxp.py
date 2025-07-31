@@ -69,17 +69,17 @@ def export(pmcid: str, fmt: str = "medline") -> str:
         >>> citation = export("PMC7181753")
         >>> print(citation)
         # Output: Structured MEDLINE format citation
-        
+
         >>> # Generate BibTeX format for LaTeX documents
         >>> bibtex = export("7181753", fmt="bibtex")
         >>> print(bibtex)
         # Output: @article{...} BibTeX entry
-        
+
         >>> # Generate RIS format for reference managers
         >>> ris_citation = export("PMC7181753", fmt="ris")
         >>> with open("citation.ris", "w") as f:
         ...     f.write(ris_citation)
-        
+
         >>> # Batch export multiple citations
         >>> pmcids = ["PMC7181753", "PMC3539614", "PMC5454911"]
         >>> citations = [export(pmcid, "bibtex") for pmcid in pmcids]
@@ -90,7 +90,7 @@ def export(pmcid: str, fmt: str = "medline") -> str:
         - Author names and affiliations
         - Article title and journal information
         - Publication dates and volume/issue details
-        
+
         BibTeX format produces LaTeX-compatible entries:
         @article{key,
           title={Article Title},

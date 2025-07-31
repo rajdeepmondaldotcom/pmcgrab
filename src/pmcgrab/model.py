@@ -43,17 +43,17 @@ from pmcgrab.utils import define_data_dict
 
 class Paper:
     """Comprehensive container for all parsed information about a PMC article.
-    
+
     This class serves as the primary data model for representing a complete
     PubMed Central article with all its metadata, content sections, references,
     tables, figures, and other scholarly article components. It provides
     convenient access to both structured data and human-readable text.
-    
+
     The Paper class is designed to be AI/ML-friendly, offering clean text
     extraction methods alongside preservation of document structure and
     cross-references. All data is normalized for JSON serialization and
     downstream processing.
-    
+
     Attributes:
         has_data (bool): Whether the paper contains valid parsed data
         last_updated (str): Timestamp of when the paper was parsed
@@ -98,22 +98,22 @@ class Paper:
         _ref_map_with_tags (BasicBiMap): Internal reference map with XML tags
         data_dict (dict): Field documentation dictionary
         vector_collection: Optional vector collection for embeddings
-    
+
     Examples:
         Create a Paper from a PMCID:
-        
+
             >>> paper = Paper.from_pmc("7181753", email="your-email@example.com")
             >>> print(paper.title)
             >>> print(paper.abstract_as_str()[:200])
-        
+
         Access specific sections:
-        
+
             >>> for section in paper.body:
             ...     if section.title == "Methods":
             ...         print(section.get_section_text())
-        
+
         Get author information:
-        
+
             >>> print(paper.authors.head())
             >>> print(f"Number of authors: {len(paper.authors)}")
     """
@@ -122,14 +122,14 @@ class Paper:
 
     def __init__(self, d: dict) -> None:
         """Initialize a Paper from a dictionary of parsed article data.
-        
+
         Args:
             d: Dictionary containing parsed article data from PMC XML.
                Should contain keys like 'PMCID', 'Title', 'Authors', 'Body', etc.
                If empty dict is provided, creates a Paper with has_data=False.
-        
+
         Note:
-            The dictionary structure should match the output of 
+            The dictionary structure should match the output of
             parser.build_complete_paper_dict() for proper initialization.
         """
         if not d:
@@ -188,16 +188,16 @@ class Paper:
 
     def abstract_as_str(self) -> str:
         """Return the abstract as plain text string.
-        
+
         Converts the structured abstract sections into a single readable
         text string by concatenating all section content with newlines.
         This is useful for applications that need simple text representation
         rather than the structured section hierarchy.
-        
+
         Returns:
             str: Complete abstract text with sections separated by newlines.
                  Returns empty string if no abstract is available.
-        
+
         Examples:
             >>> paper = Paper.from_pmc("7181753", email="your-email@example.com")
             >>> abstract_text = paper.abstract_as_str()
@@ -209,18 +209,18 @@ class Paper:
 
 class TextElement:
     """Base class for hierarchical text elements with cross-reference support.
-    
+
     This abstract base class provides common functionality for text elements
     that need to maintain and access cross-reference mappings. It implements
     a parent-child hierarchy where reference maps can be inherited from
     parent elements, ensuring consistent cross-reference resolution throughout
     the document structure.
-    
+
     Attributes:
         root (ET.Element): The XML element this text element wraps
         parent (Optional[TextElement]): Parent element in the hierarchy
         ref_map (BasicBiMap): Bidirectional reference mapping for cross-references
-    
+
     The reference map enables linking between text references (like citations,
     tables, figures) and their actual definitions elsewhere in the document.
     """
@@ -232,7 +232,7 @@ class TextElement:
         ref_map: Optional[BasicBiMap] = None,
     ) -> None:
         """Initialize a text element with XML root and optional parent/reference map.
-        
+
         Args:
             root: The XML element that this text element represents
             parent: Parent element in the document hierarchy (for reference inheritance)
@@ -245,7 +245,7 @@ class TextElement:
 
     def get_ref_map(self) -> BasicBiMap:
         """Get the reference map, inheriting from parent if available.
-        
+
         Returns:
             BasicBiMap: The reference map associated with this element or its
                        root parent. Enables consistent cross-reference resolution
@@ -255,7 +255,7 @@ class TextElement:
 
     def set_ref_map(self, ref_map: BasicBiMap) -> None:
         """Set the reference map, propagating to root parent if present.
-        
+
         Args:
             ref_map: New reference map to associate with this element tree.
                     Will be set on the root parent if hierarchy exists, otherwise
@@ -269,24 +269,24 @@ class TextElement:
 
 class TextParagraph(TextElement):
     """Individual paragraph of text with cross-reference and citation support.
-    
+
     Represents a single paragraph from a PMC article, handling both plain text
     content and embedded cross-references to citations, tables, figures, etc.
     The paragraph maintains both clean text (with references removed) and
     text with reference markers for different use cases.
-    
+
     Attributes:
         id (str): XML ID attribute of the paragraph element
         text_with_refs (str): Paragraph text with reference markers preserved
         text (str): Clean paragraph text with HTML/reference tags removed
-    
+
     Examples:
         >>> # Paragraph text without reference markers (clean for AI/ML)
         >>> clean_text = paragraph.text
-        >>> 
+        >>>
         >>> # Paragraph text with reference markers (for citation tracking)
         >>> text_with_refs = paragraph.text_with_refs
-        >>> 
+        >>>
         >>> # String representation returns clean text
         >>> print(str(paragraph))
     """
@@ -298,7 +298,7 @@ class TextParagraph(TextElement):
         ref_map: Optional[BasicBiMap] = None,
     ) -> None:
         """Initialize paragraph from XML element.
-        
+
         Args:
             p_root: XML paragraph element (<p>)
             parent: Parent text element for reference map inheritance
@@ -314,7 +314,7 @@ class TextParagraph(TextElement):
 
     def __str__(self) -> str:
         """Return clean paragraph text without reference tags.
-        
+
         Returns:
             str: Paragraph text with HTML tags and reference markers removed,
                  suitable for display or AI/ML processing.
@@ -323,10 +323,10 @@ class TextParagraph(TextElement):
 
     def __eq__(self, other: object) -> bool:
         """Check equality based on text content with references.
-        
+
         Args:
             other: Object to compare against
-            
+
         Returns:
             bool: True if other is a TextParagraph with identical text_with_refs
         """
@@ -338,27 +338,27 @@ class TextParagraph(TextElement):
 
 class TextSection(TextElement):
     """Hierarchical document section that can contain nested sections and content.
-    
+
     Represents a logical section of a PMC article (like Introduction, Methods,
     Results, Discussion, etc.) that can contain paragraphs, tables, figures,
     and nested subsections. Maintains both the hierarchical structure and
     provides flattened text access for different use cases.
-    
+
     Attributes:
         title (Optional[str]): Section title/heading
         children (list): Child elements including subsections, paragraphs, tables, figures
         text (str): Complete section text with clean formatting
         text_with_refs (str): Complete section text with reference markers preserved
-    
+
     The section automatically parses its XML structure to build the hierarchy,
     handling various content types and providing both structured access and
     flattened text representations.
-    
+
     Examples:
         >>> # Access section title and content
         >>> print(f"Section: {section.title}")
         >>> print(section.text[:200])
-        >>> 
+        >>>
         >>> # Iterate through child elements
         >>> for child in section.children:
         ...     if isinstance(child, TextParagraph):
@@ -374,16 +374,16 @@ class TextSection(TextElement):
         ref_map: Optional[BasicBiMap] = None,
     ) -> None:
         """Initialize section from XML element.
-        
+
         Parses the XML section element to extract title, child sections,
         paragraphs, tables, and figures. Builds a hierarchical structure
         while maintaining reference map consistency.
-        
+
         Args:
             sec_root: XML section element (<sec>)
             parent: Parent text element for reference map inheritance
             ref_map: Reference map for cross-reference resolution
-            
+
         Warns:
             MultipleTitleWarning: If section contains multiple <title> elements
             UnhandledTextTagWarning: If section contains unrecognized child elements
@@ -428,10 +428,10 @@ class TextSection(TextElement):
 
     def __str__(self) -> str:
         """Return human-readable representation of the section.
-        
+
         Creates a formatted string showing the section title and all child
         content with proper indentation to reflect the hierarchical structure.
-        
+
         Returns:
             str: Formatted section text with title header and indented children
         """
@@ -442,7 +442,7 @@ class TextSection(TextElement):
 
     def get_section_text(self) -> str:
         """Return clean text for this section without reference markers.
-        
+
         Returns:
             str: Complete section text with HTML tags and reference markers
                  removed, suitable for display or AI/ML processing.
@@ -451,10 +451,10 @@ class TextSection(TextElement):
 
     def get_section_text_with_refs(self) -> str:
         """Return section text including cross-reference markers.
-        
+
         Preserves reference markers for applications that need to track
         citations, table references, figure references, etc.
-        
+
         Returns:
             str: Complete section text with reference markers preserved
                  for citation and cross-reference tracking.
@@ -475,10 +475,10 @@ class TextSection(TextElement):
 
     def __eq__(self, other: object) -> bool:
         """Check equality based on title and child content.
-        
+
         Args:
             other: Object to compare against
-            
+
         Returns:
             bool: True if other is a TextSection with identical title and children
         """
@@ -491,27 +491,27 @@ class TextSection(TextElement):
 
 class TextTable(TextElement):
     """Table element with pandas DataFrame representation and metadata.
-    
+
     Wraps a PMC table element and attempts to parse it into a structured
     pandas DataFrame for data analysis and manipulation. Preserves table
     labels, captions, and provides both structured data access and text
     representations.
-    
+
     Attributes:
         df (Optional[pd.io.formats.style.Styler]): Parsed table as styled DataFrame,
                                                    None if parsing failed
-    
+
     The table parser uses pandas' read_html() function to extract tabular data
     from the XML representation, automatically handling common table structures
     and formatting.
-    
+
     Examples:
         >>> # Access parsed table data
         >>> if table.df is not None:
         ...     data = table.df.data  # Get underlying DataFrame
         ...     print(f"Table shape: {data.shape}")
         ...     print(data.head())
-        >>> 
+        >>>
         >>> # Get text representation
         >>> print(str(table))
     """
@@ -523,16 +523,16 @@ class TextTable(TextElement):
         ref_map: Optional[BasicBiMap] = None,
     ) -> None:
         """Initialize table from XML element with pandas parsing.
-        
+
         Attempts to parse the table XML into a pandas DataFrame using
         pd.read_html(). Extracts label and caption information and
         applies them as table styling.
-        
+
         Args:
             table_root: XML table-wrap element containing the table
             parent: Parent text element for reference map inheritance
             ref_map: Reference map for cross-reference resolution
-            
+
         Warns:
             ReadHTMLFailure: If table parsing fails due to malformed HTML/XML
                            or unsupported table structure
@@ -563,7 +563,7 @@ class TextTable(TextElement):
 
     def __str__(self) -> str:
         """Return string representation of the parsed table.
-        
+
         Returns:
             str: Formatted table string from pandas or error message if parsing failed
         """
@@ -571,7 +571,7 @@ class TextTable(TextElement):
 
     def __repr__(self) -> str:
         """Return detailed representation of the parsed table.
-        
+
         Returns:
             str: Detailed table representation from pandas or error message if parsing failed
         """

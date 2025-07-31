@@ -7,11 +7,11 @@ as a module and via the ``pmcgrab`` console script declared in ``pyproject.toml`
 
 Examples:
     Run PMCGrab as a module:
-    
+
         $ python -m pmcgrab --pmcids 7181753 3539614 --output-dir ./results
-    
+
     This is equivalent to using the installed console script:
-    
+
         $ pmcgrab --pmcids 7181753 3539614 --output-dir ./results
 
 Notes:

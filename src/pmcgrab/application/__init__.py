@@ -47,10 +47,10 @@ Processing Workflow:
     ```python
     from pmcgrab.application.paper_builder import build_paper_from_pmc
     from pmcgrab.application.processing import process_single_pmc
-    
+
     # High-level Paper construction
     paper = build_paper_from_pmc("PMC7181753")
-    
+
     # Application-layer processing with error handling
     result = process_single_pmc("PMC7181753", output_dir="./output")
     ```
@@ -82,12 +82,12 @@ Example Integration:
     # Application layer orchestrates the full workflow
     from pmcgrab.application.processing import process_pmc_ids
     from pmcgrab.application.paper_builder import build_paper_from_pmc
-    
+
     # Single article processing
     paper = build_paper_from_pmc("PMC7181753")
     print(f"Title: {paper.title}")
     print(f"Authors: {len(paper.authors)}")
-    
+
     # Batch processing with error handling
     results = process_pmc_ids(["PMC7181753", "PMC3539614"], output_dir="./output")
     ```
