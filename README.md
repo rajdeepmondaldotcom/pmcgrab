@@ -237,9 +237,9 @@ If this project contributes to your research, please consider citing it:
 @software{pmcgrab,
   author       = {Rajdeep Mondal},
   title        = {pmcgrab: AI-ready retrieval of PubMed Central articles},
-  year         = {2024},
+  year         = {2025},
   url          = {https://github.com/rajdeepmondaldotcom/pmcgrab},
-  version      = {0.2.0},
+  version      = {0.2.1},
   license      = {Apache-2.0}
 }
 ```
