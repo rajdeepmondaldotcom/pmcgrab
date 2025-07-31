@@ -26,7 +26,9 @@ def test_process_pmc_ids_success(monkeypatch):
         has_data = True
         abstract: ClassVar[list] = []
         title = "Dummy"
-        body: ClassVar[list] = [DummySection()]  # Non-empty body so it doesn't return None
+        body: ClassVar[list] = [
+            DummySection()
+        ]  # Non-empty body so it doesn't return None
         authors = None
         non_author_contributors = None
         publisher_name = None

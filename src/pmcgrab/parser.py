@@ -64,8 +64,14 @@ import lxml.etree as ET
 
 from pmcgrab.application.parsing import (
     content as _content,
+)
+from pmcgrab.application.parsing import (
     contributors as _contributors,
+)
+from pmcgrab.application.parsing import (
     metadata as _metadata,
+)
+from pmcgrab.application.parsing import (
     sections as _sections,
 )
 from pmcgrab.constants import (
@@ -203,17 +209,23 @@ def process_reference_map(
             if rtype == "bibr":
                 if not rid:
                     warnings.warn(
-                        "Citation without reference id", UnmatchedCitationWarning, stacklevel=2
+                        "Citation without reference id",
+                        UnmatchedCitationWarning,
+                        stacklevel=2,
                     )
                     continue
                 matches = paper_root.xpath(f"//ref[@id='{rid}']")
                 if not matches:
-                    warnings.warn("Citation id not found", UnmatchedCitationWarning, stacklevel=2)
+                    warnings.warn(
+                        "Citation id not found", UnmatchedCitationWarning, stacklevel=2
+                    )
                     continue
                 cleaned[key] = _parse_citation(matches[0])
             elif rtype == "table":
                 if not rid:
-                    warnings.warn("Table ref without id", UnmatchedTableWarning, stacklevel=2)
+                    warnings.warn(
+                        "Table ref without id", UnmatchedTableWarning, stacklevel=2
+                    )
                     continue
                 matches = paper_root.xpath(f"//table-wrap[@id='{rid}']")
                 if matches:

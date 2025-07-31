@@ -47,7 +47,7 @@ def main():
                 if hasattr(section, "title") and section.title:
                     section_titles.append(section.title)
                 else:
-                    section_titles.append(f"Section {i+1}")
+                    section_titles.append(f"Section {i + 1}")
 
             print(f"Section titles: {section_titles}")
 

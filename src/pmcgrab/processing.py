@@ -13,6 +13,7 @@ from tqdm import tqdm
 from pmcgrab.common.serialization import normalize_value
 from pmcgrab.constants import TimeoutException
 
+
 # Re-export the legacy function with the expected name for backwards compatibility
 def process_single_pmc(pmc_id: str) -> Optional[dict[str, Union[str, dict, list]]]:
     """Legacy wrapper - delegates to _legacy_process_single_pmc for backwards compatibility."""
@@ -209,13 +210,16 @@ def process_pmc_ids_in_batches(
     failed = 0
     start_time = time.time()
     custom_bar_format = "{l_bar}{bar} | {n_fmt}/{total_fmt} [elapsed: {elapsed} | remaining: {remaining}] {postfix}"
-    with tqdm(
-        total=len(pmc_ids),
-        desc="Processing PMC IDs",
-        unit="paper",
-        bar_format=custom_bar_format,
-        dynamic_ncols=True,
-    ) as pbar, ThreadPoolExecutor(max_workers=batch_size) as executor:
+    with (
+        tqdm(
+            total=len(pmc_ids),
+            desc="Processing PMC IDs",
+            unit="paper",
+            bar_format=custom_bar_format,
+            dynamic_ncols=True,
+        ) as pbar,
+        ThreadPoolExecutor(max_workers=batch_size) as executor,
+    ):
         futures = {
             executor.submit(process_single_pmc_wrapper, pmc_id): pmc_id
             for pmc_id in pmc_ids
