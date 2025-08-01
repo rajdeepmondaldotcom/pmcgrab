@@ -99,7 +99,7 @@ def normalize_value(val: Any):
         safely serialized to JSON for storage, API responses, and other
         downstream applications that require standard data types.
     """
-    if isinstance(val, (datetime.date, datetime.datetime)):
+    if isinstance(val, datetime.date | datetime.datetime):
         return val.isoformat()
     if isinstance(val, pd.DataFrame):
         return val.to_dict(orient="records")

@@ -316,7 +316,7 @@ If PMCGrab helps your research, please cite it:
   author = {Rajdeep Mondal},
   title = {PMCGrab: AI-ready retrieval and parsing of PubMed Central articles},
   url = {https://github.com/rajdeepmondaldotcom/pmcgrab},
-  version = {0.4.9},
+  version = {0.5.0},
   year = {2025}
 }
 ```

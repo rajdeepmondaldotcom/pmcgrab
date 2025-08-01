@@ -13,7 +13,7 @@ Classes:
     TextFigure: Wrapper for PMC figure elements with metadata extraction
 """
 
-from typing import Optional
+from typing import TYPE_CHECKING
 
 import lxml.etree as ET
 
@@ -62,8 +62,8 @@ class TextFigure:
     def __init__(
         self,
         fig_root: ET.Element,
-        parent: Optional["TextFigure"] = None,
-        ref_map: Optional[BasicBiMap] = None,
+        parent: "TextFigure | None" = None,
+        ref_map: BasicBiMap | None = None,
     ) -> None:
         """Initialize TextFigure from PMC XML figure element.
 
@@ -98,7 +98,7 @@ class TextFigure:
             "".join(caption_el.itertext()).strip() if caption_el is not None else None
         )
 
-        graphic_href: Optional[str] = None
+        graphic_href: str | None = None
         if graphic_el is not None:
             # The graphic xlink:href attribute is namespaced. Using the explicit
             # namespace avoids issues if the default xlink prefix is missing.

@@ -77,5 +77,5 @@ def fetch_json(pmcid: str) -> dict[str, Any]:
         is cached using pmcgrab.http_utils.cached_get for performance.
     """
     url = _BASE_URL + pmcid
-    resp = cached_get(url, headers={"User-Agent": "pmcgrab/0.4.9"})
+    resp = cached_get(url, headers={"User-Agent": "pmcgrab/0.5.0"})
     return json.loads(resp.text)
