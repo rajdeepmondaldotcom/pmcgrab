@@ -6,7 +6,7 @@ If you use PMCGrab in your research, please cite it using the following formats:
 
 ```
 Mondal, R. (2025). PMCGrab: AI-ready retrieval and parsing of PubMed Central articles
-for RAG applications (Version 0.5.3) [Computer software].
+for RAG applications (Version 0.5.4) [Computer software].
 https://github.com/rajdeepmondaldotcom/pmcgrab
 ```
 
@@ -14,7 +14,7 @@ https://github.com/rajdeepmondaldotcom/pmcgrab
 
 ```
 Mondal, Rajdeep. "PMCGrab: AI-ready retrieval and parsing of PubMed Central articles
-for RAG applications." GitHub, version 0.5.3, 2025,
+for RAG applications." GitHub, version 0.5.4, 2025,
 https://github.com/rajdeepmondaldotcom/pmcgrab
 ```
 
@@ -22,7 +22,7 @@ https://github.com/rajdeepmondaldotcom/pmcgrab
 
 ```
 Mondal, Rajdeep. "PMCGrab: AI-ready retrieval and parsing of PubMed Central articles
-for RAG applications." Version 0.5.3. Computer software. GitHub, 2025.
+for RAG applications." Version 0.5.4. Computer software. GitHub, 2025.
 https://github.com/rajdeepmondaldotcom/pmcgrab
 ```
 
@@ -33,7 +33,7 @@ https://github.com/rajdeepmondaldotcom/pmcgrab
   author = {Mondal, Rajdeep},
   title = {PMCGrab: AI-ready retrieval and parsing of PubMed Central articles for RAG applications},
   url = {https://github.com/rajdeepmondaldotcom/pmcgrab},
-  version = {0.5.3},
+  version = {0.5.4},
   year = {2025}
 }
 ```
@@ -62,7 +62,7 @@ Citing software in academic work:
 
 When citing PMCGrab, please include:
 
-- **Version number** (e.g., 0.5.3)
+- **Version number** (e.g., 0.5.4)
 - **Date accessed** if using the latest development version
 - **Specific commit hash** if using a development version
 - **DOI** if available for the specific version

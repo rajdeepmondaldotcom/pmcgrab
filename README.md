@@ -1,5 +1,7 @@
 # PMCGrab — From PubMed Central ID to AI-Ready JSON in Seconds
 
+[![PyPI](https://img.shields.io/pypi/v/pmcgrab.svg)](https://pypi.org/project/pmcgrab/) [![Python](https://img.shields.io/pypi/pyversions/pmcgrab.svg)](https://pypi.org/project/pmcgrab/) [![Docs](https://img.shields.io/badge/docs-mkdocs-blue.svg)](https://rajdeepmondaldotcom.github.io/pmcgrab/) [![CI](https://github.com/rajdeepmondaldotcom/pmcgrab/workflows/CI/badge.svg)](https://github.com/rajdeepmondaldotcom/pmcgrab/actions) [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://github.com/rajdeepmondaldotcom/pmcgrab/blob/main/LICENSE)
+
 Every AI workflow that touches biomedical literature hits the same wall:
 
 1. **Download** PMC XML hoping it’s “structured.”
@@ -21,7 +23,7 @@ That wall steals hours from **RAG pipelines, knowledge-graph builds, LLM fine-tu
 | Parallel processing         | Bash loops & temp files | `--workers N` flag             |
 | Edge-case maintenance       | Yours forever           | **200 + tests**, active upkeep |
 
-\*Evaluated on 7,500 PMC papers used in a disease-specific knowledge-graph pipeline.
+**_Evaluated on 7,500 PMC papers used in a disease-specific knowledge-graph pipeline._**
 
 At \$50 /hour, hand-parsing 100 papers burns **\$1,000+**.
 PMCGrab does the same job for \$0—within minutes—so you can focus on _using_ the information instead of extracting it.
