@@ -1,6 +1,6 @@
 # Installation
 
-PMCGrab supports Python 3.10+. Installation relies on [uv](https://github.com/astral-sh/uv)—the 10-100× faster drop-in replacement for pip. Install uv first, then add PMCGrab.
+PMCGrab supports Python 3.10+. Installation relies on [uv](https://github.com/astral-sh/uv)-the 10-100× faster drop-in replacement for pip. Install uv first, then add PMCGrab.
 
 ## Using uv (Recommended)
 

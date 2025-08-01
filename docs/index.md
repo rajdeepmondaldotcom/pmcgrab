@@ -23,7 +23,7 @@ hide:
 
 </div>
 
-## PMCGrab — From PubMed Central ID to AI-Ready JSON in Seconds
+## PMCGrab - From PubMed Central ID to AI-Ready JSON in Seconds
 
 Every AI workflow that touches biomedical literature hits the same wall:
 
