@@ -7,6 +7,10 @@ on:
       - "pyproject.toml"
       - "src/pmcgrab/__init__.py"
 
+permissions:
+  contents: write
+  ## allows workflow to push tags back to repository
+
 jobs:
   check-version:
     runs-on: ubuntu-latest
