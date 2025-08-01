@@ -20,7 +20,6 @@ extraction alongside metadata.
 import datetime
 import textwrap
 import warnings
-from typing import Optional, Union
 
 import lxml.etree as ET
 import pandas as pd
@@ -228,8 +227,8 @@ class TextElement:
     def __init__(
         self,
         root: ET.Element,
-        parent: Optional["TextElement"] = None,
-        ref_map: Optional[BasicBiMap] = None,
+        parent: "TextElement | None" = None,
+        ref_map: BasicBiMap | None = None,
     ) -> None:
         """Initialize a text element with XML root and optional parent/reference map.
 
@@ -294,8 +293,8 @@ class TextParagraph(TextElement):
     def __init__(
         self,
         p_root: ET.Element,
-        parent: Optional[TextElement] = None,
-        ref_map: Optional[BasicBiMap] = None,
+        parent: TextElement | None = None,
+        ref_map: BasicBiMap | None = None,
     ) -> None:
         """Initialize paragraph from XML element.
 
@@ -370,8 +369,8 @@ class TextSection(TextElement):
     def __init__(
         self,
         sec_root: ET.Element,
-        parent: Optional[TextElement] = None,
-        ref_map: Optional[BasicBiMap] = None,
+        parent: TextElement | None = None,
+        ref_map: BasicBiMap | None = None,
     ) -> None:
         """Initialize section from XML element.
 
@@ -389,8 +388,8 @@ class TextSection(TextElement):
             UnhandledTextTagWarning: If section contains unrecognized child elements
         """
         super().__init__(sec_root, parent, ref_map)
-        self.title: Optional[str] = None
-        self.children: list[Union[TextSection, TextParagraph, TextTable]] = []
+        self.title: str | None = None
+        self.children: list[TextSection | TextParagraph | TextTable] = []
         for child in sec_root:
             if child.tag == "title":
                 if self.title:
@@ -519,8 +518,8 @@ class TextTable(TextElement):
     def __init__(
         self,
         table_root: ET.Element,
-        parent: Optional[TextElement] = None,
-        ref_map: Optional[BasicBiMap] = None,
+        parent: TextElement | None = None,
+        ref_map: BasicBiMap | None = None,
     ) -> None:
         """Initialize table from XML element with pandas parsing.
 
@@ -542,7 +541,7 @@ class TextTable(TextElement):
         caption = table_root.xpath("caption/p/text()")
         label = label[0] if label else None
         caption = caption[0] if caption else None
-        self.df: Optional[pd.io.formats.style.Styler] = None
+        self.df: pd.io.formats.style.Styler | None = None
         table_xml_str = ET.tostring(table_root)
         try:
             tables = pd.read_html(table_xml_str)
