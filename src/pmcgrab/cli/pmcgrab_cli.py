@@ -36,7 +36,7 @@ from pathlib import Path
 
 from tqdm import tqdm
 
-from pmcgrab.application.processing import process_pmc_ids
+from pmcgrab.application.processing import process_pmc_ids, process_single_pmc
 
 
 def _parse_args() -> argparse.Namespace:
@@ -130,16 +130,16 @@ def main() -> None:
     for chunk_start in range(0, len(pmc_ids), 100):
         chunk = pmc_ids[chunk_start : chunk_start + 100]
         chunk_results = process_pmc_ids(chunk, batch_size=args.batch_size)
-        for pid, data in chunk_results.items():
-            # If the underlying call returned a dict, we have the article data
-            if isinstance(data, dict):
-                dest = out_dir / f"PMC{pid}.json"
-                with dest.open("w", encoding="utf-8") as fh:
-                    json.dump(data, fh, indent=2, ensure_ascii=False)
-                success = True
-            else:
-                # data is None or a placeholder (e.g., bool from mocked tests)
-                success = bool(data)
+        for pid, success in chunk_results.items():
+            if success:
+                # Fetch data and write JSON
+                article_data = process_single_pmc(pid)
+                if article_data is not None:
+                    dest = out_dir / f"PMC{pid}.json"
+                    with dest.open("w", encoding="utf-8") as fh:
+                        json.dump(article_data, fh, indent=2, ensure_ascii=False)
+                else:
+                    success = False
             results[pid] = success
             bar.update(1)
     bar.close()

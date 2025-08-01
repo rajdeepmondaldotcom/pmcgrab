@@ -250,8 +250,7 @@ def process_pmc_ids(
     if workers is None:
         workers = 16
 
-    # Store either the article data (dict) or None for failures
-    results: dict[str, dict | None] = {}
+    results: dict[str, bool] = {}
     with ThreadPoolExecutor(max_workers=workers) as executor:
         future_to_id = {
             executor.submit(process_single_pmc, pid): pid for pid in pmc_ids
@@ -259,8 +258,7 @@ def process_pmc_ids(
         for future in as_completed(future_to_id):
             pid = future_to_id[future]
             try:
-                article_data = future.result()
-                results[pid] = article_data  # dict on success, None on failure
+                results[pid] = future.result() is not None
             except Exception:
-                results[pid] = None
+                results[pid] = False
     return results
