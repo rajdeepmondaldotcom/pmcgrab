@@ -8,20 +8,20 @@ PMCGrab provides a powerful command-line interface for batch processing and arti
 
 ```bash
 # Process a single PMC article
-uv run uv run python -m pmcgrab PMC7181753
+uv run python -m pmcgrab --pmcids 7181753
 
 # Specify email (required by NCBI)
-uv run uv run python -m pmcgrab --email your-email@example.com PMC7181753
+uv run python -m pmcgrab --pmcids --email your-email@example.com 7181753
 ```
 
 ### Multiple Articles
 
 ```bash
 # Process multiple articles
-uv run uv run python -m pmcgrab PMC7181753 PMC3539614 PMC5454911
+uv run python -m pmcgrab --pmcids 7181753 3539614 5454911
 
 # From a file (one PMC ID per line)
-uv run uv run python -m pmcgrab --input-file pmc_ids.txt
+uv run python -m pmcgrab --pmcids --input-file pmc_ids.txt
 ```
 
 ## Command Options
@@ -30,36 +30,36 @@ uv run uv run python -m pmcgrab --input-file pmc_ids.txt
 
 ```bash
 # Custom output directory
-uv run uv run python -m pmcgrab --output-dir ./results PMC7181753
+uv run python -m pmcgrab --pmcids --output-dir ./results 7181753
 
 # Create timestamped directory
-uv run uv run python -m pmcgrab --output-dir ./results_$(date +%Y%m%d) PMC7181753
+uv run python -m pmcgrab --pmcids --output-dir ./results_$(date +%Y%m%d) 7181753
 ```
 
 ### Performance Options
 
 ```bash
 # Parallel processing
-uv run uv run python -m pmcgrab --workers 8 PMC7181753 PMC3539614
+uv run python -m pmcgrab --pmcids --workers 8 7181753 3539614
 
 # Batch size configuration
-uv run uv run python -m pmcgrab --batch-size 20 --workers 4 PMC7181753 PMC3539614
+uv run python -m pmcgrab --pmcids --batch-size 20 --workers 4 7181753 3539614
 
 # Timeout settings
-uv run uv run python -m pmcgrab --timeout 60 PMC7181753
+uv run python -m pmcgrab --pmcids --timeout 60 7181753
 ```
 
 ### Error Handling
 
 ```bash
 # Retry configuration
-uv run python -m pmcgrab --max-retries 5 PMC7181753
+uv run python -m pmcgrab --max-retries 5 7181753
 
 # Verbose output
-uv run python -m pmcgrab --verbose PMC7181753
+uv run python -m pmcgrab --verbose 7181753
 
 # Suppress warnings
-uv run python -m pmcgrab --quiet PMC7181753
+uv run python -m pmcgrab --quiet 7181753
 ```
 
 ## Complete Example
@@ -73,7 +73,7 @@ uv run python -m pmcgrab \
     --max-retries 3 \
     --timeout 60 \
     --verbose \
-    PMC7181753 PMC3539614 PMC5454911
+    7181753 3539614 5454911
 ```
 
 ## Input Files
@@ -116,9 +116,9 @@ The CLI creates several output files:
 
 ```
 output_directory/
-├── PMC7181753.json      # Individual article data
-├── PMC3539614.json
-└── PMC5454911.json
+├── 7181753.json      # Individual article data
+├── 3539614.json
+└── 5454911.json
 ```
 
 ### Summary Files
@@ -143,7 +143,7 @@ export PMCGRAB_TIMEOUT=60
 export PMCGRAB_MAX_RETRIES=3
 
 # Now you can run with defaults
-uv run python -m pmcgrab PMC7181753
+uv run python -m pmcgrab 7181753
 ```
 
 ## Advanced Usage
@@ -152,20 +152,20 @@ uv run python -m pmcgrab PMC7181753
 
 ```bash
 # Validate XML structure
-uv run python -m pmcgrab --validate PMC7181753
+uv run python -m pmcgrab --validate 7181753
 
 # Skip validation for speed
-uv run python -m pmcgrab --no-validate PMC7181753
+uv run python -m pmcgrab --no-validate 7181753
 
 # Download and cache XML files
-uv run python -m pmcgrab --download --cache-dir ./xml_cache PMC7181753
+uv run python -m pmcgrab --download --cache-dir ./xml_cache 7181753
 ```
 
 ### Resume Processing
 
 ```bash
 # Resume from previous failed run
-uv run python -m pmcgrab --resume --input-dir ./previous_output PMC7181753 PMC3539614
+uv run python -m pmcgrab --resume --input-dir ./previous_output 7181753 3539614
 
 # Or resume from failed IDs file
 uv run python -m pmcgrab --input-file ./previous_output/failed_pmcids.txt
@@ -175,11 +175,11 @@ uv run python -m pmcgrab --input-file ./previous_output/failed_pmcids.txt
 
 ```bash
 # Enable detailed logging
-uv run python -m pmcgrab --verbose --log-file processing.log PMC7181753
+uv run python -m pmcgrab --verbose --log-file processing.log 7181753
 
 # Different log levels
-uv run python -m pmcgrab --log-level DEBUG PMC7181753
-uv run python -m pmcgrab --log-level WARNING PMC7181753
+uv run python -m pmcgrab --log-level DEBUG 7181753
+uv run python -m pmcgrab --log-level WARNING 7181753
 ```
 
 ## Batch Processing Examples
@@ -236,7 +236,7 @@ uv run python -m pmcgrab \
 
 ```bash
 # Run with error handling
-uv run python -m pmcgrab PMC7181753 PMC3539614
+uv run python -m pmcgrab 7181753 3539614
 EXIT_CODE=$?
 
 if [ $EXIT_CODE -eq 0 ]; then
@@ -276,7 +276,7 @@ uv run python -m pmcgrab \
     --batch-size 5 \
     --timeout 120 \
     --max-retries 10 \
-    PMC7181753
+    7181753
 
 # For fast networks
 uv run python -m pmcgrab \
@@ -284,7 +284,7 @@ uv run python -m pmcgrab \
     --batch-size 50 \
     --timeout 30 \
     --max-retries 2 \
-    PMC7181753
+    7181753
 ```
 
 ### Memory Optimization
@@ -295,14 +295,14 @@ uv run python -m pmcgrab \
     --workers 2 \
     --batch-size 5 \
     --no-cache \
-    PMC7181753
+    7181753
 
 # For high-memory systems
 uv run python -m pmcgrab \
     --workers 16 \
     --batch-size 100 \
     --cache-dir ./large_cache \
-    PMC7181753
+    7181753
 ```
 
 ## Integration with Shell Scripts

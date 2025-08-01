@@ -23,6 +23,18 @@ hide:
 
 </div>
 
+## PMCGrab — From PubMed Central ID to AI-Ready JSON in Seconds
+
+Every AI workflow that touches biomedical literature hits the same wall:
+
+1. **Download** PMC XML hoping it’s “structured.”
+2. **Fight** nested tags, footnotes, figure refs, and half-broken links.
+3. **Hope** your regex didn’t blow away the Methods section you actually need.
+
+**PMCGrab ends this cycle.** Feed the tool a list of PMC IDs and get back clean, section-aware JSON ready for embeddings, vector stores, or prompt templates.
+
+---
+
 ## Example Usage
 
 ```python

@@ -130,10 +130,16 @@ def main() -> None:
     for chunk_start in range(0, len(pmc_ids), 100):
         chunk = pmc_ids[chunk_start : chunk_start + 100]
         chunk_results = process_pmc_ids(chunk, batch_size=args.batch_size)
-        for pid, success in chunk_results.items():
-            if success:
-                # assuming process_single_pmc already wrote the file via higher-level call
-                pass
+        for pid, data in chunk_results.items():
+            # If the underlying call returned a dict, we have the article data
+            if isinstance(data, dict):
+                dest = out_dir / f"PMC{pid}.json"
+                with dest.open("w", encoding="utf-8") as fh:
+                    json.dump(data, fh, indent=2, ensure_ascii=False)
+                success = True
+            else:
+                # data is None or a placeholder (e.g., bool from mocked tests)
+                success = bool(data)
             results[pid] = success
             bar.update(1)
     bar.close()

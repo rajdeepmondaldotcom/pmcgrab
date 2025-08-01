@@ -107,8 +107,8 @@ After processing, you'll have JSON files like:
 ```
 pmc_output/
 ├── PMC7114487.json
-├── PMC3084273.json
-├── PMC7690653.json
+├── 3084273.json
+├── 7690653.json
 ├── PMC5707528.json
 └── PMC7979870.json
 ```
@@ -139,17 +139,17 @@ PMCGrab also works from the command line:
 
 ```bash
 # Single paper
-uv run python -m pmcgrab PMC7114487
+uv run python -m pmcgrab --pmcids 7114487
 
 # Multiple papers
-uv run python -m pmcgrab PMC7114487 PMC3084273 PMC7690653
+uv run python -m pmcgrab --pmcids 7114487 3084273 7690653
 
 # With custom settings
 uv run python -m pmcgrab \
     --output-dir ./results \
     --workers 4 \
-    --email your-email@example.com \
-    PMC7114487
+    --pmcids 7114487 \
+
 ```
 
 ## Error Handling
