@@ -49,7 +49,7 @@ External Service Functions:
     oai_list_sets: List OAI-PMH sets
 """
 
-__version__ = "0.4.7"
+__version__ = "0.4.8"
 
 import sys
 import types

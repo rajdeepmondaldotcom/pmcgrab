@@ -64,7 +64,7 @@ jobs:
 
       - name: Create and push tag
         run: |
-          git config --local user.email "action@github.com"
+          git config --local user.email "rajdeep@rajdeepmondal.com"
           git config --local user.name "GitHub Action"
           git tag -a "v${{ needs.check-version.outputs.new-version }}" -m "Auto-release v${{ needs.check-version.outputs.new-version }}"
           git push origin "v${{ needs.check-version.outputs.new-version }}"

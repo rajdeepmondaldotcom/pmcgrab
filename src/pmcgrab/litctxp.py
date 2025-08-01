@@ -110,5 +110,5 @@ def export(pmcid: str, fmt: str = "medline") -> str:
         format will return cached results for improved performance.
     """
     params: dict[str, str] = {"format": fmt, "id": pmcid}
-    resp = cached_get(_BASE_URL, params=params, headers={"User-Agent": "pmcgrab/0.4.7"})
+    resp = cached_get(_BASE_URL, params=params, headers={"User-Agent": "pmcgrab/0.4.8"})
     return resp.text

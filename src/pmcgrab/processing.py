@@ -28,7 +28,6 @@ import os
 import signal
 import time
 from concurrent.futures import ThreadPoolExecutor, as_completed
-from typing import Optional, Union
 
 from tqdm import tqdm
 
@@ -38,7 +37,7 @@ from pmcgrab.constants import TimeoutException
 
 
 # Re-export the legacy function with the expected name for backwards compatibility
-def process_single_pmc(pmc_id: str) -> Optional[dict[str, Union[str, dict, list]]]:
+def process_single_pmc(pmc_id: str) -> dict[str, str | dict | list] | None:
     """Legacy single PMC article processing function.
 
     Backward-compatible wrapper that delegates to the internal legacy implementation.
@@ -67,7 +66,7 @@ def process_single_pmc(pmc_id: str) -> Optional[dict[str, Union[str, dict, list]
 
 def _legacy_process_single_pmc(
     pmc_id: str,
-) -> Optional[dict[str, Union[str, dict, list]]]:
+) -> dict[str, str | dict | list] | None:
     """Internal legacy implementation for single PMC article processing.
 
     Downloads, parses, and normalizes a single PMC article with timeout protection
@@ -99,7 +98,7 @@ def _legacy_process_single_pmc(
         are normalized for JSON compatibility.
     """
     gc.collect()
-    paper_info: dict[str, Union[str, dict, list]] = {}
+    paper_info: dict[str, str | dict | list] = {}
     body_info: dict[str, str] = {}
     p_obj = None
     try:
@@ -302,7 +301,7 @@ def process_pmc_ids_in_batches(
                 json.dump(info, jf, ensure_ascii=False, indent=4, default=str)
         return pmc_id, info is not None
 
-    results: dict[str, Optional[dict[str, Union[str, dict, list]]]] = {}
+    results: dict[str, dict[str, str | dict | list] | None] = {}
     total_processed = 0
     successful = 0
     failed = 0
