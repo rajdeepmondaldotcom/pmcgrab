@@ -13,8 +13,6 @@ Classes:
     TextFigure: Wrapper for PMC figure elements with metadata extraction
 """
 
-from typing import TYPE_CHECKING
-
 import lxml.etree as ET
 
 from pmcgrab.domain.value_objects import BasicBiMap
