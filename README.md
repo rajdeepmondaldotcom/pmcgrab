@@ -53,12 +53,6 @@ uv add pmcgrab
 uv pip install pmcgrab
 ```
 
-**Traditional pip:**
-
-```bash
-pip install pmcgrab
-```
-
 **Why uv?** uv is 10-100x faster than pip and provides better dependency resolution. [Learn more about uv](https://github.com/astral-sh/uv)
 
 ### Basic Usage

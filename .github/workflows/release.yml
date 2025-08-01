@@ -29,14 +29,10 @@ jobs:
       - name: Create tag if it does not exist
         run: |
           TAG="v${{ steps.get_version.outputs.version }}"
-          if git rev-parse "$TAG" >/dev/null 2>&1; then
-            echo "Tag $TAG already exists. Skipping creation."
-          else
-            git config user.name github-actions
-            git config user.email github-actions@github.com
-            git tag -a "$TAG" -m "Release $TAG"
-            git push origin "$TAG"
-          fi
+          git config user.name github-actions
+          git config user.email rajdeep@rajdeepmondal.com
+          git tag -a "$TAG" -m "Release $TAG" --force
+          git push origin "$TAG" --force
 
   build_publish:
     name: Build & Publish
@@ -64,3 +60,18 @@ jobs:
 
       - name: Publish to PyPI
         run: uv publish --token ${{ secrets.PYPI_TOKEN }}
+
+      - name: Create GitHub Release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: v${{ needs.tag_release.outputs.version }}
+          release_name: Release v${{ needs.tag_release.outputs.version }}
+          body: |
+            ## Changes in v${{ needs.tag_release.outputs.version }}
+
+            - Automated release from version bump
+            - Install with: `uv add pmcgrab`
+          draft: false
+          prerelease: false
