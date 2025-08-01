@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "pmcgrab"
-version = "0.4.6"
+version = "0.4.7"
 description = "AI-ready retrieval and parsing of PubMed Central articles for RAG applications. Install with uv for best performance."
 readme = "README.md"
 license = "Apache-2.0"
@@ -214,7 +214,7 @@ update_changelog_on_bump = true
 
 # Pytest configuration
 [tool.pytest.ini_options]
-minversion = "0.4.6"
+minversion = "6.0"
 addopts = [
     "-ra",
     "--strict-markers",
@@ -262,7 +262,7 @@ directory = "htmlcov"
 
 # MyPy configuration
 [tool.mypy]
-python_version = "0.4.6"
+python_version = "3.12"
 warn_return_any = true
 warn_unused_configs = true
 disallow_untyped_defs = true
