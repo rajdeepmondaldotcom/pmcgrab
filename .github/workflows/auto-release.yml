@@ -66,8 +66,13 @@ jobs:
         run: |
           git config --local user.email "rajdeep@rajdeepmondal.com"
           git config --local user.name "GitHub Action"
-          git tag -a "v${{ needs.check-version.outputs.new-version }}" -m "Auto-release v${{ needs.check-version.outputs.new-version }}"
-          git push origin "v${{ needs.check-version.outputs.new-version }}"
+          TAG="v${{ needs.check-version.outputs.new-version }}"
+          # Delete existing tag if it exists
+          git tag -d "$TAG" 2>/dev/null || true
+          git push origin ":refs/tags/$TAG" 2>/dev/null || true
+          # Create new tag
+          git tag -a "$TAG" -m "Auto-release $TAG"
+          git push origin "$TAG"
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 

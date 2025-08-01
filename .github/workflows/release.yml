@@ -31,8 +31,12 @@ jobs:
           TAG="v${{ steps.get_version.outputs.version }}"
           git config user.name github-actions
           git config user.email rajdeep@rajdeepmondal.com
-          git tag -a "$TAG" -m "Release $TAG" --force
-          git push origin "$TAG" --force
+          # Delete existing tag if it exists
+          git tag -d "$TAG" 2>/dev/null || true
+          git push origin ":refs/tags/$TAG" 2>/dev/null || true
+          # Create new tag
+          git tag -a "$TAG" -m "Release $TAG"
+          git push origin "$TAG"
 
   build_publish:
     name: Build & Publish
