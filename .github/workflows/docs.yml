@@ -56,5 +56,12 @@ jobs:
       - name: Install dependencies
         run: uv sync --group docs
 
+      - name: Build documentation
+        run: |
+          uv run mkdocs build -d site
       - name: Deploy to GitHub Pages
-        run: uv run mkdocs gh-deploy --force
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./site
+          force_orphan: false
