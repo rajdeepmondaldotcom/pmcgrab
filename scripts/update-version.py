@@ -123,7 +123,7 @@ def update_version(new_version: str):
     if updated_files:
         # Remove duplicates and sort for cleaner output
         unique_files = sorted(set(updated_files))
-        print(f"\n✅ Version updated to {new_version} in {len(unique_files)} files:")
+        print(f"\nVersion updated to {new_version} in {len(unique_files)} files:")
         for file in unique_files:
             print(f"   - {file}")
         print("\nNext steps:")

@@ -170,12 +170,23 @@ else:
 
 ## What's Next?
 
-Now that you've got the basics:
+Now that you've got the basics, choose your learning path:
+
+### New to PMCGrab?
+
+- **[Complete Beginner Guide](complete-beginner-guide.md)**: Start from absolute zero with step-by-step instructions
+- **[Interactive Jupyter Tutorial](jupyter-tutorial.md)**: Hands-on notebook experience with real data
+
+### Learn More Features
 
 - **[Basic Usage](../user-guide/basic-usage.md)**: Learn about all available features
 - **[Batch Processing](../user-guide/batch-processing.md)**: Advanced batch processing techniques
 - **[CLI Reference](../user-guide/cli.md)**: Command-line usage guide
-- **[Examples](../examples/python-examples.md)**: Real-world usage examples
+
+### See Examples
+
+- **[Python Examples](../examples/python-examples.md)**: Code snippets and real-world usage
+- **[Advanced Usage](../examples/advanced-usage.md)**: Production-ready workflows
 
 ## Need Help?
 

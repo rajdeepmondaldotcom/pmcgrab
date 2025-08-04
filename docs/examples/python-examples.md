@@ -1,6 +1,23 @@
 # Python Examples
 
-Real-world example showing how to use PMCGrab effectively.
+Real-world examples showing how to use PMCGrab effectively.
+
+## Interactive Jupyter Tutorial
+
+For a complete hands-on experience, check out our interactive Jupyter notebook:
+
+**[PMCGrab Tutorial Notebook](../../examples/pmcgrab_tutorial.ipynb)**
+
+This notebook covers:
+
+- Installation and setup (including uv)
+- Single paper processing
+- Batch processing with multiple papers
+- Data analysis and visualization
+- RAG chunk preparation
+- Export formats for different use cases
+
+## Code Examples
 
 ## Batch Processing Multiple Papers
 

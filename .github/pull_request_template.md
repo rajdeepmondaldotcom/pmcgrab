@@ -1,10 +1,10 @@
+# Pull Request
+
 ## Description
 
-Please provide a brief description of the changes in this PR.
+Brief description of the changes in this PR.
 
 ## Type of Change
-
-Please delete options that are not relevant:
 
 - [ ] Bug fix (non-breaking change which fixes an issue)
 - [ ] New feature (non-breaking change which adds functionality)
@@ -12,39 +12,23 @@ Please delete options that are not relevant:
 - [ ] Documentation update
 - [ ] Performance improvement
 - [ ] Code refactoring
-- [ ] CI/CD changes
-- [ ] Dependencies update
-
-## Related Issues
-
-Fixes #(issue number)
-Closes #(issue number)
-Related to #(issue number)
 
 ## Testing
 
-- [ ] I have added tests that prove my fix is effective or that my feature works
-- [ ] New and existing unit tests pass locally with my changes
-- [ ] I have tested this change manually
-
-## Documentation
-
-- [ ] I have updated the documentation accordingly
-- [ ] I have added docstrings to new functions/classes
-- [ ] I have updated the README if needed
+- [ ] Tests pass locally with `uv run pytest`
+- [ ] Code follows the style guidelines (`uv run ruff check .`)
+- [ ] Code is properly formatted (`uv run ruff format .`)
+- [ ] Type checking passes (`uv run mypy src/pmcgrab`)
 
 ## Checklist
 
-- [ ] My code follows the project's style guidelines
-- [ ] I have performed a self-review of my own code
+- [ ] I have performed a self-review of my code
 - [ ] I have commented my code, particularly in hard-to-understand areas
+- [ ] I have made corresponding changes to the documentation
 - [ ] My changes generate no new warnings
-- [ ] Any dependent changes have been merged and published
-
-## Screenshots (if applicable)
-
-Please add screenshots to help explain your changes.
+- [ ] I have added tests that prove my fix is effective or that my feature works
+- [ ] New and existing unit tests pass locally with my changes
 
 ## Additional Notes
 
-Add any other notes about the PR here.
+Any additional information, context, or screenshots about the pull request.

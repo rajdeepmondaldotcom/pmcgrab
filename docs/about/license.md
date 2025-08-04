@@ -24,23 +24,23 @@ limitations under the License.
 
 The Apache License 2.0 is a permissive license that allows you to:
 
-- ✅ **Use** the software for any purpose
-- ✅ **Modify** the software
-- ✅ **Distribute** the software
-- ✅ **Patent use** (license includes patent rights)
-- ✅ **Private use** (use in private projects)
-- ✅ **Commercial use** (use in commercial projects)
+- **Use** the software for any purpose
+- **Modify** the software
+- **Distribute** the software
+- **Patent use** (license includes patent rights)
+- **Private use** (use in private projects)
+- **Commercial use** (use in commercial projects)
 
 You must:
 
-- 📄 **Include copyright** (include the original copyright notice)
-- 📄 **Include license** (include the license text)
-- 📝 **State changes** (document any changes you make)
+- **Include copyright** (include the original copyright notice)
+- **Include license** (include the license text)
+- **State changes** (document any changes you make)
 
 You cannot:
 
-- ❌ **Hold liable** (the authors cannot be held liable for damages)
-- ❌ **Use trademark** (you cannot use the project's trademarks)
+- **Hold liable** (the authors cannot be held liable for damages)
+- **Use trademark** (you cannot use the project's trademarks)
 
 ## Full License Text
 

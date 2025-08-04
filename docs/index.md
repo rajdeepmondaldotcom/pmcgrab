@@ -9,8 +9,14 @@ hide:
 <!-- Navigation Cards -->
 <div class="grid cards" markdown>
 
-- [:material-timer-sand-complete: **5-minute setup**](getting-started/quick-start.md)
-  Install PMCGrab and run a multi-paper demo in minutes.
+- [:material-rocket-launch: **Complete Beginner Guide**](getting-started/complete-beginner-guide.md)
+  Start from absolute zero. Install uv, PMCGrab, and process your first papers.
+
+- [:material-notebook-outline: **Interactive Tutorial**](getting-started/jupyter-tutorial.md)
+  Hands-on Jupyter notebook with real data and AI/ML examples.
+
+- [:material-timer-sand-complete: **Quick Start**](getting-started/quick-start.md)
+  5-minute setup for experienced users.
 
 - [:material-book-open-variant: **User Guide**](user-guide/basic-usage.md)
   Comprehensive guides covering every feature.

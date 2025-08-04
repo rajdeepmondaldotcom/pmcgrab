@@ -32,9 +32,16 @@ PMCGrab does the same job for \$0-within minutes-so you can focus on _using_ the
 
 ## Quick Install
 
-First, install the blazing-fast package manager [uv](https://github.com/astral-sh/uv) (if you haven’t already). Then add PMCGrab:
+Install via **pip** or **uv** – your choice.
 
 ```bash
+# pip (PyPI)
+pip install pmcgrab  # once published on PyPI
+
+# pip from GitHub
+pip install "pmcgrab @ git+https://github.com/rajdeepmondaldotcom/pmcgrab.git"
+
+# uv (fastest)
 uv add pmcgrab
 ```
 

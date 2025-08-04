@@ -1,8 +1,61 @@
 # Installation
 
-PMCGrab supports Python 3.10+. Installation relies on [uv](https://github.com/astral-sh/uv)-the 10-100× faster drop-in replacement for pip. Install uv first, then add PMCGrab.
+PMCGrab supports Python 3.10+. Installation relies on [uv](https://github.com/astral-sh/uv)—the 10-100× faster drop-in replacement for pip. Install uv first, then add PMCGrab.
 
-## Using uv (Recommended)
+## Step 1: Install uv
+
+First, install uv (the fast Python package manager):
+
+### On macOS and Linux:
+
+```bash
+curl -LsSf https://astral.sh/uv/install.sh | sh
+```
+
+### On Windows:
+
+```powershell
+powershell -ExecutionPolicy ByPass -c "irm https://astral.sh/uv/install.ps1 | iex"
+```
+
+### Alternative: Using pip
+
+```bash
+pip install uv
+```
+
+Restart your terminal after installation and verify uv is working:
+
+```bash
+uv --version
+```
+
+## Step 2: Install PMCGrab
+
+### Option A – Using uv (Recommended)
+
+Now install PMCGrab with uv (faster resolver):
+
+```bash
+uv add pmcgrab
+```
+
+### Option B – Using pip
+
+If you prefer the standard toolchain:
+
+```bash
+# From PyPI (once the wheel is published)
+pip install pmcgrab
+
+# Or directly from GitHub main branch
+pip install "pmcgrab @ git+https://github.com/rajdeepmondaldotcom/pmcgrab.git"
+
+# Local checkout
+pip install .
+```
+
+pip will build the wheel on the fly using the PEP 517 backend (Hatchling).
 
 For adding to an existing project:
 

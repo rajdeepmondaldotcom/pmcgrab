@@ -170,5 +170,6 @@ uv.lock
 # Project specific
 data/
 output_papers/
+pmcgrab_tutorial_output/
 *.xml
 *.json
