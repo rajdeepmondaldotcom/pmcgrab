@@ -92,7 +92,7 @@ def _request(verb: str, **params) -> ET.Element:
         xml.etree.ElementTree.ParseError: If response XML is malformed
     """
     q = {"verb": verb, **params}
-    resp = cached_get(_BASE_URL, params=q, headers={"User-Agent": "pmcgrab/0.5.5"})
+    resp = cached_get(_BASE_URL, params=q, headers={"User-Agent": "pmcgrab/0.5.6"})
     root = ET.fromstring(resp.content)
     error = root.find("{*}error")
     if error is not None:
