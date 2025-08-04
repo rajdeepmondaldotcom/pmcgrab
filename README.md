@@ -32,16 +32,9 @@ PMCGrab does the same job for \$0-within minutes-so you can focus on _using_ the
 
 ## Quick Install
 
-Install via **pip** or **uv** – your choice.
+Install via **uv**
 
 ```bash
-# pip (PyPI)
-pip install pmcgrab  # once published on PyPI
-
-# pip from GitHub
-pip install "pmcgrab @ git+https://github.com/rajdeepmondaldotcom/pmcgrab.git"
-
-# uv (fastest)
 uv add pmcgrab
 ```
 
@@ -49,7 +42,7 @@ Python ≥ 3.10 required.
 
 ---
 
-## Two Ways to Use
+## Ways to Use
 
 ### 1 · Python API
 
@@ -58,13 +51,6 @@ from pmcgrab.application.processing import process_single_pmc
 
 article = process_single_pmc("7114487")
 print(article)
-```
-
-### 2 · Command Line
-
-```bash
-uv run python -m pmcgrab --pmcids 7114487 3084273 --workers 4
-# → writes pmc_output/PMC7114487.json, PMC3084273.json
 ```
 
 (Use the numeric part of the PMC ID only.)

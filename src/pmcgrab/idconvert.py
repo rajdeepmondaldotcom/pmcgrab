@@ -104,6 +104,6 @@ def convert(ids: list[str]) -> dict[str, Any]:
     """
     params = {"ids": ",".join(ids), "format": "json"}
     resp = cached_get(
-        _BASE_URL + "json/", params=params, headers={"User-Agent": "pmcgrab/0.5.6"}
+        _BASE_URL + "json/", params=params, headers={"User-Agent": "pmcgrab/0.5.7"}
     )
     return json.loads(resp.text)
