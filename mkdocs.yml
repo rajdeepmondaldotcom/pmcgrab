@@ -138,6 +138,8 @@ nav:
   - Home: index.md
   - Getting Started:
       - Installation: getting-started/installation.md
+      - Complete Beginner Guide: getting-started/complete-beginner-guide.md
+      - Interactive Tutorial: getting-started/jupyter-tutorial.md
       - Quick Start: getting-started/quick-start.md
       - Configuration: getting-started/configuration.md
   - User Guide:

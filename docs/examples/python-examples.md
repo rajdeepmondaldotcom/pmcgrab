@@ -6,7 +6,9 @@ Real-world examples showing how to use PMCGrab effectively.
 
 For a complete hands-on experience, check out our interactive Jupyter notebook:
 
-**[PMCGrab Tutorial Notebook](../../examples/pmcgrab_tutorial.ipynb)**
+**[PMCGrab Tutorial Notebook](https://github.com/rajdeepmondaldotcom/pmcgrab/blob/main/examples/pmcgrab_tutorial.ipynb)**
+
+You can also download it directly: [pmcgrab_tutorial.ipynb](../../examples/pmcgrab_tutorial.ipynb)
 
 This notebook covers:
 
