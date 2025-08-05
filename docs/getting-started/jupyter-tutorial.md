@@ -76,7 +76,7 @@ By the end of the notebook, you'll have:
 **Notebook won't start**
 
 - Check Python version: `python --version` (need 3.10+)
-- Try: `uv run pip install jupyter` then `uv run jupyter notebook`
+- Try: `uv add jupyter` then `uv run jupyter notebook`
 
 ## Advanced Usage
 

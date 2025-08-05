@@ -8,8 +8,7 @@ First, install uv (the fast Python package manager).
 If you already have `uv` installed, **upgrade to the latest version first**:
 
 ```bash
-# If you installed via pip
-pip install --upgrade uv
+# Update uv by rerunning the install script above
 
 # If you used the one-liner script originally, just rerun it:
 curl -LsSf https://astral.sh/uv/install.sh | sh
@@ -29,10 +28,10 @@ curl -LsSf https://astral.sh/uv/install.sh | sh
 powershell -ExecutionPolicy ByPass -c "irm https://astral.sh/uv/install.ps1 | iex"
 ```
 
-### Alternative: Using pip
+<!-- Removed pip installation path -->
 
 ```bash
-pip install uv
+# Use the install script above instead of pip
 ```
 
 Restart your terminal after installation and verify uv is working:
@@ -51,22 +50,20 @@ Now install PMCGrab with uv (faster resolver):
 uv add pmcgrab
 ```
 
-### Option B – Using pip
+<!-- Removed pip option -->
 
 If you prefer the standard toolchain:
 
 ```bash
 # From PyPI (once the wheel is published)
-pip install pmcgrab
+
 
 # Or directly from GitHub main branch
-pip install "pmcgrab @ git+https://github.com/rajdeepmondaldotcom/pmcgrab.git"
+
 
 # Local checkout
-pip install .
-```
 
-pip will build the wheel on the fly using the PEP 517 backend (Hatchling).
+```
 
 For adding to an existing project:
 
@@ -77,7 +74,7 @@ uv add pmcgrab
 For standalone installation:
 
 ```bash
-uv pip install pmcgrab
+uv
 ```
 
 This installs the latest stable version from PyPI along with all required dependencies.
@@ -89,7 +86,7 @@ If you want the latest development version or need to modify PMCGrab:
 ```bash
 git clone https://github.com/rajdeepmondaldotcom/pmcgrab.git
 cd pmcgrab
-uv pip install -e .
+uv add --editable .
 ```
 
 ## Development Installation
@@ -162,7 +159,7 @@ sudo apt-get install libxml2-dev libxslt-dev python3-dev
 brew install libxml2 libxslt
 
 # Then reinstall
-uv pip install --force-reinstall lxml
+uv add --upgrade --force lxml
 ```
 
 ### Permission Errors
@@ -170,7 +167,7 @@ uv pip install --force-reinstall lxml
 If you get permission errors during installation:
 
 ```bash
-uv pip install --user pmcgrab
+uv add pmcgrab
 ```
 
 ### Virtual Environment (Recommended)
@@ -180,7 +177,7 @@ uv automatically manages virtual environments, but you can create one explicitly
 ```bash
 uv venv pmcgrab-env
 source pmcgrab-env/bin/activate  # On Windows: pmcgrab-env\Scripts\activate
-uv pip install pmcgrab
+uv
 ```
 
 ## Next Steps

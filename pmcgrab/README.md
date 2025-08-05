@@ -23,13 +23,13 @@ The core strength of `pmcgrab` lies in its output. It produces a detailed JSON o
 Install the package directly from PyPI:
 
 ```bash
-pip install pmcgrab
+uv add pmcgrab
 ```
 
 Or from a local clone of the repository:
 
 ```bash
-pip install .
+uv add .
 ```
 
 ## Quick Start

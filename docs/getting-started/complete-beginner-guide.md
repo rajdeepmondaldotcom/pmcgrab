@@ -35,7 +35,7 @@ If you already have `uv` installed, update it first:
 
 ```bash
 # If installed via pip
-pip install --upgrade uv
+curl -LsSf https://astral.sh/uv/install.sh | sh  # upgrade
 
 # Or rerun the install script (macOS/Linux example):
 curl -LsSf https://astral.sh/uv/install.sh | sh
@@ -55,7 +55,7 @@ Otherwise, install uv:
 
 === "Already have pip?"
 `bash
-    pip install uv
+    curl -LsSf https://astral.sh/uv/install.sh | sh
     `
 
 ### Verify installation:
