@@ -132,7 +132,7 @@ def fetch(article_id: str, id_type: str = "pmcid") -> dict[str, str] | None:
         improved performance on repeated queries.
     """
     resp = cached_get(
-        _BASE_URL, params={id_type: article_id}, headers={"User-Agent": "pmcgrab/0.5.7"}
+        _BASE_URL, params={id_type: article_id}, headers={"User-Agent": "pmcgrab/0.5.8"}
     )
     root = ET.fromstring(resp.content)
     rec = root.find("record")
