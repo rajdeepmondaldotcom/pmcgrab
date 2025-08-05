@@ -602,15 +602,6 @@
   
 </li>
         
-          <li class="md-nav__item">
-  <a href="#alternative-using-pip" class="md-nav__link">
-    <span class="md-ellipsis">
-      Alternative: Using pip
-    </span>
-  </a>
-  
-</li>
-        
       </ul>
     </nav>
   
@@ -630,15 +621,6 @@
   <a href="#option-a-using-uv-recommended" class="md-nav__link">
     <span class="md-ellipsis">
       Option A – Using uv (Recommended)
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#option-b-using-pip" class="md-nav__link">
-    <span class="md-ellipsis">
-      Option B – Using pip
     </span>
   </a>
   
@@ -1569,11 +1551,10 @@
 <h2 id="step-1-install-uv">Step 1: Install uv<a class="headerlink" href="#step-1-install-uv" title="Permanent link">&para;</a></h2>
 <p>First, install uv (the fast Python package manager).
 If you already have <code>uv</code> installed, <strong>upgrade to the latest version first</strong>:</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="c1"># If you installed via pip</span>
-</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>pip<span class="w"> </span>install<span class="w"> </span>--upgrade<span class="w"> </span>uv
-</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>
-</span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a><span class="c1"># If you used the one-liner script originally, just rerun it:</span>
-</span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>curl<span class="w"> </span>-LsSf<span class="w"> </span>https://astral.sh/uv/install.sh<span class="w"> </span><span class="p">|</span><span class="w"> </span>sh
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="c1"># Update uv by rerunning the install script above</span>
+</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>
+</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="c1"># If you used the one-liner script originally, just rerun it:</span>
+</span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>curl<span class="w"> </span>-LsSf<span class="w"> </span>https://astral.sh/uv/install.sh<span class="w"> </span><span class="p">|</span><span class="w"> </span>sh
 </span></code></pre></div>
 <p>Then install uv if it's not present:</p>
 <h3 id="on-macos-and-linux">On macOS and Linux:<a class="headerlink" href="#on-macos-and-linux" title="Permanent link">&para;</a></h3>
@@ -1582,8 +1563,9 @@ If you already have <code>uv</code> installed, <strong>upgrade to the latest ver
 <h3 id="on-windows">On Windows:<a class="headerlink" href="#on-windows" title="Permanent link">&para;</a></h3>
 <div class="language-powershell highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="n">powershell</span> <span class="n">-ExecutionPolicy</span> <span class="n">ByPass</span> <span class="n">-c</span> <span class="s2">&quot;irm https://astral.sh/uv/install.ps1 | iex&quot;</span>
 </span></code></pre></div>
-<h3 id="alternative-using-pip">Alternative: Using pip<a class="headerlink" href="#alternative-using-pip" title="Permanent link">&para;</a></h3>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>pip<span class="w"> </span>install<span class="w"> </span>uv
+<!-- Removed pip installation path -->
+
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="c1"># Use the install script above instead of pip</span>
 </span></code></pre></div>
 <p>Restart your terminal after installation and verify uv is working:</p>
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>uv<span class="w"> </span>--version
@@ -1593,30 +1575,29 @@ If you already have <code>uv</code> installed, <strong>upgrade to the latest ver
 <p>Now install PMCGrab with uv (faster resolver):</p>
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a>uv<span class="w"> </span>add<span class="w"> </span>pmcgrab
 </span></code></pre></div>
-<h3 id="option-b-using-pip">Option B – Using pip<a class="headerlink" href="#option-b-using-pip" title="Permanent link">&para;</a></h3>
+<!-- Removed pip option -->
+
 <p>If you prefer the standard toolchain:</p>
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="c1"># From PyPI (once the wheel is published)</span>
-</span><span id="__span-6-2"><a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a>pip<span class="w"> </span>install<span class="w"> </span>pmcgrab
+</span><span id="__span-6-2"><a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a>
 </span><span id="__span-6-3"><a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a>
 </span><span id="__span-6-4"><a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a><span class="c1"># Or directly from GitHub main branch</span>
-</span><span id="__span-6-5"><a id="__codelineno-6-5" name="__codelineno-6-5" href="#__codelineno-6-5"></a>pip<span class="w"> </span>install<span class="w"> </span><span class="s2">&quot;pmcgrab @ git+https://github.com/rajdeepmondaldotcom/pmcgrab.git&quot;</span>
+</span><span id="__span-6-5"><a id="__codelineno-6-5" name="__codelineno-6-5" href="#__codelineno-6-5"></a>
 </span><span id="__span-6-6"><a id="__codelineno-6-6" name="__codelineno-6-6" href="#__codelineno-6-6"></a>
 </span><span id="__span-6-7"><a id="__codelineno-6-7" name="__codelineno-6-7" href="#__codelineno-6-7"></a><span class="c1"># Local checkout</span>
-</span><span id="__span-6-8"><a id="__codelineno-6-8" name="__codelineno-6-8" href="#__codelineno-6-8"></a>pip<span class="w"> </span>install<span class="w"> </span>.
 </span></code></pre></div>
-<p>pip will build the wheel on the fly using the PEP 517 backend (Hatchling).</p>
 <p>For adding to an existing project:</p>
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-7-1"><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a>uv<span class="w"> </span>add<span class="w"> </span>pmcgrab
 </span></code></pre></div>
 <p>For standalone installation:</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-8-1"><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a>uv<span class="w"> </span>pip<span class="w"> </span>install<span class="w"> </span>pmcgrab
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-8-1"><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a>uv
 </span></code></pre></div>
 <p>This installs the latest stable version from PyPI along with all required dependencies.</p>
 <h2 id="from-source">From Source<a class="headerlink" href="#from-source" title="Permanent link">&para;</a></h2>
 <p>If you want the latest development version or need to modify PMCGrab:</p>
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-9-1"><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a>git<span class="w"> </span>clone<span class="w"> </span>https://github.com/rajdeepmondaldotcom/pmcgrab.git
 </span><span id="__span-9-2"><a id="__codelineno-9-2" name="__codelineno-9-2" href="#__codelineno-9-2"></a><span class="nb">cd</span><span class="w"> </span>pmcgrab
-</span><span id="__span-9-3"><a id="__codelineno-9-3" name="__codelineno-9-3" href="#__codelineno-9-3"></a>uv<span class="w"> </span>pip<span class="w"> </span>install<span class="w"> </span>-e<span class="w"> </span>.
+</span><span id="__span-9-3"><a id="__codelineno-9-3" name="__codelineno-9-3" href="#__codelineno-9-3"></a>uv<span class="w"> </span>add<span class="w"> </span>--editable<span class="w"> </span>.
 </span></code></pre></div>
 <h2 id="development-installation">Development Installation<a class="headerlink" href="#development-installation" title="Permanent link">&para;</a></h2>
 <p>For development work, install with development dependencies:</p>
@@ -1668,17 +1649,17 @@ If you already have <code>uv</code> installed, <strong>upgrade to the latest ver
 </span><span id="__span-14-5"><a id="__codelineno-14-5" name="__codelineno-14-5" href="#__codelineno-14-5"></a>brew<span class="w"> </span>install<span class="w"> </span>libxml2<span class="w"> </span>libxslt
 </span><span id="__span-14-6"><a id="__codelineno-14-6" name="__codelineno-14-6" href="#__codelineno-14-6"></a>
 </span><span id="__span-14-7"><a id="__codelineno-14-7" name="__codelineno-14-7" href="#__codelineno-14-7"></a><span class="c1"># Then reinstall</span>
-</span><span id="__span-14-8"><a id="__codelineno-14-8" name="__codelineno-14-8" href="#__codelineno-14-8"></a>uv<span class="w"> </span>pip<span class="w"> </span>install<span class="w"> </span>--force-reinstall<span class="w"> </span>lxml
+</span><span id="__span-14-8"><a id="__codelineno-14-8" name="__codelineno-14-8" href="#__codelineno-14-8"></a>uv<span class="w"> </span>add<span class="w"> </span>--upgrade<span class="w"> </span>--force<span class="w"> </span>lxml
 </span></code></pre></div>
 <h3 id="permission-errors">Permission Errors<a class="headerlink" href="#permission-errors" title="Permanent link">&para;</a></h3>
 <p>If you get permission errors during installation:</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-15-1"><a id="__codelineno-15-1" name="__codelineno-15-1" href="#__codelineno-15-1"></a>uv<span class="w"> </span>pip<span class="w"> </span>install<span class="w"> </span>--user<span class="w"> </span>pmcgrab
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-15-1"><a id="__codelineno-15-1" name="__codelineno-15-1" href="#__codelineno-15-1"></a>uv<span class="w"> </span>add<span class="w"> </span>pmcgrab
 </span></code></pre></div>
 <h3 id="virtual-environment-recommended">Virtual Environment (Recommended)<a class="headerlink" href="#virtual-environment-recommended" title="Permanent link">&para;</a></h3>
 <p>uv automatically manages virtual environments, but you can create one explicitly:</p>
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-16-1"><a id="__codelineno-16-1" name="__codelineno-16-1" href="#__codelineno-16-1"></a>uv<span class="w"> </span>venv<span class="w"> </span>pmcgrab-env
 </span><span id="__span-16-2"><a id="__codelineno-16-2" name="__codelineno-16-2" href="#__codelineno-16-2"></a><span class="nb">source</span><span class="w"> </span>pmcgrab-env/bin/activate<span class="w">  </span><span class="c1"># On Windows: pmcgrab-env\Scripts\activate</span>
-</span><span id="__span-16-3"><a id="__codelineno-16-3" name="__codelineno-16-3" href="#__codelineno-16-3"></a>uv<span class="w"> </span>pip<span class="w"> </span>install<span class="w"> </span>pmcgrab
+</span><span id="__span-16-3"><a id="__codelineno-16-3" name="__codelineno-16-3" href="#__codelineno-16-3"></a>uv
 </span></code></pre></div>
 <h2 id="next-steps">Next Steps<a class="headerlink" href="#next-steps" title="Permanent link">&para;</a></h2>
 <p>Once installed, proceed to <a href="../quick-start/">Quick Start</a> to begin using PMCGrab.</p>
