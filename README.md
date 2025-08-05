@@ -32,7 +32,7 @@ PMCGrab does the same job for \$0-within minutes-so you can focus on _using_ the
 
 ## Quick Install
 
-Install via **uv**
+Install via **uv** (make sure `uv` itself is up to date first)
 
 ```bash
 uv add pmcgrab

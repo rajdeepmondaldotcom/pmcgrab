@@ -29,7 +29,19 @@ By the end of this guide, you'll:
 
 `uv` is a blazing-fast Python package manager that makes installing and managing packages much easier than traditional `pip`.
 
-### Install uv:
+### Install or Update uv
+
+If you already have `uv` installed, update it first:
+
+```bash
+# If installed via pip
+pip install --upgrade uv
+
+# Or rerun the install script (macOS/Linux example):
+curl -LsSf https://astral.sh/uv/install.sh | sh
+```
+
+Otherwise, install uv:
 
 === "macOS/Linux"
 `bash

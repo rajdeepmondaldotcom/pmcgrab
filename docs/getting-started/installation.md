@@ -4,7 +4,18 @@ PMCGrab supports Python 3.10+. Installation relies on [uv](https://github.com/as
 
 ## Step 1: Install uv
 
-First, install uv (the fast Python package manager):
+First, install uv (the fast Python package manager).
+If you already have `uv` installed, **upgrade to the latest version first**:
+
+```bash
+# If you installed via pip
+pip install --upgrade uv
+
+# If you used the one-liner script originally, just rerun it:
+curl -LsSf https://astral.sh/uv/install.sh | sh
+```
+
+Then install uv if it's not present:
 
 ### On macOS and Linux:
 

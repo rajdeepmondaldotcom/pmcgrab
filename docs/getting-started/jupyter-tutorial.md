@@ -21,7 +21,7 @@ The notebook covers:
 2. **Install dependencies**:
 
    ```bash
-   # Install uv first (if you haven't already)
+   # Update uv first (or install if you don't have it)
    curl -LsSf https://astral.sh/uv/install.sh | sh
 
    # Install PMCGrab and Jupyter
