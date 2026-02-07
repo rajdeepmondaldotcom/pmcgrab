@@ -10,7 +10,13 @@ from typing import Any
 
 import numpy as np
 import pandas as pd
-from pandas.io.formats.style import Styler as _PandasStyler
+
+# Styler requires optional dependency `jinja2` in pandas; keep this import optional
+# so pmcgrab can be imported even in minimal environments.
+try:
+    from pandas.io.formats.style import Styler as _PandasStyler
+except Exception:  # pragma: no cover
+    _PandasStyler = None  # type: ignore[assignment]
 
 __all__: list[str] = [
     "clean_doc",
@@ -106,7 +112,7 @@ def normalize_value(val: Any):
     if isinstance(val, datetime.date | datetime.datetime):
         return val.isoformat()
     # pandas Styler wraps a DataFrame – unwrap before serializing
-    if isinstance(val, _PandasStyler):
+    if _PandasStyler is not None and isinstance(val, _PandasStyler):
         return normalize_value(val.data.to_dict(orient="records"))  # type: ignore[attr-defined]
     if isinstance(val, pd.DataFrame):
         return normalize_value(val.to_dict(orient="records"))

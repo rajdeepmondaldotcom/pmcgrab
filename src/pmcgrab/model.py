@@ -1220,7 +1220,9 @@ class TextTable(TextElement):
                 footnotes.append(fn_text)
         self.footnotes: list[str] = footnotes
 
-        table_xml_str = ET.tostring(table_root)
+        # pandas.read_html expects a string / file-like / URL. Passing raw bytes
+        # can be interpreted as a filesystem path on newer pandas versions.
+        table_xml_str = ET.tostring(table_root, encoding="unicode")
 
         # --- Attempt 1: pandas read_html ---
         try:
