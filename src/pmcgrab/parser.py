@@ -57,7 +57,6 @@ They exercise both the high-level API and various edge-cases such as
 DTD validation, HTML cleaning, and external service wrappers.
 """
 
-import copy
 import warnings
 
 import lxml.etree as ET
@@ -136,6 +135,127 @@ def gather_lpage(root: ET.Element) -> str | None:
     return lpage[0] if lpage else None
 
 
+def gather_elocation_id(root: ET.Element) -> str | None:
+    """Extract the electronic location identifier from PMC article metadata.
+
+    Modern articles use elocation-id instead of traditional page numbers.
+
+    Args:
+        root: Root element of the PMC article XML document
+
+    Returns:
+        str | None: Electronic location ID as string, or None if not found
+    """
+    eloc = root.xpath("//article-meta/elocation-id/text()")
+    return eloc[0] if eloc else None
+
+
+def gather_counts(root: ET.Element) -> dict[str, int]:
+    """Extract official content counts from PMC article metadata.
+
+    PMC XML often includes <count> elements with official counts of figures,
+    tables, pages, equations, references, etc.
+
+    Args:
+        root: Root element of the PMC article XML document
+
+    Returns:
+        dict[str, int]: Mapping of count types to values
+    """
+    counts: dict[str, int] = {}
+    for count_elem in root.xpath("//article-meta/counts/count"):
+        count_type = count_elem.get("count-type")
+        if count_type:
+            try:
+                counts[count_type] = int(count_elem.get("count", "0"))
+            except (ValueError, TypeError):
+                pass
+    # Also check specific named count elements
+    for tag in (
+        "fig-count",
+        "table-count",
+        "equation-count",
+        "ref-count",
+        "page-count",
+        "word-count",
+    ):
+        elems = root.xpath(f"//article-meta/counts/{tag}")
+        if elems:
+            try:
+                counts[tag.replace("-", "_")] = int(elems[0].get("count", "0"))
+            except (ValueError, TypeError):
+                pass
+    return counts
+
+
+def gather_self_uri(root: ET.Element) -> list[dict[str, str]]:
+    """Extract self-URI elements pointing to article full-text links.
+
+    Args:
+        root: Root element of the PMC article XML document
+
+    Returns:
+        list[dict[str, str]]: List of URI dicts with 'href' and 'content_type' keys
+    """
+    uris: list[dict[str, str]] = []
+    for uri in root.xpath("//article-meta/self-uri"):
+        href = (
+            uri.get("{http://www.w3.org/1999/xlink}href") or uri.get("xlink:href") or ""
+        )
+        content_type = uri.get("content-type", "")
+        if href:
+            uris.append({"href": href, "content_type": content_type})
+    return uris
+
+
+def gather_related_articles(root: ET.Element) -> list[dict[str, str]]:
+    """Extract related article references (errata, commentaries, etc.).
+
+    Args:
+        root: Root element of the PMC article XML document
+
+    Returns:
+        list[dict[str, str]]: List of related article dicts
+    """
+    articles: list[dict[str, str]] = []
+    for rel in root.xpath("//article-meta/related-article"):
+        href = (
+            rel.get("{http://www.w3.org/1999/xlink}href") or rel.get("xlink:href") or ""
+        )
+        articles.append(
+            {
+                "related_article_type": rel.get("related-article-type", ""),
+                "ext_link_type": rel.get("ext-link-type", ""),
+                "href": href,
+                "id": rel.get("id", ""),
+            }
+        )
+    return articles
+
+
+def gather_conference_info(root: ET.Element) -> dict[str, str] | None:
+    """Extract conference information for conference papers.
+
+    Args:
+        root: Root element of the PMC article XML document
+
+    Returns:
+        dict[str, str] | None: Conference info or None if not a conference paper
+    """
+    conf = root.xpath("//article-meta/conference")
+    if not conf:
+        return None
+    c = conf[0]
+    return {
+        "conf_name": c.findtext("conf-name") or "",
+        "conf_date": c.findtext("conf-date") or "",
+        "conf_loc": c.findtext("conf-loc") or "",
+        "conf_sponsor": c.findtext("conf-sponsor") or "",
+        "conf_theme": c.findtext("conf-theme") or "",
+        "conf_acronym": c.findtext("conf-acronym") or "",
+    }
+
+
 # Permissions / funding / misc content ---------------------------------------
 gather_permissions = _content.gather_permissions
 gather_funding = _content.gather_funding
@@ -147,6 +267,103 @@ gather_footnote = _content.gather_footnote
 gather_acknowledgements = _content.gather_acknowledgements
 gather_notes = _content.gather_notes
 gather_custom_metadata = _content.gather_custom_metadata
+
+# Abstract type (from sections module) ----------------------------------------
+gather_abstract_type = _sections.gather_abstract_type
+
+
+# ---------------------------------------------------------------------------
+# Phase 5 extraction functions
+# ---------------------------------------------------------------------------
+
+
+def gather_subtitle(root: ET.Element) -> str | None:
+    """Extract article subtitle from PMC XML."""
+    subs = root.xpath("//article-meta/title-group/subtitle")
+    if subs:
+        return "".join(subs[0].itertext()).strip() or None
+    return None
+
+
+def gather_author_notes(root: ET.Element) -> dict[str, str | list[str]] | None:
+    """Extract author-notes: correspondence, present addresses, footnotes."""
+    notes_el = root.xpath("//article-meta/author-notes")
+    if not notes_el:
+        return None
+    result: dict[str, str | list[str]] = {}
+    # Correspondence
+    corresp = []
+    for c in notes_el[0].xpath("corresp"):
+        corresp.append("".join(c.itertext()).strip())
+    if corresp:
+        result["correspondence"] = corresp
+    # Footnotes within author-notes
+    fns = []
+    for fn in notes_el[0].xpath("fn"):
+        fn_type = fn.get("fn-type", "")
+        text = "".join(fn.itertext()).strip()
+        if text:
+            fns.append({"type": fn_type, "text": text})
+    if fns:
+        result["footnotes"] = fns
+    return result or None
+
+
+def gather_appendices(root: ET.Element) -> list[dict[str, str]] | None:
+    """Extract appendices from <back>/<app-group>/<app>."""
+    apps: list[dict[str, str]] = []
+    for app in root.xpath("//back//app"):
+        title_el = app.find("title")
+        title = "".join(title_el.itertext()).strip() if title_el is not None else ""
+        text = "".join(app.itertext()).strip()
+        if title and text.startswith(title):
+            text = text[len(title) :].strip()
+        apps.append({"title": title, "text": text})
+    return apps or None
+
+
+def gather_glossary(root: ET.Element) -> list[dict[str, str]] | None:
+    """Extract glossary / definition-list entries from <back>/<glossary>."""
+    entries: list[dict[str, str]] = []
+    for glossary in root.xpath("//back//glossary"):
+        for def_item in glossary.xpath(".//def-item"):
+            term_el = def_item.find("term")
+            def_el = def_item.find("def")
+            term = "".join(term_el.itertext()).strip() if term_el is not None else ""
+            defn = "".join(def_el.itertext()).strip() if def_el is not None else ""
+            entries.append({"term": term, "definition": defn})
+    return entries or None
+
+
+def gather_translated_titles(root: ET.Element) -> list[dict[str, str]] | None:
+    """Extract translated titles from <trans-title-group>."""
+    titles: list[dict[str, str]] = []
+    for ttg in root.xpath("//article-meta/title-group/trans-title-group"):
+        lang = ttg.get("{http://www.w3.org/XML/1998/namespace}lang", "")
+        tt = ttg.find("trans-title")
+        if tt is not None:
+            titles.append({"lang": lang, "title": "".join(tt.itertext()).strip()})
+    return titles or None
+
+
+def gather_translated_abstracts(root: ET.Element) -> list[dict[str, str]] | None:
+    """Extract translated abstracts from <trans-abstract>."""
+    abstracts: list[dict[str, str]] = []
+    for ta in root.xpath("//trans-abstract"):
+        lang = ta.get("{http://www.w3.org/XML/1998/namespace}lang", "")
+        text = "".join(ta.itertext()).strip()
+        abstracts.append({"lang": lang, "text": text})
+    return abstracts or None
+
+
+def gather_tex_equations(root: ET.Element) -> list[str] | None:
+    """Extract TeX/LaTeX equations from <tex-math> elements."""
+    eqs: list[str] = []
+    for tex in root.xpath("//tex-math"):
+        if tex.text:
+            eqs.append(tex.text.strip())
+    return eqs or None
+
 
 # ---------------------------------------------------------------------------
 # Internal helpers
@@ -187,9 +404,44 @@ def _parse_citation(
         >>> print(f"Authors: {citation_data['authors']}")
         >>> print(f"Title: {citation_data['title']}")
     """
-    authors = citation_root.xpath('.//person-group[@person-group-type="author"]/name')
-    if not authors:
-        mixed = citation_root.xpath("//mixed-citation/text()")
+    # --- Author extraction (name + collab + etal) ---
+    author_names: list[str] = []
+
+    # Named authors (person-group type="author")
+    for pg in citation_root.xpath('.//person-group[@person-group-type="author"]'):
+        for name_el in pg.xpath("name"):
+            given = _extract_xpath_text(name_el, "given-names") or ""
+            surname = _extract_xpath_text(name_el, "surname") or ""
+            name = f"{given} {surname}".strip()
+            if name:
+                author_names.append(name)
+        # Collaborative group authors
+        for collab in pg.xpath("collab"):
+            collab_text = "".join(collab.itertext()).strip()
+            if collab_text:
+                author_names.append(collab_text)
+
+    # Fallback: <name> directly under the element-citation/mixed-citation
+    if not author_names:
+        for name_el in citation_root.xpath(".//name"):
+            given = _extract_xpath_text(name_el, "given-names") or ""
+            surname = _extract_xpath_text(name_el, "surname") or ""
+            name = f"{given} {surname}".strip()
+            if name:
+                author_names.append(name)
+
+    # Standalone <collab> outside person-group
+    if not author_names:
+        for collab in citation_root.xpath(".//collab"):
+            collab_text = "".join(collab.itertext()).strip()
+            if collab_text:
+                author_names.append(collab_text)
+
+    # Check for <etal/>
+    has_etal = len(citation_root.xpath(".//etal")) > 0
+
+    if not author_names:
+        mixed = citation_root.xpath(".//mixed-citation/text()")
         if mixed:
             return str(mixed[0])
         warnings.warn(
@@ -197,20 +449,83 @@ def _parse_citation(
             RuntimeWarning,
             stacklevel=2,
         )
-    return {
-        "authors": [
-            f"{_extract_xpath_text(author, 'given-names')} {_extract_xpath_text(author, 'surname')}"
-            for author in authors
-        ],
-        "title": _extract_xpath_text(citation_root, ".//article-title"),
+
+    # --- Determine citation type ---
+    pub_type = None
+    for child_tag in ("element-citation", "mixed-citation", "nlm-citation"):
+        child = citation_root.find(f".//{child_tag}")
+        if child is not None:
+            pub_type = child.get("publication-type")
+            break
+
+    # --- Build result dict ---
+    result: dict[str, list[str] | str | None | bool] = {
+        "authors": author_names,
+        "has_etal": has_etal,
+        "publication_type": pub_type,
+        "title": (
+            _extract_xpath_text(citation_root, ".//article-title")
+            or _extract_xpath_text(citation_root, ".//chapter-title")
+        ),
         "source": _extract_xpath_text(citation_root, ".//source"),
         "year": _extract_xpath_text(citation_root, ".//year"),
         "volume": _extract_xpath_text(citation_root, ".//volume"),
+        "issue": _extract_xpath_text(citation_root, ".//issue"),
         "first_page": _extract_xpath_text(citation_root, ".//fpage"),
         "last_page": _extract_xpath_text(citation_root, ".//lpage"),
+        "elocation_id": _extract_xpath_text(citation_root, ".//elocation-id"),
         "doi": _extract_xpath_text(citation_root, './/pub-id[@pub-id-type="doi"]'),
         "pmid": _extract_xpath_text(citation_root, './/pub-id[@pub-id-type="pmid"]'),
+        "pmcid": _extract_xpath_text(citation_root, './/pub-id[@pub-id-type="pmcid"]'),
+        "isbn": _extract_xpath_text(citation_root, ".//isbn"),
+        "publisher_name": _extract_xpath_text(citation_root, ".//publisher-name"),
+        "publisher_loc": _extract_xpath_text(citation_root, ".//publisher-loc"),
+        "edition": _extract_xpath_text(citation_root, ".//edition"),
+        "comment": _extract_xpath_text(citation_root, ".//comment"),
+        # Book-specific fields
+        "chapter_title": _extract_xpath_text(citation_root, ".//chapter-title"),
+        "part_title": _extract_xpath_text(citation_root, ".//part-title"),
+        # Conference-specific fields
+        "conf_name": _extract_xpath_text(citation_root, ".//conf-name"),
+        "conf_date": _extract_xpath_text(citation_root, ".//conf-date"),
+        "conf_loc": _extract_xpath_text(citation_root, ".//conf-loc"),
+        # Data citation fields
+        "data_title": _extract_xpath_text(citation_root, ".//data-title"),
+        # Patent fields
+        "patent": _extract_xpath_text(citation_root, ".//patent"),
+        # External links / URIs
+        "uri": _extract_xpath_text(citation_root, ".//uri"),
     }
+
+    # Editors
+    editor_names: list[str] = []
+    for pg in citation_root.xpath('.//person-group[@person-group-type="editor"]'):
+        for name_el in pg.xpath("name"):
+            given = _extract_xpath_text(name_el, "given-names") or ""
+            surname = _extract_xpath_text(name_el, "surname") or ""
+            name = f"{given} {surname}".strip()
+            if name:
+                editor_names.append(name)
+    if editor_names:
+        result["editors"] = editor_names
+
+    # External links
+    ext_links = []
+    for ext in citation_root.xpath(".//ext-link"):
+        href = ext.get("{http://www.w3.org/1999/xlink}href") or ext.get(
+            "xlink:href", ""
+        )
+        if href:
+            ext_links.append(href)
+    if ext_links:
+        result["ext_links"] = ext_links
+
+    # Add full mixed-citation text as fallback
+    mixed_elems = citation_root.xpath(".//mixed-citation")
+    if mixed_elems:
+        result["mixed_citation_text"] = "".join(mixed_elems[0].itertext()).strip()
+
+    return result
 
 
 def _extract_xpath_text(root: ET.Element, xpath: str, *, multiple: bool = False):
@@ -328,6 +643,73 @@ def process_reference_map(
                 matches = paper_root.xpath(f"//fig[@id='{rid}']")
                 if matches:
                     cleaned[key] = TextFigure(matches[0])
+            elif rtype == "fn" and rid:
+                # Footnote references
+                matches = paper_root.xpath(f"//fn[@id='{rid}']")
+                if matches:
+                    cleaned[key] = "".join(matches[0].itertext()).strip()
+            elif rtype == "supplementary-material" and rid:
+                matches = paper_root.xpath(f"//supplementary-material[@id='{rid}']")
+                if matches:
+                    cleaned[key] = {
+                        "type": "supplementary-material",
+                        "id": rid,
+                        "text": "".join(matches[0].itertext()).strip(),
+                    }
+            elif rtype == "disp-formula" and rid:
+                matches = paper_root.xpath(f"//disp-formula[@id='{rid}']")
+                if matches:
+                    cleaned[key] = {
+                        "type": "formula",
+                        "id": rid,
+                        "text": "".join(matches[0].itertext()).strip(),
+                    }
+            elif rtype == "app" and rid:
+                matches = paper_root.xpath(f"//app[@id='{rid}']")
+                if matches:
+                    cleaned[key] = {
+                        "type": "appendix",
+                        "id": rid,
+                        "text": "".join(matches[0].itertext()).strip()[:200],
+                    }
+            elif rtype == "sec" and rid:
+                matches = paper_root.xpath(f"//sec[@id='{rid}']")
+                if matches:
+                    title = matches[0].find("title")
+                    cleaned[key] = {
+                        "type": "section",
+                        "id": rid,
+                        "title": (
+                            "".join(title.itertext()).strip()
+                            if title is not None
+                            else ""
+                        ),
+                    }
+            elif rtype == "boxed-text" and rid:
+                matches = paper_root.xpath(f"//boxed-text[@id='{rid}']")
+                if matches:
+                    cleaned[key] = {
+                        "type": "boxed-text",
+                        "id": rid,
+                        "text": "".join(matches[0].itertext()).strip()[:200],
+                    }
+            elif rtype == "scheme" and rid:
+                matches = paper_root.xpath(f"//*[@id='{rid}']")
+                if matches:
+                    cleaned[key] = {
+                        "type": "scheme",
+                        "id": rid,
+                        "text": "".join(matches[0].itertext()).strip()[:200],
+                    }
+            elif rtype and rid:
+                # Generic fallback for any other xref type
+                matches = paper_root.xpath(f"//*[@id='{rid}']")
+                if matches:
+                    cleaned[key] = {
+                        "type": rtype,
+                        "id": rid,
+                        "text": "".join(matches[0].itertext()).strip()[:200],
+                    }
         elif root.tag == "table-wrap":
             cleaned[key] = TextTable(root)
         elif root.tag == "fig":
@@ -586,15 +968,13 @@ def generate_paper_dict(
         >>> if article:  # Check if parsing succeeded
         ...     process_article(article)
     """
-    if suppress_warnings:
-        warnings.simplefilter("ignore")
-    try:
-        data = build_complete_paper_dict(pmcid, root, verbose)
-    except Exception as exc:
-        data = {} if suppress_errors else (_raise(exc))
-    finally:
+    with warnings.catch_warnings():
         if suppress_warnings:
-            warnings.simplefilter("default")
+            warnings.simplefilter("ignore")
+        try:
+            data = build_complete_paper_dict(pmcid, root, verbose)
+        except Exception as exc:
+            data = {} if suppress_errors else (_raise(exc))
     return data
 
 
@@ -611,7 +991,11 @@ def _raise(exc):
 
 
 def build_complete_paper_dict(
-    pmcid: int, root: ET.Element, verbose: bool = False
+    pmcid: int,
+    root: ET.Element,
+    verbose: bool = False,
+    *,
+    include_ref_map_with_tags: bool = False,
 ) -> dict[str, str | int | dict | list]:
     """Low-level orchestrator that coordinates all parsing operations.
 
@@ -650,42 +1034,78 @@ def build_complete_paper_dict(
         >>> print(f"Citations: {len(article_dict['Citations'])}")
     """
     ref_map: BasicBiMap = BasicBiMap()
+
+    def _safe(fn, *args, default=None, **kwargs):
+        """Call *fn* and return *default* if it raises."""
+        try:
+            return fn(*args, **kwargs)
+        except Exception as exc:
+            logger.warning(
+                "gather_%s failed for PMCID %s: %s",
+                getattr(fn, "__name__", "?"),
+                pmcid,
+                exc,
+            )
+            return default
+
     d: dict[str, str | int | dict | list] = {
         "PMCID": pmcid,
-        "Title": gather_title(root),
-        "Authors": gather_authors(root),
-        "Non-Author Contributors": gather_non_author_contributors(root),
-        "Abstract": gather_abstract(root, ref_map),
-        "Body": gather_body(root, ref_map),
-        "Journal ID": gather_journal_id(root),
-        "Journal Title": gather_journal_title(root),
-        "ISSN": gather_issn(root),
-        "Publisher Name": gather_publisher_name(root),
-        "Publisher Location": gather_publisher_location(root),
-        "Article ID": gather_article_id(root),
-        "Article Types": gather_article_types(root),
-        "Article Categories": gather_article_categories(root),
-        "Keywords": gather_keywords(root),
-        "Published Date": gather_published_date(root),
-        "Version History": gather_version_history(root),
-        "History Dates": gather_history_dates(root),
-        "Volume": gather_volume(root),
-        "Issue": gather_issue(root),
-        "FPage": gather_fpage(root),
-        "LPage": gather_lpage(root),
-        "First Page": gather_fpage(root),
-        "Last Page": gather_lpage(root),
-        "Permissions": gather_permissions(root),
-        "Funding": gather_funding(root),
-        "Ethics": gather_ethics_disclosures(root),
-        "Supplementary Material": gather_supplementary_material(root),
-        "Footnote": gather_footnote(root),
-        "Acknowledgements": gather_acknowledgements(root),
-        "Notes": gather_notes(root),
-        "Custom Meta": gather_custom_metadata(root),
-        "Ref Map With Tags": copy.deepcopy(ref_map),
-        "Ref Map": process_reference_map(root, ref_map),
+        "Title": _safe(gather_title, root),
+        "Authors": _safe(gather_authors, root),
+        "Non-Author Contributors": _safe(
+            gather_non_author_contributors, root, default=""
+        ),
+        "Abstract": _safe(gather_abstract, root, ref_map),
+        "Body": _safe(gather_body, root, ref_map),
+        "Journal ID": _safe(gather_journal_id, root, default={}),
+        "Journal Title": _safe(gather_journal_title, root),
+        "ISSN": _safe(gather_issn, root, default={}),
+        "Publisher Name": _safe(gather_publisher_name, root, default=""),
+        "Publisher Location": _safe(gather_publisher_location, root),
+        "Article ID": _safe(gather_article_id, root, default={}),
+        "Article Types": _safe(gather_article_types, root),
+        "Article Categories": _safe(gather_article_categories, root),
+        "Keywords": _safe(gather_keywords, root),
+        "Published Date": _safe(gather_published_date, root, default={}),
+        "Version History": _safe(gather_version_history, root),
+        "History Dates": _safe(gather_history_dates, root),
+        "Volume": _safe(gather_volume, root),
+        "Issue": _safe(gather_issue, root),
+        "FPage": _safe(gather_fpage, root),
+        "LPage": _safe(gather_lpage, root),
+        "Elocation ID": _safe(gather_elocation_id, root),
+        "Permissions": _safe(gather_permissions, root),
+        "Funding": _safe(gather_funding, root),
+        "Ethics": _safe(gather_ethics_disclosures, root),
+        "Supplementary Material": _safe(gather_supplementary_material, root),
+        "Footnote": _safe(gather_footnote, root),
+        "Acknowledgements": _safe(gather_acknowledgements, root, default=[]),
+        "Notes": _safe(gather_notes, root, default=[]),
+        "Custom Meta": _safe(gather_custom_metadata, root),
+        "Counts": _safe(gather_counts, root, default={}),
+        "Self URI": _safe(gather_self_uri, root, default=[]),
+        "Related Articles": _safe(gather_related_articles, root, default=[]),
+        "Conference": _safe(gather_conference_info, root),
+        # Phase 5 extractions
+        "Subtitle": _safe(gather_subtitle, root),
+        "Author Notes": _safe(gather_author_notes, root),
+        "Appendices": _safe(gather_appendices, root),
+        "Glossary": _safe(gather_glossary, root),
+        "Translated Titles": _safe(gather_translated_titles, root),
+        "Translated Abstracts": _safe(gather_translated_abstracts, root),
+        "Abstract Type": _safe(gather_abstract_type, root),
+        "TeX Equations": _safe(gather_tex_equations, root),
     }
+
+    # Only deep-copy the ref_map when explicitly requested (expensive operation)
+    if include_ref_map_with_tags:
+        import copy
+
+        d["Ref Map With Tags"] = copy.deepcopy(ref_map)
+    else:
+        d["Ref Map With Tags"] = BasicBiMap()
+
+    d["Ref Map"] = process_reference_map(root, ref_map)
 
     citations, tables, figures = _split_citations_tables_figs(d["Ref Map"])
     d.update(

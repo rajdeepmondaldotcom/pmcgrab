@@ -131,8 +131,12 @@ def fetch(article_id: str, id_type: str = "pmcid") -> dict[str, str] | None:
         Requests are cached using pmcgrab.http_utils.cached_get for
         improved performance on repeated queries.
     """
+    from pmcgrab import __version__
+
     resp = cached_get(
-        _BASE_URL, params={id_type: article_id}, headers={"User-Agent": "pmcgrab/0.5.8"}
+        _BASE_URL,
+        params={id_type: article_id},
+        headers={"User-Agent": f"pmcgrab/{__version__}"},
     )
     root = ET.fromstring(resp.content)
     rec = root.find("record")

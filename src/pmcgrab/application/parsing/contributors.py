@@ -124,29 +124,71 @@ def extract_contributor_info(
         addr = addr.strip() if addr else None
 
         # affiliations ------------------------------------------------------
-        affils: list[str] = []
-        for aff in contrib.xpath(".//xref[@ref-type='aff']"):
-            aid = aff.get("rid")
-            texts = root.xpath(
-                f"//contrib-group/aff[@id='{aid}']/text()[not(parent::label)]"
+        affils: list[str | dict] = []
+        for aff_xref in contrib.xpath(".//xref[@ref-type='aff']"):
+            aid = aff_xref.get("rid")
+            aff_els = root.xpath(f"//contrib-group/aff[@id='{aid}']") or root.xpath(
+                f"//aff[@id='{aid}']"
             )
-            if len(texts) > 1:
-                warnings.warn(
-                    "Multiple affiliations found for one ID.",
-                    UnexpectedMultipleMatchWarning,
-                    stacklevel=2,
+            if not aff_els:
+                affils.append(f"{aid}: Affiliation data not found.")
+                continue
+            aff_el = aff_els[0]
+
+            # Try structured extraction first
+            institutions = []
+            for inst_el in aff_el.xpath(".//institution"):
+                content_type = inst_el.get("content-type", "")
+                inst_text = "".join(inst_el.itertext()).strip()
+                if inst_text:
+                    institutions.append({"type": content_type, "name": inst_text})
+
+            # Address components
+            city = (
+                aff_el.findtext(".//city") or aff_el.findtext(".//addr-line/city") or ""
+            )
+            state = aff_el.findtext(".//state") or ""
+            country = aff_el.findtext(".//country") or ""
+            postal = aff_el.findtext(".//postal-code") or ""
+
+            # Institution IDs (ROR, Ringgold, ISNI)
+            inst_ids = {}
+            for iid in aff_el.xpath(".//institution-id"):
+                iid_type = iid.get("institution-id-type", "")
+                if iid.text:
+                    inst_ids[iid_type] = iid.text.strip()
+
+            if institutions or city or country or inst_ids:
+                aff_dict: dict[str, str | list | dict] = {"id": aid}
+                if institutions:
+                    aff_dict["institutions"] = institutions
+                if city:
+                    aff_dict["city"] = city.strip()
+                if state:
+                    aff_dict["state"] = state.strip()
+                if country:
+                    aff_dict["country"] = country.strip()
+                if postal:
+                    aff_dict["postal_code"] = postal.strip()
+                if inst_ids:
+                    aff_dict["institution_ids"] = inst_ids
+                # Also include a flat text fallback
+                aff_dict["text"] = "".join(aff_el.itertext()).strip()
+                affils.append(aff_dict)
+            else:
+                # Fallback: plain text
+                full_text = "".join(aff_el.itertext()).strip()
+                if len(aff_els) > 1:
+                    warnings.warn(
+                        "Multiple affiliations found for one ID.",
+                        UnexpectedMultipleMatchWarning,
+                        stacklevel=2,
+                    )
+                affils.append(
+                    f"{aid.strip()}: {full_text}"
+                    if full_text
+                    else f"{aid}: Affiliation data not found."
                 )
-            if not texts:
-                texts = ["Affiliation data not found."]
-            inst = root.xpath(
-                f"//contrib-group/aff[@id='{aid}']/institution-wrap/institution/text()"
-            )
-            inst_str = " ".join(str(i) for i in inst)
-            affils.append(
-                f"{aid.strip()}: {inst_str}{texts[0].strip()}"
-                if inst_str
-                else f"{aid.strip()}: {texts[0].strip()}"
-            )
 
         orcid = contrib.findtext(".//contrib-id[@contrib-id-type='orcid']")
         isni = contrib.findtext(".//contrib-id[@contrib-id-type='isni']")

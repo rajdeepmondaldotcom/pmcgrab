@@ -110,7 +110,33 @@ def stringify_children(node: ET.Element, *, encoding: str = "utf-8") -> str:
     return "".join(decoded).strip()
 
 
-_ALLOWED_TAGS = {"xref", "fig", "table-wrap"}
+# Tags that are tracked in the reference map (xref, fig, table-wrap) or
+# whose content should be kept inline without warnings.
+_ALLOWED_TAGS = {
+    "xref",
+    "fig",
+    "table-wrap",
+    # Inline elements whose *text content* should be preserved
+    "named-content",
+    "styled-content",
+    "inline-formula",
+    "fn",
+    "target",
+    "break",
+    "sc",
+    "monospace",
+    "ext-link",
+    "uri",
+    "email",
+    "supplementary-material",
+    "media",
+    # Inline formatting that may survive HTML cleaning
+    "sub",
+    "sup",
+    "italic",
+    "bold",
+    "underline",
+}
 _TAG_PATTERN = re.compile(
     r"<([a-zA-Z][\w-]*)\b[^>]*>(.*?)</\1>|<([a-zA-Z][\w-]*)\b[^/>]*/?>",
     re.DOTALL,
@@ -263,16 +289,24 @@ def split_text_and_refs(
             continue
 
         # Allowed tags -----------------------------------------------------
-        if tag_name == "xref":
-            cleaned.append(tag_contents)  # Inline citation text
+        # Tags that generate a ref-map entry (cross-references / floats)
+        _REF_MAP_TAGS = {"xref", "fig", "table-wrap", "supplementary-material", "media"}
 
-        if full_tag in ref_map.reverse:
-            ref_num = ref_map.reverse[full_tag]
+        if tag_name in _REF_MAP_TAGS:
+            if tag_name == "xref":
+                cleaned.append(tag_contents)  # Inline citation text
+
+            if full_tag in ref_map.reverse:
+                ref_num = ref_map.reverse[full_tag]
+            else:
+                ref_num = len(ref_map)
+                ref_map[ref_num] = full_tag
+
+            cleaned.append(generate_typed_mhtml_tag("dataref", str(ref_num)))
         else:
-            ref_num = len(ref_map)
-            ref_map[ref_num] = full_tag
+            # Inline content tags -- just keep the text content
+            cleaned.append(tag_contents)
 
-        cleaned.append(generate_typed_mhtml_tag("dataref", str(ref_num)))
         text = text[match.end() :]
 
     return "".join(cleaned)

@@ -174,6 +174,57 @@ def remove_html_tags(
     return cleaned
 
 
+# Pre-compiled default patterns for strip_html_text_styling (avoids recompilation per call)
+_DEFAULT_REMOVALS = ["<italic>", "<i>", "<bold>", "<b>", "<underline>", "<u>"]
+_DEFAULT_REPLACEMENTS = {"<sub>": "_", "<sup>": "^", "<ext-link>": "[External URI:]"}
+_DEFAULT_REMOVE_PATTERNS, _DEFAULT_REPLACE_PATTERNS = _compile_patterns(
+    _DEFAULT_REMOVALS, _DEFAULT_REPLACEMENTS
+)
+_DEFAULT_COMBINED_REMOVE_RE = re.compile(
+    "|".join(_DEFAULT_REMOVE_PATTERNS), re.IGNORECASE
+)
+
+
+def _build_single_pass_re(
+    remove_patterns: list[str], replace_patterns: dict[str, str]
+) -> tuple[re.Pattern, dict[str, str]]:
+    """Build a single compiled regex that handles both removals and replacements.
+
+    Returns a compiled pattern and a mapping from named groups to replacement
+    strings.  Groups that have no entry in the mapping are removals (replaced
+    with ``""``).
+    """
+    parts: list[str] = []
+    group_map: dict[str, str] = {}
+
+    for idx, pat in enumerate(remove_patterns):
+        group_name = f"_rm{idx}"
+        parts.append(f"(?P<{group_name}>{pat})")
+        group_map[group_name] = ""
+
+    for idx, (pat, rep) in enumerate(replace_patterns.items()):
+        group_name = f"_rp{idx}"
+        parts.append(f"(?P<{group_name}>{pat})")
+        group_map[group_name] = rep
+
+    combined = re.compile("|".join(parts), re.IGNORECASE)
+    return combined, group_map
+
+
+# Pre-build the single-pass regex for the default rules
+_SINGLE_PASS_RE, _SINGLE_PASS_MAP = _build_single_pass_re(
+    _DEFAULT_REMOVE_PATTERNS, _DEFAULT_REPLACE_PATTERNS
+)
+
+
+def _single_pass_replacer(match: re.Match) -> str:
+    """Replacement callback for the single-pass regex."""
+    for name, rep in _SINGLE_PASS_MAP.items():
+        if match.group(name) is not None:
+            return rep
+    return ""
+
+
 def strip_html_text_styling(
     text: str,
     replacements: dict[str, str] | None = None,
@@ -182,65 +233,23 @@ def strip_html_text_styling(
 ) -> str:
     """Remove common text styling tags and convert special elements to plain text.
 
-    Convenience function that applies common HTML/XML cleaning rules optimized
-    for scientific article text. Removes visual formatting tags while converting
-    structural elements like subscripts and external links to readable alternatives.
+    Uses a single-pass compiled regex for maximum performance.
 
     Args:
         text: HTML/XML text to clean
         replacements: Additional or override replacements for default rules.
-                     These will be merged with (and override) the default replacements.
         verbose: If True, emit debug logging about tag processing
 
     Returns:
         str: Cleaned text with styling removed and special elements converted
-
-    Default Processing Rules:
-        Removed tags (styling only):
-            * <italic>, <i>: Italic formatting
-            * <bold>, <b>: Bold formatting
-            * <underline>, <u>: Underline formatting
-
-        Converted tags (structural meaning preserved):
-            * <sub>content</sub> → _content_: Subscripts
-            * <sup>content</sup> → ^content^: Superscripts
-            * <ext-link>URL</ext-link> → [External URI:]URL: External links
-
-    Examples:
-        >>> # Basic styling removal
-        >>> text = "<b>Important:</b> H<sub>2</sub>O is <i>water</i>"
-        >>> clean = strip_html_text_styling(text)
-        >>> print(clean)  # "Important: H_2_O is water"
-        >>>
-        >>> # Custom replacements
-        >>> text = "See <ext-link>example.com</ext-link> for details"
-        >>> clean = strip_html_text_styling(text, {"<ext-link>": "[Link] "})
-        >>> print(clean)  # "See [Link] example.com for details"
-        >>>
-        >>> # Scientific notation handling
-        >>> text = "CO<sub>2</sub> + H<sub>2</sub>O → H<sub>2</sub>CO<sub>3</sub>"
-        >>> clean = strip_html_text_styling(text)
-        >>> print(clean)  # "CO_2_ + H_2_O → H_2_CO_3_"
-
-    Use Cases:
-        * Cleaning PMC article abstracts and bodies for text analysis
-        * Preparing scientific text for AI/ML processing
-        * Converting formatted text to plain text while preserving meaning
-        * Normalizing text from different XML sources
-
-    Customization:
-        Override or extend default replacements by providing a replacements dict:
-
-        >>> custom_rules = {"<ext-link>": "[See: ", "<sub>": "_{", "<sup>": "^{"}
-        >>> clean = strip_html_text_styling(text, custom_rules)
-
-    Note:
-        This function is specifically designed for scientific article content
-        where subscripts, superscripts, and external links are common. The
-        default replacement patterns maintain readability while removing markup.
     """
-    removals = ["<italic>", "<i>", "<bold>", "<b>", "<underline>", "<u>"]
-    default_replacements = {"<sub>": "_", "<sup>": "^", "<ext-link>": "[External URI:]"}
     if replacements:
-        default_replacements.update(replacements)
-    return remove_html_tags(text, removals, default_replacements, verbose=verbose)
+        merged = dict(_DEFAULT_REPLACEMENTS)
+        merged.update(replacements)
+        return remove_html_tags(text, _DEFAULT_REMOVALS, merged, verbose=verbose)
+
+    # Fast single-pass path using pre-compiled combined regex
+    if verbose:
+        logger.info("Using single-pass cleaning regex")
+
+    return _SINGLE_PASS_RE.sub(_single_pass_replacer, text)

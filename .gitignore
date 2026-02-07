@@ -167,9 +167,14 @@ uv.lock
 # macOS
 .DS_Store
 
+# Ruff
+.ruff_cache/
+
 # Project specific
 data/
 output_papers/
+test_output/
 pmcgrab_tutorial_output/
+mypy.ini
 *.xml
 *.json

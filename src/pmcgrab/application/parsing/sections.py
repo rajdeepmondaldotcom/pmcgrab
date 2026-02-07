@@ -164,6 +164,21 @@ def _gather_sections(
 # ----------------------------------------------------------------------------
 
 
+def gather_abstract_type(root: ET.Element) -> str | None:
+    """Extract the abstract type attribute (e.g., 'graphical', 'toc', 'summary').
+
+    Args:
+        root: Root element of the PMC XML document
+
+    Returns:
+        str | None: Abstract type attribute value, or None if not specified
+    """
+    abstracts = root.xpath("//abstract")
+    if abstracts:
+        return abstracts[0].get("abstract-type")
+    return None
+
+
 def gather_abstract(
     root: ET.Element, ref_map: BasicBiMap
 ) -> list[TextSection | TextParagraph] | None:

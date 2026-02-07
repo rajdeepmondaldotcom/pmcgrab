@@ -18,6 +18,7 @@ Key Functions:
 import json
 import os
 import time
+import warnings
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
 from tqdm import tqdm
@@ -25,9 +26,17 @@ from tqdm import tqdm
 # Delegate to the application-layer implementation instead of duplicating code.
 from pmcgrab.application.processing import process_single_pmc as _app_process_single
 
+_DEPRECATION_MSG = (
+    "pmcgrab.processing is deprecated and will be removed in a future version. "
+    "Use pmcgrab.application.processing instead."
+)
+
 
 def process_single_pmc(pmc_id: str) -> dict[str, str | dict | list] | None:
     """Legacy single PMC article processing function.
+
+    .. deprecated:: 0.6.0
+        Use :func:`pmcgrab.application.processing.process_single_pmc` instead.
 
     Backward-compatible wrapper that delegates to the application-layer
     implementation.
@@ -42,6 +51,7 @@ def process_single_pmc(pmc_id: str) -> dict[str, str | dict | list] | None:
         For new applications, use
         :func:`pmcgrab.application.processing.process_single_pmc` directly.
     """
+    warnings.warn(_DEPRECATION_MSG, DeprecationWarning, stacklevel=2)
     return _app_process_single(pmc_id)
 
 
@@ -60,6 +70,8 @@ def process_pmc_ids_in_batches(
     Returns:
         dict[str, bool]: Mapping from PMC ID to processing success status.
     """
+
+    warnings.warn(_DEPRECATION_MSG, DeprecationWarning, stacklevel=2)
 
     def _wrapper(pmc_id: str):
         info = _app_process_single(pmc_id)

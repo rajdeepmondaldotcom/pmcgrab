@@ -384,18 +384,21 @@ class TestFetchModuleEdgeCases:
         """Test fetch with retry logic."""
         from urllib.error import HTTPError
 
-        # First call fails, second succeeds
-        mock_context1 = MagicMock()
-        mock_context1.__enter__.return_value.read.side_effect = HTTPError(
+        # First call fails (raises exception), second succeeds
+        mock_handle_fail = MagicMock()
+        mock_handle_fail.read.side_effect = HTTPError(
             url="test", code=500, msg="Error", hdrs=None, fp=None
         )
 
-        mock_context2 = MagicMock()
-        mock_context2.__enter__.return_value.read.return_value = (
+        mock_handle_ok = MagicMock()
+        mock_handle_ok.read.return_value = (
             b"<pmc-articleset><article><title>Test</title></article></pmc-articleset>"
         )
 
-        mock_efetch.side_effect = [mock_context1, mock_context2]
+        mock_efetch.side_effect = [
+            HTTPError(url="test", code=500, msg="Error", hdrs=None, fp=None),
+            mock_handle_ok,
+        ]
 
         with patch("pmcgrab.fetch.time.sleep"):
             result = fetch_pmc_xml_string(12345, "test@example.com")
@@ -453,20 +456,25 @@ class TestHttpUtilsEdgeCases:
         _backoff_sleep(20)
         mock_sleep.assert_called_with(32)
 
-    @patch("requests.get")
-    def test_cached_get_edge_cases(self, mock_get):
+    @patch("pmcgrab.http_utils._session")
+    def test_cached_get_edge_cases(self, mock_session):
         """Test cached GET with edge cases."""
+        # Clear cache to avoid stale entries
+        from pmcgrab.http_utils import _CACHE
+
+        _CACHE.clear()
+
         # Test with various parameter types
         mock_response = MagicMock()
         mock_response.raise_for_status = MagicMock()
-        mock_get.return_value = mock_response
+        mock_session.get.return_value = mock_response
 
         # Test with None params
-        result = cached_get("http://example.com", params=None)
+        result = cached_get("http://example-cached-test.com", params=None)
         assert result == mock_response
 
         # Test with empty params
-        result = cached_get("http://example.com", params={})
+        result = cached_get("http://example-cached-test2.com", params={})
         assert result == mock_response
 
 

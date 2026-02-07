@@ -37,12 +37,17 @@ Configuration:
 
 from __future__ import annotations
 
-import itertools
 import os
+import threading
+import time
 
 __all__: list[str] = [
     "EMAIL_POOL",
+    "NCBI_API_KEY",
+    "NCBI_TIMEOUT",
+    "NCBI_RETRIES",
     "next_email",
+    "rate_limit_wait",
 ]
 
 # ---------------------------------------------------------------------------
@@ -60,7 +65,6 @@ _DEFAULT_EMAIL_POOL: list[str] = [
     "pfd4bf0y@demo.com",
     "hvjhnv7o@test.com",
     "vtirmn0j@sample.com",
-    # … truncated for brevity – full list kept identical
 ]
 
 _env_emails = os.getenv("PMCGRAB_EMAILS")
@@ -70,45 +74,72 @@ if _env_emails:
 else:
     EMAIL_POOL = _DEFAULT_EMAIL_POOL
 
-# Cycle provides thread-safe round-robin iteration (no shared counter required)
-_email_cycle = itertools.cycle(EMAIL_POOL)
+# ---------------------------------------------------------------------------
+# NCBI API key – allows 10 req/s instead of 3 req/s
+# ---------------------------------------------------------------------------
+
+NCBI_API_KEY: str | None = os.getenv("NCBI_API_KEY") or None
+
+# ---------------------------------------------------------------------------
+# Configurable timeouts and retries via env vars
+# ---------------------------------------------------------------------------
+
+NCBI_TIMEOUT: int = int(os.getenv("PMCGRAB_TIMEOUT", "60"))
+NCBI_RETRIES: int = int(os.getenv("PMCGRAB_RETRIES", "3"))
+
+# ---------------------------------------------------------------------------
+# Thread-safe email rotation (with lock instead of bare itertools.cycle)
+# ---------------------------------------------------------------------------
+
+_email_lock = threading.Lock()
+_email_index = 0
 
 
 def next_email() -> str:
     """Return the next email address in round-robin rotation.
 
-    Provides thread-safe access to the email pool using round-robin rotation.
-    This ensures fair distribution of API requests across available email
-    addresses, which helps with rate limiting and API usage policies.
+    Thread-safe via a lock-protected index counter.
 
     Returns:
         str: Next email address from the configured pool
-
-    Examples:
-        >>> # Get email for NCBI Entrez request
-        >>> email = next_email()
-        >>> print(f"Using email: {email}")
-        >>>
-        >>> # Multiple calls rotate through pool
-        >>> emails = [next_email() for _ in range(3)]
-        >>> print(f"Rotation: {emails}")
-
-    Thread Safety:
-        This function is thread-safe and can be called concurrently from
-        multiple threads without requiring external synchronization. The
-        underlying itertools.cycle iterator handles concurrent access safely.
-
-    Configuration:
-        The email pool can be customized via the PMCGRAB_EMAILS environment
-        variable. If not set, uses a default pool of test email addresses.
-
-        Example environment setup:
-        export PMCGRAB_EMAILS="user1@example.com,user2@example.com"
-
-    Note:
-        NCBI Entrez requires a valid email address for API identification.
-        The email is used to identify the requester and enable NCBI to
-        contact users about API usage if necessary. Use real email addresses
-        in production environments.
     """
-    return next(_email_cycle)
+    global _email_index
+    with _email_lock:
+        email = EMAIL_POOL[_email_index % len(EMAIL_POOL)]
+        _email_index += 1
+    return email
+
+
+# ---------------------------------------------------------------------------
+# Token-bucket rate limiter for NCBI API
+# ---------------------------------------------------------------------------
+
+
+class _RateLimiter:
+    """Simple token-bucket rate limiter.
+
+    NCBI allows 3 requests/second without an API key and 10/second with one.
+    This limiter enforces that ceiling across all threads.
+    """
+
+    def __init__(self, rate: float) -> None:
+        self._min_interval = 1.0 / rate
+        self._last_call = 0.0
+        self._lock = threading.Lock()
+
+    def wait(self) -> None:
+        with self._lock:
+            now = time.monotonic()
+            elapsed = now - self._last_call
+            if elapsed < self._min_interval:
+                time.sleep(self._min_interval - elapsed)
+            self._last_call = time.monotonic()
+
+
+_rate = 10.0 if NCBI_API_KEY else 3.0
+_limiter = _RateLimiter(_rate)
+
+
+def rate_limit_wait() -> None:
+    """Block until the next NCBI API call is allowed by the rate limiter."""
+    _limiter.wait()

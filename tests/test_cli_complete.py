@@ -127,7 +127,7 @@ class TestCLIComplete:
             test_args = [
                 "pmcgrab_cli.py",
                 "--pmcids",
-                "invalid_id",
+                "9999999",
                 "--output-dir",
                 str(output_dir),
             ]
@@ -354,7 +354,12 @@ class TestCLIComplete:
                 pass
 
     def test_main_with_mixed_valid_invalid_pmcids(self):
-        """Test main function with mix of valid and invalid PMC IDs."""
+        """Test main function with mix of valid and invalid PMC IDs.
+
+        The CLI now validates IDs before processing, so 'invalid' is
+        filtered out during normalize_id. Only valid numeric IDs are
+        passed to process_single_pmc.
+        """
         with tempfile.TemporaryDirectory() as temp_dir:
             output_dir = Path(temp_dir)
 
@@ -372,9 +377,11 @@ class TestCLIComplete:
                 with patch(
                     "pmcgrab.cli.pmcgrab_cli.process_single_pmc"
                 ) as mock_process:
-                    mock_process.side_effect = [_DUMMY_ARTICLE, None, _DUMMY_ARTICLE]
+                    mock_process.side_effect = [_DUMMY_ARTICLE, _DUMMY_ARTICLE]
                     main()
-                    assert mock_process.call_count == 3
+                    # "invalid" is filtered out during ID normalization,
+                    # so only 2 valid IDs are processed
+                    assert mock_process.call_count == 2
 
     def test_main_output_directory_handling(self):
         """Test output directory creation and handling."""

@@ -141,46 +141,83 @@ def gather_permissions(root: ET.Element) -> dict[str, str] | None:
     }
 
 
-def gather_funding(root: ET.Element) -> list[str] | None:
-    """Extract funding source information from PMC article.
+def gather_funding(root: ET.Element) -> list[dict[str, str]] | None:
+    """Extract detailed funding source information from PMC article.
 
-    Parses funding information to identify the institutions and organizations
-    that supported the research. This information is valuable for understanding
-    research funding patterns and institutional affiliations.
+    Parses funding information to identify the institutions, grant IDs,
+    and funding statements. Returns structured data with institution names,
+    award IDs, and funder identifiers.
 
     Args:
         root: Root element of the PMC XML document
 
     Returns:
-        list[str] | None: List of funding institution names.
-                         Returns None if no funding information is found.
+        list[dict[str, str]] | None: List of funding dicts with keys:
+            - institution: Funding institution name
+            - award_id: Grant/award ID
+            - institution_id: Funder identifier (e.g., FundRef ID)
+            - country: Country of the funder
+        Returns None if no funding information is found.
 
     Examples:
         >>> root = ET.fromstring(pmc_xml)
         >>> funding = gather_funding(root)
         >>> if funding:
-        ...     print("Funded by:")
-        ...     for funder in funding:
-        ...         print(f"  - {funder}")
-        >>>
-        >>> # Check for specific funding sources
-        >>> if funding and any("NIH" in f for f in funding):
-        ...     print("NIH-funded research")
-
-    Common Funding Sources:
-        * National Institutes of Health (NIH)
-        * National Science Foundation (NSF)
-        * European Research Council (ERC)
-        * Various university and private foundation grants
-
-    Note:
-        Funding information helps identify potential conflicts of interest
-        and provides context for research independence. Some articles may
-        have multiple funding sources or complex funding arrangements.
+        ...     for award in funding:
+        ...         print(f"  {award['institution']}: {award['award_id']}")
     """
-    fund: list[str] = []
+    fund: list[dict[str, str]] = []
     for group in root.xpath("//article-meta/funding-group"):
-        fund.extend(group.xpath("award-group/funding-source/institution/text()"))
+        for award in group.xpath("award-group"):
+            institution = award.xpath("funding-source/institution/text()")
+            award_id = award.xpath("award-id/text()")
+            inst_id = award.xpath(
+                "funding-source/institution-wrap/institution-id/text()"
+            )
+            country = award.xpath(
+                "funding-source/institution-wrap/institution[@content-type='country']/text()"
+            )
+
+            fund.append(
+                {
+                    "institution": institution[0].strip() if institution else "",
+                    "award_id": award_id[0].strip() if award_id else "",
+                    "institution_id": inst_id[0].strip() if inst_id else "",
+                    "country": country[0].strip() if country else "",
+                }
+            )
+
+        # Also capture standalone institution names not wrapped in award-group
+        for inst in group.xpath("funding-source/institution/text()"):
+            if not any(f["institution"] == inst.strip() for f in fund):
+                fund.append(
+                    {
+                        "institution": inst.strip(),
+                        "award_id": "",
+                        "institution_id": "",
+                        "country": "",
+                    }
+                )
+
+    # Capture funding-statement as well
+    statements = root.xpath("//article-meta/funding-group/funding-statement")
+    if statements:
+        statement_text = " ".join(
+            "".join(s.itertext()).strip() for s in statements
+        ).strip()
+        if statement_text and not fund:
+            fund.append(
+                {
+                    "institution": "",
+                    "award_id": "",
+                    "institution_id": "",
+                    "country": "",
+                    "funding_statement": statement_text,
+                }
+            )
+        elif statement_text and fund:
+            fund[0]["funding_statement"] = statement_text
+
     return fund or None
 
 

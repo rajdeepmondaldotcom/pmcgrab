@@ -19,6 +19,7 @@ Key Functions:
 """
 
 import os
+import threading
 import time
 import warnings
 from io import StringIO
@@ -27,6 +28,8 @@ from urllib.error import HTTPError
 
 import lxml.etree as ET
 from Bio import Entrez
+
+_entrez_lock = threading.Lock()
 
 from pmcgrab.common.html_cleaning import strip_html_text_styling
 from pmcgrab.common.serialization import clean_doc
@@ -84,15 +87,26 @@ def fetch_pmc_xml_string(
         if verbose:
             logger.info("Using cached XML for PMCID %s", pmcid)
         return cached_xml
+    from pmcgrab.infrastructure.settings import (
+        NCBI_API_KEY,
+        NCBI_RETRIES,
+        rate_limit_wait,
+    )
+
     db, rettype, retmode = "pmc", "full", "xml"
-    Entrez.email = email
     delay = 5
-    for _attempt in range(3):
+    for _attempt in range(NCBI_RETRIES):
         try:
-            with Entrez.efetch(
-                db=db, id=pmcid, rettype=rettype, retmode=retmode
-            ) as handle:
-                xml_record = handle.read()
+            rate_limit_wait()
+            with _entrez_lock:
+                Entrez.email = email
+                if NCBI_API_KEY:
+                    Entrez.api_key = NCBI_API_KEY
+                handle = Entrez.efetch(
+                    db=db, id=pmcid, rettype=rettype, retmode=retmode
+                )
+            xml_record = handle.read()
+            handle.close()
             xml_text = xml_record.decode("utf-8")
             if verbose:
                 logger.info("Fetched XML (first 100 chars): %s", xml_text[:100])
@@ -394,7 +408,29 @@ def parse_local_xml(
     # itself (ET.fromstring rejects Unicode strings that contain an
     # <?xml encoding="..."?> declaration).
     raw_bytes = xml_path.read_bytes()
-    xml_text = raw_bytes.decode("utf-8")
+
+    # Detect encoding from XML declaration or fall back to UTF-8
+    try:
+        xml_text = raw_bytes.decode("utf-8")
+    except UnicodeDecodeError:
+        # Try common fallback encodings
+        for enc in ("latin-1", "iso-8859-1", "windows-1252", "ascii"):
+            try:
+                xml_text = raw_bytes.decode(enc)
+                if verbose:
+                    logger.info("Decoded %s with fallback encoding: %s", xml_path, enc)
+                break
+            except UnicodeDecodeError:
+                continue
+        else:
+            # Last resort: decode with errors replaced
+            xml_text = raw_bytes.decode("utf-8", errors="replace")
+            if verbose:
+                logger.warning(
+                    "Could not detect encoding for %s, using UTF-8 with replacement",
+                    xml_path,
+                )
+
     if verbose:
         logger.info("Read %d bytes from %s", len(raw_bytes), xml_path)
 

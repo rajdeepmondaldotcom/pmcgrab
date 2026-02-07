@@ -15,8 +15,12 @@ def test_process_pmc_ids_success(monkeypatch):
 
     class DummySection:
         title = "Test Section"
+        children: ClassVar[list] = []
 
         def get_section_text(self):
+            return "Test content"
+
+        def get_clean_text(self):
             return "Test content"
 
         def __str__(self):
@@ -40,19 +44,68 @@ def test_process_pmc_ids_success(monkeypatch):
         article_types = None
         article_categories = None
         published_date = None
+        history_dates = None
         volume = None
         issue = None
+        fpage = None
+        lpage = None
+        elocation_id = None
         permissions = None
         copyright = None
         license = None
         funding = None
+        ethics = None
+        supplementary = None
+        equations = None
         footnote = None
         acknowledgements = None
         notes = None
         custom_meta = None
+        citations = None
+        tables = None
+        figures = None
+        keywords = None
+        counts = None
+        self_uri = None
+        related_articles = None
+        conference = None
+        version_history = None
+        subtitle = None
+        author_notes = None
+        appendices = None
+        glossary = None
+        translated_titles = None
+        translated_abstracts = None
+        abstract_type = None
+        tex_equations = None
 
         def abstract_as_str(self):
             return ""
+
+        def abstract_as_dict(self):
+            return {}
+
+        def body_as_dict(self):
+            return {"Test Section": "Test content"}
+
+        def body_as_nested_dict(self):
+            return {"Test Section": {"_text": "Test content"}}
+
+        def body_as_paragraphs(self):
+            return [
+                {
+                    "section": "Test Section",
+                    "subsection": None,
+                    "paragraph_index": 0,
+                    "text": "Test content",
+                }
+            ]
+
+        def full_text(self):
+            return "Test content"
+
+        def get_toc(self):
+            return ["Test Section"]
 
     monkeypatch.setattr(app_proc, "build_paper_from_pmc", lambda *a, **kw: DummyPaper())
     res: dict[str, Any] = app_proc.process_pmc_ids(["1", "2"], workers=2)

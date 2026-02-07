@@ -123,19 +123,21 @@ def gather_title(root: ET.Element) -> str | None:
         article identification and search. Missing titles indicate
         significant structural issues with the XML document.
     """
-    matches: list[str] = root.xpath("//article-title/text()")
-    if len(matches) > 1:
+    title_elems = root.xpath("//article-title")
+    if len(title_elems) > 1:
         warnings.warn(
             "Multiple titles found; using the first.",
             UnexpectedMultipleMatchWarning,
             stacklevel=2,
         )
-    if not matches:
+    if not title_elems:
         warnings.warn(
             "No article title found.", UnexpectedZeroMatchWarning, stacklevel=2
         )
         return None
-    return matches[0]
+    # Use itertext() to capture all text content including inline markup
+    # e.g. <article-title>Gene <italic>BRCA1</italic> and cancer</article-title>
+    return "".join(title_elems[0].itertext()).strip() or None
 
 
 # ---------------------------------------------------------------------------
@@ -525,8 +527,12 @@ def gather_article_categories(root: ET.Element) -> list[dict[str, str]] | None:
             "No article-categories found.", UnexpectedZeroMatchWarning, stacklevel=2
         )
         return None
-    others = cats[0].xpath("subj-group[not(@subj-group-type='heading')]/subject")
-    result = [{other.get("subj-group-type"): other.text} for other in others]
+    result: list[dict[str, str]] = []
+    for subj_grp in cats[0].xpath("subj-group[not(@subj-group-type='heading')]"):
+        grp_type = subj_grp.get("subj-group-type", "unspecified")
+        for subj in subj_grp.xpath("subject"):
+            if subj.text and subj.text.strip():
+                result.append({grp_type: subj.text.strip()})
     if not result:
         return [{"info": "No extra article categories found."}]
     return result

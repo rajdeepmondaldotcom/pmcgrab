@@ -91,21 +91,71 @@ class TextFigure:
         caption_el = fig_root.find(".//caption")
         graphic_el = fig_root.find(".//graphic")
 
-        label = label_el.text if label_el is not None else None
+        label = "".join(label_el.itertext()).strip() if label_el is not None else None
         caption = (
             "".join(caption_el.itertext()).strip() if caption_el is not None else None
         )
 
         graphic_href: str | None = None
         if graphic_el is not None:
-            # The graphic xlink:href attribute is namespaced. Using the explicit
-            # namespace avoids issues if the default xlink prefix is missing.
             graphic_href = graphic_el.get("{http://www.w3.org/1999/xlink}href")
 
-        self.fig_dict = {
+        # --- Extended metadata ---
+        alt_text_el = fig_root.find(".//alt-text")
+        alt_text = (
+            "".join(alt_text_el.itertext()).strip() if alt_text_el is not None else None
+        )
+
+        long_desc_el = fig_root.find(".//long-desc")
+        long_desc = (
+            "".join(long_desc_el.itertext()).strip()
+            if long_desc_el is not None
+            else None
+        )
+
+        attrib_el = fig_root.find(".//attrib")
+        attrib = (
+            "".join(attrib_el.itertext()).strip() if attrib_el is not None else None
+        )
+
+        # Figure-specific copyright/permissions
+        fig_permissions: dict[str, str] | None = None
+        perm_el = fig_root.find(".//permissions")
+        if perm_el is not None:
+            cp = perm_el.findtext("copyright-statement") or ""
+            lic_el = perm_el.find("license")
+            lic_type = lic_el.get("license-type", "") if lic_el is not None else ""
+            fig_permissions = {"copyright": cp, "license_type": lic_type}
+
+        # Object-id (e.g., figure DOI)
+        object_id_el = fig_root.find(".//object-id")
+        object_id = (
+            object_id_el.text.strip()
+            if object_id_el is not None and object_id_el.text
+            else None
+        )
+
+        # Multiple graphics (alternatives)
+        all_graphics: list[str] = []
+        for g in fig_root.findall(".//graphic"):
+            href = g.get("{http://www.w3.org/1999/xlink}href")
+            if href:
+                all_graphics.append(href)
+
+        # Figure ID
+        fig_id = fig_root.get("id")
+
+        self.fig_dict: dict[str, str | list | dict | None] = {
+            "id": fig_id,
             "Label": label,
             "Caption": caption,
             "Link": graphic_href,
+            "alt_text": alt_text,
+            "long_desc": long_desc,
+            "attrib": attrib,
+            "permissions": fig_permissions,
+            "object_id": object_id,
+            "all_graphics": all_graphics if len(all_graphics) > 1 else None,
         }
 
     # String / repr helpers -------------------------------------------------

@@ -55,9 +55,6 @@ External Service Functions:
 
 __version__ = "0.5.8"
 
-import sys
-import types
-
 from pmcgrab.application.processing import (
     process_local_xml_dir,
     process_single_local_xml,
@@ -65,6 +62,12 @@ from pmcgrab.application.processing import (
 from pmcgrab.bioc import fetch_json as bioc_fetch
 from pmcgrab.fetch import get_xml, parse_local_xml
 from pmcgrab.idconvert import convert as id_convert
+from pmcgrab.idconvert import (
+    normalize_id,
+    normalize_ids,
+    normalize_pmid,
+    normalize_pmids,
+)
 from pmcgrab.litctxp import export as citation_export
 from pmcgrab.model import Paper
 from pmcgrab.oa_service import fetch as oa_fetch
@@ -84,45 +87,6 @@ from pmcgrab.processing import (
     process_single_pmc,
 )
 
-# ---------------------------------------------------------------------------
-# Optional dependency handling (tests expect psutil but it's not required)
-# ---------------------------------------------------------------------------
-
-if "psutil" not in sys.modules:
-    mock_psutil = types.ModuleType("psutil")
-
-    class _Process:
-        """Minimal stub for psutil.Process when psutil is not available.
-
-        This provides basic compatibility for memory monitoring functionality
-        without requiring psutil as a mandatory dependency.
-        """
-
-        def __init__(self, _pid: int) -> None:
-            """Initialize process stub.
-
-            Args:
-                _pid: Process ID (unused in stub implementation).
-            """
-            self._pid = _pid
-
-        def memory_info(self) -> object:
-            """Return mock memory info with zero RSS.
-
-            Returns:
-                Object with rss attribute set to 0.
-            """
-
-            class mem:
-                """Simple inner struct with rss attribute."""
-
-                rss = 0
-
-            return mem()
-
-    mock_psutil.Process = _Process  # type: ignore[attr-defined]
-    sys.modules["psutil"] = mock_psutil
-
 __all__ = [
     "Paper",
     "bioc_fetch",
@@ -130,6 +94,10 @@ __all__ = [
     "citation_export",
     "get_xml",
     "id_convert",
+    "normalize_id",
+    "normalize_ids",
+    "normalize_pmid",
+    "normalize_pmids",
     "oa_fetch",
     "oai_get_record",
     "oai_list_identifiers",

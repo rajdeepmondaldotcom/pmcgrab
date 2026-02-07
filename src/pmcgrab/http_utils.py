@@ -23,6 +23,7 @@ Functions:
 
 from __future__ import annotations
 
+import threading
 import time
 from typing import Any
 
@@ -31,6 +32,10 @@ import requests
 __all__ = [
     "cached_get",
 ]
+
+# Module-level session for connection pooling (HTTP keep-alive)
+_session = requests.Session()
+_session.headers.update({"User-Agent": "pmcgrab"})
 
 
 def _backoff_sleep(retry: int) -> None:
@@ -118,19 +123,20 @@ def cached_get(
         key = url + "?" + "&".join(f"{k}={v}" for k, v in sorted(params.items()))
     else:
         key = url
-    if key in _CACHE:
-        return _CACHE[key]
+
+    with _cache_lock:
+        if key in _CACHE:
+            return _CACHE[key]
 
     for retry in range(5):
         try:
-            # Add a sensible default timeout *only* if the caller did not specify
-            # any extra keyword arguments (to keep test expectations unchanged).
-            if not kwargs:
-                resp = requests.get(url, params=params, timeout=30)
-            else:
-                resp = requests.get(url, params=params, **kwargs)
+            # Use the module-level session for connection pooling
+            kw = dict(kwargs)
+            kw.setdefault("timeout", 30)
+            resp = _session.get(url, params=params, **kw)
             resp.raise_for_status()
-            _CACHE[key] = resp
+            with _cache_lock:
+                _CACHE[key] = resp
             return resp
         except requests.RequestException:
             if retry == 4:
@@ -140,3 +146,4 @@ def cached_get(
 
 
 _CACHE: dict[str, requests.Response] = {}
+_cache_lock = threading.Lock()

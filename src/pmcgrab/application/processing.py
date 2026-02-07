@@ -13,11 +13,12 @@ already been downloaded to disk.  Local processing bypasses the network
 entirely and is orders of magnitude faster.
 """
 
-import contextlib
-import gc
+import logging
 import threading
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path
+
+_logger = logging.getLogger(__name__)
 
 from pmcgrab.application.paper_builder import build_paper_from_pmc
 from pmcgrab.common.serialization import normalize_value
@@ -39,86 +40,192 @@ __all__: list[str] = [
 # ---------------------------------------------------------------------------
 
 
+def _or(val, default):
+    """Return *val* if not None and not a sentinel string, else *default*."""
+    if val is None:
+        return default
+    if isinstance(val, str) and val.startswith("No ") and val.endswith("found."):
+        return default
+    return val
+
+
 def _extract_paper_dict(
-    paper: Paper, pmc_id: str | int
-) -> dict[str, str | dict | list] | None:
+    paper: Paper,
+    pmc_id: str | int,
+    *,
+    metadata_only: bool = False,
+    _source: str = "ncbi_entrez",
+    _xml_path: str | None = None,
+) -> dict[str, str | dict | list | bool | int | None] | None:
     """Extract a normalized dictionary from a Paper object.
 
     Centralised helper so that both ``process_single_pmc`` and
     ``process_single_local_xml`` share the same extraction logic
     without duplicating code.
-    """
-    body_info: dict[str, str] = {}
-    body_sections = paper.body
-    if body_sections is not None:
-        try:
-            iter(body_sections)
-            sec_counter = 1
-            for section in body_sections:
-                try:
-                    text = getattr(
-                        section, "get_section_text", lambda s=section: str(s)
-                    )()
-                    title = (
-                        section.title
-                        if getattr(section, "title", None)
-                        else f"Section {sec_counter}"
-                    )
-                    sec_counter += 1
-                    body_info[title] = text
-                except Exception:
-                    pass  # Robustness: ignore malformed sections
-        except (TypeError, ValueError):
-            pass
 
-    paper_info: dict[str, str | dict | list] = {
+    Returns a comprehensive, snake_case, JSON-serializable dictionary
+    containing all parsed fields from the article.
+    """
+    import datetime as _dt
+
+    import pmcgrab
+
+    # --- Body (flat + nested + paragraph-level) ---
+    body_info = paper.body_as_dict()
+    body_nested = paper.body_as_nested_dict()
+    paragraphs = paper.body_as_paragraphs()
+
+    # --- Abstract ---
+    abstract_dict = paper.abstract_as_dict()
+    abstract_text = paper.abstract_as_str() if paper.abstract else ""
+
+    # --- Table of contents ---
+    toc = paper.get_toc()
+
+    # --- Full text ---
+    full_text = paper.full_text()
+
+    # --- Compute word/char counts ---
+    body_text_all = "\n".join(body_info.values())
+    body_word_count = len(body_text_all.split()) if body_text_all else 0
+    body_char_count = len(body_text_all)
+    abstract_word_count = len(abstract_text.split()) if abstract_text else 0
+
+    # --- Section-level statistics ---
+    section_stats: list[dict] = []
+    if paper.body:
+        from pmcgrab.model import TextFigure, TextParagraph, TextSection, TextTable
+
+        for element in paper.body:
+            if isinstance(element, TextSection):
+                clean_text = element.get_clean_text()
+                n_paragraphs = sum(
+                    1 for c in element.children if isinstance(c, TextParagraph)
+                )
+                n_subsections = sum(
+                    1 for c in element.children if isinstance(c, TextSection)
+                )
+                section_stats.append(
+                    {
+                        "title": element.title or "",
+                        "word_count": len(clean_text.split()) if clean_text else 0,
+                        "char_count": len(clean_text),
+                        "paragraph_count": n_paragraphs,
+                        "subsection_count": n_subsections,
+                        "has_tables": any(
+                            isinstance(c, TextTable) for c in element.children
+                        ),
+                        "has_figures": any(
+                            isinstance(c, TextFigure) for c in element.children
+                        ),
+                    }
+                )
+
+    now_iso = _dt.datetime.now(_dt.UTC).isoformat()
+
+    paper_info: dict[str, str | dict | list | bool | int | None] = {
+        # --- Identifiers ---
         "pmc_id": str(pmc_id),
-        "abstract": paper.abstract_as_str() if paper.abstract else "",
-        "has_data": str(paper.has_data),
-        "body": body_info or {},
+        "article_id": _or(paper.article_id, {}),
+        # --- Core metadata ---
         "title": paper.title or "",
-        "authors": paper.authors if paper.authors is not None else "",
+        "has_data": paper.has_data,
+        # --- Abstract (structured + plain text) ---
+        "abstract": abstract_dict,
+        "abstract_text": abstract_text,
+        # --- Body (section title -> clean text) ---
+        "body": body_info,
+        "body_nested": body_nested,
+        "paragraphs": paragraphs,
+        "full_text": full_text,
+        "toc": toc,
+        # --- Authors & contributors ---
+        "authors": _or(paper.authors, []),
         "non_author_contributors": (
             paper.non_author_contributors
             if paper.non_author_contributors is not None
-            else ""
+            and not isinstance(paper.non_author_contributors, str)
+            else []
         ),
-        "publisher_name": (
-            paper.publisher_name if paper.publisher_name is not None else ""
-        ),
-        "publisher_location": (
-            paper.publisher_location if paper.publisher_location is not None else ""
-        ),
-        "article_id": paper.article_id if paper.article_id is not None else "",
-        "journal_title": paper.journal_title if paper.journal_title is not None else "",
-        "journal_id": paper.journal_id if paper.journal_id is not None else "",
-        "issn": paper.issn if paper.issn is not None else "",
-        "article_types": paper.article_types if paper.article_types is not None else "",
-        "article_categories": (
-            paper.article_categories if paper.article_categories is not None else ""
-        ),
-        "published_date": (
-            paper.published_date if paper.published_date is not None else ""
-        ),
-        "volume": paper.volume if paper.volume is not None else "",
-        "issue": paper.issue if paper.issue is not None else "",
-        "permissions": paper.permissions if paper.permissions is not None else "",
-        "copyright": paper.copyright if paper.copyright is not None else "",
-        "license": paper.license if paper.license is not None else "",
-        "funding": paper.funding if paper.funding is not None else "",
-        "footnote": paper.footnote if paper.footnote is not None else "",
-        "acknowledgements": (
-            paper.acknowledgements if paper.acknowledgements is not None else ""
-        ),
-        "notes": paper.notes if paper.notes is not None else "",
-        "custom_meta": paper.custom_meta if paper.custom_meta is not None else "",
-        "last_updated": getattr(paper, "last_updated", ""),
+        # --- Journal info ---
+        "journal_title": _or(paper.journal_title, ""),
+        "journal_id": _or(paper.journal_id, {}),
+        "issn": _or(paper.issn, {}),
+        "publisher_name": _or(paper.publisher_name, ""),
+        "publisher_location": _or(paper.publisher_location, ""),
+        # --- Classification ---
+        "article_types": _or(paper.article_types, []),
+        "article_categories": _or(paper.article_categories, []),
+        "keywords": _or(paper.keywords, []),
+        # --- Dates ---
+        "published_date": _or(paper.published_date, {}),
+        "history_dates": _or(paper.history_dates, {}),
+        # --- Volume / issue / pages ---
+        "volume": _or(paper.volume, ""),
+        "issue": _or(paper.issue, ""),
+        "fpage": _or(paper.fpage, ""),
+        "lpage": _or(paper.lpage, ""),
+        # --- Permissions ---
+        "permissions": _or(paper.permissions, {}),
+        "copyright": _or(paper.copyright, ""),
+        "license": _or(paper.license, ""),
+        # --- References & cross-references ---
+        "citations": _or(paper.citations, []),
+        "tables": _or(paper.tables, []),
+        "figures": _or(paper.figures, []),
+        "equations": _or(paper.equations, []),
+        # --- Funding & ethics ---
+        "funding": _or(paper.funding, []),
+        "ethics": _or(paper.ethics, {}),
+        # --- Supplementary ---
+        "supplementary_material": _or(paper.supplementary, []),
+        "footnote": _or(paper.footnote, ""),
+        "acknowledgements": _or(paper.acknowledgements, []),
+        "notes": _or(paper.notes, []),
+        "custom_meta": _or(paper.custom_meta, {}),
+        # --- Additional extractions ---
+        "elocation_id": getattr(paper, "elocation_id", None) or "",
+        "counts": getattr(paper, "counts", None) or {},
+        "self_uri": getattr(paper, "self_uri", None) or [],
+        "related_articles": getattr(paper, "related_articles", None) or [],
+        "conference": getattr(paper, "conference", None) or {},
+        "version_history": getattr(paper, "version_history", None) or [],
+        # --- Phase 5 extractions ---
+        "subtitle": getattr(paper, "subtitle", None) or "",
+        "author_notes": getattr(paper, "author_notes", None) or {},
+        "appendices": getattr(paper, "appendices", None) or [],
+        "glossary": getattr(paper, "glossary", None) or [],
+        "translated_titles": getattr(paper, "translated_titles", None) or [],
+        "translated_abstracts": getattr(paper, "translated_abstracts", None) or [],
+        "abstract_type": getattr(paper, "abstract_type", None) or "",
+        "tex_equations": getattr(paper, "tex_equations", None) or [],
+        # --- Metadata counts ---
+        "word_count": body_word_count + abstract_word_count,
+        "body_word_count": body_word_count,
+        "body_char_count": body_char_count,
+        "abstract_word_count": abstract_word_count,
+        "section_count": len(body_info),
+        "paragraph_count": len(paragraphs),
+        "citation_count": len(paper.citations) if paper.citations else 0,
+        "table_count": len(paper.tables) if paper.tables else 0,
+        "figure_count": len(paper.figures) if paper.figures else 0,
+        # --- Section-level statistics ---
+        "section_stats": section_stats,
+        # --- Timestamps ---
+        "last_updated": now_iso,
+        # --- Provenance metadata ---
+        "_meta": {
+            "pmcgrab_version": pmcgrab.__version__,
+            "parse_timestamp": now_iso,
+            "source": _source,
+            "xml_source_path": _xml_path,
+        },
     }
 
     # Normalise all values once for JSON compatibility
     paper_info = {k: normalize_value(v) for k, v in paper_info.items()}
 
-    if not paper_info.get("body"):
+    if not metadata_only and not paper_info.get("body"):
         return None
     return paper_info
 
@@ -128,7 +235,7 @@ def _extract_paper_dict(
 # main thread on POSIX and is a no-op on Windows)
 # ---------------------------------------------------------------------------
 
-_TIMEOUT_SECONDS = 60
+from pmcgrab.infrastructure.settings import NCBI_TIMEOUT as _TIMEOUT_SECONDS
 
 
 def _run_with_timeout(fn, *args, timeout: int = _TIMEOUT_SECONDS, **kwargs):
@@ -167,6 +274,7 @@ def process_single_pmc(
     *,
     download: bool = False,
     timeout: int = _TIMEOUT_SECONDS,
+    metadata_only: bool = False,
 ) -> dict[str, str | dict | list] | None:
     """Download and parse a single PMC article into normalized dictionary format.
 
@@ -197,9 +305,11 @@ def process_single_pmc(
         ...     print(f"Title: {article_data['title']}")
         ...     print(f"Sections: {list(article_data['body'].keys())}")
     """
-    paper = None
     try:
         pmc_id_num = int(pmc_id)
+        if pmc_id_num <= 0:
+            _logger.warning("Invalid PMC ID (must be positive): %s", pmc_id)
+            return None
         current_email = next_email()
 
         try:
@@ -212,19 +322,23 @@ def process_single_pmc(
                 timeout=timeout,
             )
         except TimeoutException:
+            _logger.warning("Timeout processing PMCID %s after %ds", pmc_id, timeout)
             return None
 
         if paper is None:
+            _logger.info("No data returned for PMCID %s", pmc_id)
             return None
 
-        return _extract_paper_dict(paper, pmc_id_num)
+        return _extract_paper_dict(
+            paper,
+            pmc_id_num,
+            metadata_only=metadata_only,
+            _source="ncbi_entrez",
+        )
 
     except Exception:
+        _logger.exception("Error processing PMCID %s", pmc_id)
         return None
-    finally:
-        with contextlib.suppress(Exception):
-            del paper
-        gc.collect()
 
 
 # ---------------------------------------------------------------------------
@@ -262,13 +376,21 @@ def process_single_local_xml(
             suppress_errors=True,
         )
         if not d:
+            _logger.info("No data from local XML: %s", xml_path)
             return None
         paper = Paper(d)
         if paper is None or not paper.has_data:
+            _logger.info("Empty paper from local XML: %s", xml_path)
             return None
         pmcid = d.get("PMCID", 0)
-        return _extract_paper_dict(paper, pmcid)
+        return _extract_paper_dict(
+            paper,
+            pmcid,
+            _source="local_xml",
+            _xml_path=str(xml_path),
+        )
     except Exception:
+        _logger.exception("Error processing local XML: %s", xml_path)
         return None
 
 
@@ -373,4 +495,56 @@ def process_pmc_ids(
                 results[pid] = future.result() is not None
             except Exception:
                 results[pid] = False
+    return results
+
+
+# ---------------------------------------------------------------------------
+# Async batch processing (optional -- requires no new deps)
+# ---------------------------------------------------------------------------
+
+
+async def async_process_pmc_ids(
+    pmc_ids: list[str],
+    *,
+    max_concurrency: int = 10,
+) -> dict[str, dict | None]:
+    """Process multiple PMC IDs concurrently using asyncio.
+
+    Wraps the synchronous :func:`process_single_pmc` in an executor so
+    that I/O-bound network calls can overlap.  Uses an asyncio Semaphore
+    to cap concurrency and respect NCBI rate limits.
+
+    Args:
+        pmc_ids: List of PMC ID strings to process.
+        max_concurrency: Maximum number of concurrent requests (default: 10).
+
+    Returns:
+        dict[str, dict | None]: Mapping from PMC ID to parsed article dict
+            (or ``None`` on failure).
+
+    Examples:
+        >>> import asyncio
+        >>> results = asyncio.run(async_process_pmc_ids(["7181753", "3539614"]))
+        >>> for pid, data in results.items():
+        ...     print(pid, "OK" if data else "FAIL")
+    """
+    import asyncio
+
+    sem = asyncio.Semaphore(max_concurrency)
+    loop = asyncio.get_running_loop()
+
+    async def _process_one(pid: str) -> tuple[str, dict | None]:
+        async with sem:
+            result = await loop.run_in_executor(None, process_single_pmc, pid)
+            return pid, result
+
+    tasks = [_process_one(pid) for pid in pmc_ids]
+    pairs = await asyncio.gather(*tasks, return_exceptions=True)
+
+    results: dict[str, dict | None] = {}
+    for item in pairs:
+        if isinstance(item, BaseException):
+            continue
+        pid, data = item
+        results[pid] = data
     return results
