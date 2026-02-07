@@ -23,8 +23,8 @@ import signal
 import warnings
 
 logger = logging.getLogger(__name__)
-warnings.formatwarning = (
-    lambda msg, cat, *_args, **_kwargs: f"{cat.__name__}: {msg}\n\n"
+warnings.formatwarning = lambda msg, cat, *_args, **_kwargs: (
+    f"{cat.__name__}: {msg}\n\n"
 )
 
 SUPPORTED_DTD_URLS = [
