@@ -68,7 +68,7 @@ from pmcgrab.application.parsing import metadata as _metadata
 from pmcgrab.application.parsing import sections as _sections
 from pmcgrab.constants import UnmatchedCitationWarning, UnmatchedTableWarning, logger
 from pmcgrab.domain.value_objects import BasicBiMap
-from pmcgrab.fetch import get_xml
+from pmcgrab.fetch import get_xml, parse_local_xml
 from pmcgrab.model import TextFigure, TextTable
 
 # ---------------------------------------------------------------------------
@@ -483,6 +483,68 @@ def paper_dict_from_pmc(
     tree = get_xml(pmcid, email, download, validate, verbose=verbose)
     root = tree.getroot()
     return generate_paper_dict(pmcid, root, verbose, suppress_warnings, suppress_errors)
+
+
+def paper_dict_from_local_xml(
+    xml_path: str,
+    *,
+    verbose: bool = False,
+    suppress_warnings: bool = False,
+    suppress_errors: bool = False,
+    strip_text_styling: bool = True,
+    validate: bool = False,
+) -> dict[str, str | int | dict | list]:
+    """Parse a local JATS XML file into a structured article dictionary.
+
+    This is the local-file counterpart of :func:`paper_dict_from_pmc`.
+    Instead of downloading XML from NCBI Entrez, it reads a pre-downloaded
+    JATS XML file from disk, making it ideal for processing bulk-exported
+    PMC data (e.g. from ``https://ftp.ncbi.nlm.nih.gov/pub/pmc/``).
+
+    Because no network I/O is involved, this function is orders of magnitude
+    faster than :func:`paper_dict_from_pmc` and does not require an email
+    address or timeouts.
+
+    Args:
+        xml_path: Path to a JATS XML file on disk.
+        verbose: If True, emit progress logging messages.
+        suppress_warnings: If True, suppress parsing warnings.
+        suppress_errors: If True, return empty dict on errors instead of raising.
+        strip_text_styling: If True, remove HTML-style formatting tags.
+        validate: If True, perform DTD validation against PMC schema.
+
+    Returns:
+        dict[str, str | int | dict | list]: Comprehensive article dictionary
+            with the same structure as :func:`paper_dict_from_pmc` output.
+
+    Raises:
+        FileNotFoundError: If *xml_path* does not exist.
+
+    Examples:
+        >>> article = paper_dict_from_local_xml("path/to/PMC7181753.xml")
+        >>> print(article["Title"])
+        >>> print(len(article["Body"]))
+        >>>
+        >>> # Batch-friendly: suppress errors and warnings
+        >>> article = paper_dict_from_local_xml(
+        ...     "article.xml",
+        ...     suppress_warnings=True,
+        ...     suppress_errors=True,
+        ... )
+    """
+    tree, pmcid = parse_local_xml(
+        xml_path,
+        strip_text_styling=strip_text_styling,
+        validate=validate,
+        verbose=verbose,
+    )
+    root = tree.getroot()
+    effective_pmcid = pmcid if pmcid is not None else 0
+    if verbose:
+        logger.info("Parsing local XML for PMCID=%s from %s", effective_pmcid, xml_path)
+    return generate_paper_dict(
+        effective_pmcid, root, verbose, suppress_warnings, suppress_errors
+    )
 
 
 def generate_paper_dict(

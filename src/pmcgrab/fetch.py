@@ -1,9 +1,9 @@
-"""XML fetching and validation utilities for PMC articles.
+"""XML fetching, local file reading, and validation utilities for PMC articles.
 
 This module provides the core functionality for downloading PMC article XML
-from NCBI Entrez, parsing it into ElementTree objects, and validating it
-against PMC DTD schemas. It handles network retries, caching, XML cleaning,
-and validation error recovery.
+from NCBI Entrez **or reading it from local files**, parsing it into
+ElementTree objects, and validating it against PMC DTD schemas. It handles
+network retries, caching, XML cleaning, and validation error recovery.
 
 The module supports both raw XML fetching and complete parsing pipelines
 with configurable validation, text styling removal, and error handling.
@@ -15,12 +15,14 @@ Key Functions:
     xml_tree_from_string: Parse XML string into ElementTree
     validate_xml: Validate XML against PMC DTD schemas
     get_xml: Complete pipeline from PMCID to validated ElementTree
+    parse_local_xml: Read and parse a local JATS XML file from disk
 """
 
 import os
 import time
 import warnings
 from io import StringIO
+from pathlib import Path
 from urllib.error import HTTPError
 
 import lxml.etree as ET
@@ -332,3 +334,91 @@ def get_xml(
             stacklevel=2,
         )
     return tree
+
+
+# ---------------------------------------------------------------------------
+# Local / bulk XML file support
+# ---------------------------------------------------------------------------
+
+
+def parse_local_xml(
+    xml_path: str | Path,
+    *,
+    strip_text_styling: bool = True,
+    validate: bool = False,
+    verbose: bool = False,
+) -> tuple[ET.ElementTree, int | None]:
+    """Read and parse a local JATS XML file from disk.
+
+    This function provides an alternative to :func:`get_xml` for working with
+    bulk-exported PMC data that has already been downloaded (e.g. from the
+    PMC FTP service at https://ftp.ncbi.nlm.nih.gov/pub/pmc/).  By reading
+    from disk instead of fetching over the network, processing is orders of
+    magnitude faster and does not require timeouts or email authentication.
+
+    Args:
+        xml_path: Path to a JATS XML file on disk.
+        strip_text_styling: If True, remove HTML-style formatting tags before
+            parsing (same behaviour as :func:`get_xml`).
+        validate: If True, perform DTD validation against PMC schema.
+        verbose: If True, emit progress logging messages.
+
+    Returns:
+        tuple[ET.ElementTree, int | None]: A 2-tuple of:
+            - The parsed XML document tree.
+            - The PMCID extracted from ``<article-id pub-id-type="pmc">``,
+              or ``None`` if the element is not present in the XML.
+
+    Raises:
+        FileNotFoundError: If *xml_path* does not exist.
+        ET.XMLSyntaxError: If the file contains malformed XML.
+
+    Examples:
+        >>> tree, pmcid = parse_local_xml("path/to/PMC7181753.xml")
+        >>> root = tree.getroot()
+        >>> title = root.xpath("//article-title/text()")[0]
+        >>> print(f"PMCID {pmcid}: {title}")
+        >>>
+        >>> # Parse without any cleaning
+        >>> tree, pmcid = parse_local_xml(
+        ...     "article.xml",
+        ...     strip_text_styling=False,
+        ...     validate=True,
+        ... )
+    """
+    xml_path = Path(xml_path)
+    if not xml_path.exists():
+        raise FileNotFoundError(f"XML file not found: {xml_path}")
+
+    # Read as bytes first so lxml can handle the encoding declaration
+    # itself (ET.fromstring rejects Unicode strings that contain an
+    # <?xml encoding="..."?> declaration).
+    raw_bytes = xml_path.read_bytes()
+    xml_text = raw_bytes.decode("utf-8")
+    if verbose:
+        logger.info("Read %d bytes from %s", len(raw_bytes), xml_path)
+
+    # Apply optional text-styling cleanup (operates on str)
+    cleaned = clean_xml_string(xml_text, strip_text_styling, verbose)
+    # Parse from bytes to honour encoding declarations
+    tree = ET.ElementTree(ET.fromstring(cleaned.encode("utf-8")))
+
+    if validate:
+        validate_xml(tree)
+
+    # Extract PMCID from the parsed XML
+    root = tree.getroot()
+    pmc_id_elements = root.xpath(
+        './/article-id[@pub-id-type="pmc"]/text()'
+    ) or root.xpath('.//article-meta/article-id[@pub-id-type="pmc"]/text()')
+
+    pmcid: int | None = None
+    if pmc_id_elements:
+        raw = str(pmc_id_elements[0]).strip().upper().replace("PMC", "")
+        try:
+            pmcid = int(raw)
+        except (ValueError, TypeError):
+            if verbose:
+                logger.warning("Could not parse PMCID from XML: %r", pmc_id_elements[0])
+
+    return tree, pmcid

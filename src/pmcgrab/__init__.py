@@ -31,9 +31,13 @@ Classes:
 
 Functions:
     get_xml: Fetch, parse and optionally validate XML for a PMCID
+    parse_local_xml: Read and parse a local JATS XML file from disk
     paper_dict_from_pmc: Convert PMC article to structured dictionary
+    paper_dict_from_local_xml: Convert local JATS XML file to structured dictionary
     build_complete_paper_dict: Low-level orchestrator for parsing PMC XML
     process_single_pmc: Download and parse a single PMC article
+    process_single_local_xml: Parse a single local JATS XML file
+    process_local_xml_dir: Batch-process a directory of local XML files
     process_pmc_ids_in_batches: Process multiple PMC IDs concurrently
     process_in_batches: Process PMC IDs in sequential chunks
     process_in_batches_with_retry: Batch processing with automatic retries
@@ -54,8 +58,12 @@ __version__ = "0.5.8"
 import sys
 import types
 
+from pmcgrab.application.processing import (
+    process_local_xml_dir,
+    process_single_local_xml,
+)
 from pmcgrab.bioc import fetch_json as bioc_fetch
-from pmcgrab.fetch import get_xml
+from pmcgrab.fetch import get_xml, parse_local_xml
 from pmcgrab.idconvert import convert as id_convert
 from pmcgrab.litctxp import export as citation_export
 from pmcgrab.model import Paper
@@ -64,7 +72,11 @@ from pmcgrab.oai import get_record as oai_get_record
 from pmcgrab.oai import list_identifiers as oai_list_identifiers
 from pmcgrab.oai import list_records as oai_list_records
 from pmcgrab.oai import list_sets as oai_list_sets
-from pmcgrab.parser import build_complete_paper_dict, paper_dict_from_pmc
+from pmcgrab.parser import (
+    build_complete_paper_dict,
+    paper_dict_from_local_xml,
+    paper_dict_from_pmc,
+)
 from pmcgrab.processing import (
     process_in_batches,
     process_in_batches_with_retry,
@@ -121,12 +133,16 @@ __all__ = [
     "oa_fetch",
     "oai_get_record",
     "oai_list_identifiers",
-    # external service helpers
     "oai_list_records",
     "oai_list_sets",
+    # Local XML processing
+    "paper_dict_from_local_xml",
     "paper_dict_from_pmc",
+    "parse_local_xml",
     "process_in_batches",
     "process_in_batches_with_retry",
+    "process_local_xml_dir",
     "process_pmc_ids_in_batches",
+    "process_single_local_xml",
     "process_single_pmc",
 ]

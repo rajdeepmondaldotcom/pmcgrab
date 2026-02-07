@@ -1,10 +1,21 @@
 """Comprehensive CLI tests to achieve 100% coverage of pmcgrab_cli.py."""
 
+import json
 import tempfile
 from pathlib import Path
 from unittest.mock import patch
 
 from pmcgrab.cli.pmcgrab_cli import main
+
+# Dummy article data returned by process_single_pmc mock
+_DUMMY_ARTICLE = {
+    "pmc_id": "7114487",
+    "title": "Test Article",
+    "abstract": "Test abstract",
+    "body": {"Introduction": "Some text"},
+    "authors": "",
+    "has_data": "True",
+}
 
 
 class TestCLIComplete:
@@ -15,7 +26,6 @@ class TestCLIComplete:
         with tempfile.TemporaryDirectory() as temp_dir:
             output_dir = Path(temp_dir)
 
-            # Mock sys.argv
             test_args = [
                 "pmcgrab_cli.py",
                 "--pmcids",
@@ -28,17 +38,12 @@ class TestCLIComplete:
             ]
 
             with patch("sys.argv", test_args):
-                with patch("pmcgrab.cli.pmcgrab_cli.process_pmc_ids") as mock_process:
-                    # Mock successful processing
-                    mock_process.return_value = {"7114487": True, "3084273": True}
-
-                    # Should run without error
+                with patch(
+                    "pmcgrab.cli.pmcgrab_cli.process_single_pmc"
+                ) as mock_process:
+                    mock_process.return_value = _DUMMY_ARTICLE
                     main()
-
-                    # Verify process_pmc_ids was called
-                    mock_process.assert_called_once_with(
-                        ["7114487", "3084273"], batch_size=2
-                    )
+                    assert mock_process.call_count == 2
 
     def test_main_with_default_batch_size(self):
         """Test main function with default batch size."""
@@ -51,17 +56,15 @@ class TestCLIComplete:
                 "7114487",
                 "--output-dir",
                 str(output_dir),
-                # No batch-size specified, should use default
             ]
 
             with patch("sys.argv", test_args):
-                with patch("pmcgrab.cli.pmcgrab_cli.process_pmc_ids") as mock_process:
-                    mock_process.return_value = {"7114487": True}
-
+                with patch(
+                    "pmcgrab.cli.pmcgrab_cli.process_single_pmc"
+                ) as mock_process:
+                    mock_process.return_value = _DUMMY_ARTICLE
                     main()
-
-                    # Should use default batch size of 10
-                    mock_process.assert_called_once_with(["7114487"], batch_size=10)
+                    mock_process.assert_called_once_with("7114487")
 
     def test_main_with_single_pmcid(self):
         """Test main function with single PMC ID."""
@@ -79,12 +82,12 @@ class TestCLIComplete:
             ]
 
             with patch("sys.argv", test_args):
-                with patch("pmcgrab.cli.pmcgrab_cli.process_pmc_ids") as mock_process:
-                    mock_process.return_value = {"7114487": True}
-
+                with patch(
+                    "pmcgrab.cli.pmcgrab_cli.process_single_pmc"
+                ) as mock_process:
+                    mock_process.return_value = _DUMMY_ARTICLE
                     main()
-
-                    mock_process.assert_called_once_with(["7114487"], batch_size=1)
+                    mock_process.assert_called_once_with("7114487")
 
     def test_main_with_multiple_pmcids(self):
         """Test main function with multiple PMC IDs."""
@@ -104,18 +107,17 @@ class TestCLIComplete:
             ]
 
             with patch("sys.argv", test_args):
-                with patch("pmcgrab.cli.pmcgrab_cli.process_pmc_ids") as mock_process:
-                    mock_process.return_value = {
-                        "7114487": True,
-                        "3084273": True,
-                        "7690653": False,  # One failed
-                    }
-
+                with patch(
+                    "pmcgrab.cli.pmcgrab_cli.process_single_pmc"
+                ) as mock_process:
+                    # Third one fails
+                    mock_process.side_effect = [
+                        _DUMMY_ARTICLE,
+                        _DUMMY_ARTICLE,
+                        None,
+                    ]
                     main()
-
-                    mock_process.assert_called_once_with(
-                        ["7114487", "3084273", "7690653"], batch_size=5
-                    )
+                    assert mock_process.call_count == 3
 
     def test_main_with_processing_failures(self):
         """Test main function when processing fails."""
@@ -131,13 +133,11 @@ class TestCLIComplete:
             ]
 
             with patch("sys.argv", test_args):
-                with patch("pmcgrab.cli.pmcgrab_cli.process_pmc_ids") as mock_process:
-                    # Mock processing failure
-                    mock_process.return_value = {"invalid_id": False}
-
-                    # Should handle failures gracefully
+                with patch(
+                    "pmcgrab.cli.pmcgrab_cli.process_single_pmc"
+                ) as mock_process:
+                    mock_process.return_value = None
                     main()
-
                     mock_process.assert_called_once()
 
     def test_main_with_exception_in_processing(self):
@@ -154,28 +154,22 @@ class TestCLIComplete:
             ]
 
             with patch("sys.argv", test_args):
-                with patch("pmcgrab.cli.pmcgrab_cli.process_pmc_ids") as mock_process:
-                    # Mock processing exception
+                with patch(
+                    "pmcgrab.cli.pmcgrab_cli.process_single_pmc"
+                ) as mock_process:
                     mock_process.side_effect = Exception("Processing failed")
 
-                    # Should handle exception gracefully
                     try:
                         main()
-                    except SystemExit:
-                        # CLI might exit on error
-                        pass
-                    except Exception:
-                        # Or handle exception internally
+                    except (SystemExit, Exception):
                         pass
 
     def test_main_argument_parsing_edge_cases(self):
         """Test argument parsing edge cases."""
-        # Test with no arguments (should show help or error)
         with patch("sys.argv", ["pmcgrab_cli.py"]):
             try:
                 main()
             except (SystemExit, Exception):
-                # Expected to fail with no arguments
                 pass
 
     def test_main_with_invalid_batch_size(self):
@@ -190,14 +184,13 @@ class TestCLIComplete:
                 "--output-dir",
                 str(output_dir),
                 "--batch-size",
-                "0",  # Invalid batch size
+                "0",
             ]
 
             with patch("sys.argv", test_args):
                 try:
                     main()
                 except (SystemExit, ValueError, Exception):
-                    # Should handle invalid batch size
                     pass
 
     def test_main_with_negative_batch_size(self):
@@ -212,14 +205,13 @@ class TestCLIComplete:
                 "--output-dir",
                 str(output_dir),
                 "--batch-size",
-                "-1",  # Negative batch size
+                "-1",
             ]
 
             with patch("sys.argv", test_args):
                 try:
                     main()
                 except (SystemExit, ValueError, Exception):
-                    # Should handle negative batch size
                     pass
 
     def test_main_with_nonexistent_output_dir(self):
@@ -235,13 +227,12 @@ class TestCLIComplete:
         ]
 
         with patch("sys.argv", test_args):
-            with patch("pmcgrab.cli.pmcgrab_cli.process_pmc_ids") as mock_process:
-                mock_process.return_value = {"7114487": True}
+            with patch("pmcgrab.cli.pmcgrab_cli.process_single_pmc") as mock_process:
+                mock_process.return_value = _DUMMY_ARTICLE
 
                 try:
                     main()
-                except (SystemExit, FileNotFoundError, Exception):
-                    # Should handle non-existent directory
+                except (SystemExit, FileNotFoundError, OSError, Exception):
                     pass
 
     def test_main_help_option(self):
@@ -252,7 +243,6 @@ class TestCLIComplete:
             try:
                 main()
             except SystemExit as e:
-                # Help should exit with code 0
                 assert e.code == 0 or e.code is None
 
     def test_main_version_option(self):
@@ -263,7 +253,6 @@ class TestCLIComplete:
             try:
                 main()
             except (SystemExit, AttributeError):
-                # Version option might not be implemented
                 pass
 
     def test_main_verbose_option(self):
@@ -277,17 +266,18 @@ class TestCLIComplete:
                 "7114487",
                 "--output-dir",
                 str(output_dir),
-                "--verbose",  # If verbose option exists
+                "--verbose",
             ]
 
             with patch("sys.argv", test_args):
-                with patch("pmcgrab.cli.pmcgrab_cli.process_pmc_ids") as mock_process:
-                    mock_process.return_value = {"7114487": True}
+                with patch(
+                    "pmcgrab.cli.pmcgrab_cli.process_single_pmc"
+                ) as mock_process:
+                    mock_process.return_value = _DUMMY_ARTICLE
 
                     try:
                         main()
                     except (SystemExit, Exception):
-                        # Verbose option might not be implemented
                         pass
 
     def test_main_with_large_batch_size(self):
@@ -303,18 +293,16 @@ class TestCLIComplete:
                 "--output-dir",
                 str(output_dir),
                 "--batch-size",
-                "1000",  # Very large batch size
+                "1000",
             ]
 
             with patch("sys.argv", test_args):
-                with patch("pmcgrab.cli.pmcgrab_cli.process_pmc_ids") as mock_process:
-                    mock_process.return_value = {"7114487": True, "3084273": True}
-
+                with patch(
+                    "pmcgrab.cli.pmcgrab_cli.process_single_pmc"
+                ) as mock_process:
+                    mock_process.return_value = _DUMMY_ARTICLE
                     main()
-
-                    mock_process.assert_called_once_with(
-                        ["7114487", "3084273"], batch_size=1000
-                    )
+                    assert mock_process.call_count == 2
 
     def test_main_with_empty_pmcids_list(self):
         """Test main function with empty PMC IDs list."""
@@ -323,7 +311,7 @@ class TestCLIComplete:
 
             test_args = [
                 "pmcgrab_cli.py",
-                "--pmcids",  # No PMC IDs provided
+                "--pmcids",
                 "--output-dir",
                 str(output_dir),
             ]
@@ -332,7 +320,6 @@ class TestCLIComplete:
                 try:
                     main()
                 except (SystemExit, Exception):
-                    # Should handle empty PMC IDs list
                     pass
 
     def test_main_with_duplicate_pmcids(self):
@@ -345,28 +332,25 @@ class TestCLIComplete:
                 "--pmcids",
                 "7114487",
                 "7114487",
-                "3084273",  # Duplicate
+                "3084273",
                 "--output-dir",
                 str(output_dir),
             ]
 
             with patch("sys.argv", test_args):
-                with patch("pmcgrab.cli.pmcgrab_cli.process_pmc_ids") as mock_process:
-                    mock_process.return_value = {"7114487": True, "3084273": True}
-
+                with patch(
+                    "pmcgrab.cli.pmcgrab_cli.process_single_pmc"
+                ) as mock_process:
+                    mock_process.return_value = _DUMMY_ARTICLE
                     main()
-
-                    # Should handle duplicates (might deduplicate or process both)
-                    mock_process.assert_called_once()
+                    assert mock_process.call_count == 3
 
     def test_main_argument_parser_creation(self):
         """Test argument parser creation and configuration."""
-        # This tests the argument parser setup
         with patch("sys.argv", ["pmcgrab_cli.py", "--help"]):
             try:
                 main()
             except SystemExit:
-                # Help should exit cleanly
                 pass
 
     def test_main_with_mixed_valid_invalid_pmcids(self):
@@ -385,24 +369,16 @@ class TestCLIComplete:
             ]
 
             with patch("sys.argv", test_args):
-                with patch("pmcgrab.cli.pmcgrab_cli.process_pmc_ids") as mock_process:
-                    mock_process.return_value = {
-                        "7114487": True,
-                        "invalid": False,  # Failed
-                        "3084273": True,
-                    }
-
+                with patch(
+                    "pmcgrab.cli.pmcgrab_cli.process_single_pmc"
+                ) as mock_process:
+                    mock_process.side_effect = [_DUMMY_ARTICLE, None, _DUMMY_ARTICLE]
                     main()
-
-                    mock_process.assert_called_once_with(
-                        ["7114487", "invalid", "3084273"],
-                        batch_size=10,  # Default
-                    )
+                    assert mock_process.call_count == 3
 
     def test_main_output_directory_handling(self):
         """Test output directory creation and handling."""
         with tempfile.TemporaryDirectory() as temp_dir:
-            # Create a nested path that doesn't exist yet
             output_dir = Path(temp_dir) / "nested" / "output"
 
             test_args = [
@@ -414,13 +390,14 @@ class TestCLIComplete:
             ]
 
             with patch("sys.argv", test_args):
-                with patch("pmcgrab.cli.pmcgrab_cli.process_pmc_ids") as mock_process:
-                    mock_process.return_value = {"7114487": True}
+                with patch(
+                    "pmcgrab.cli.pmcgrab_cli.process_single_pmc"
+                ) as mock_process:
+                    mock_process.return_value = _DUMMY_ARTICLE
 
                     try:
                         main()
                     except Exception:
-                        # Directory creation might fail or be handled differently
                         pass
 
     def test_main_keyboard_interrupt(self):
@@ -437,12 +414,44 @@ class TestCLIComplete:
             ]
 
             with patch("sys.argv", test_args):
-                with patch("pmcgrab.cli.pmcgrab_cli.process_pmc_ids") as mock_process:
-                    # Mock keyboard interrupt
+                with patch(
+                    "pmcgrab.cli.pmcgrab_cli.process_single_pmc"
+                ) as mock_process:
                     mock_process.side_effect = KeyboardInterrupt("User interrupted")
 
                     try:
                         main()
                     except (KeyboardInterrupt, SystemExit):
-                        # Should handle keyboard interrupt gracefully
                         pass
+
+    def test_main_writes_json_and_summary(self):
+        """Test that main writes JSON files and summary correctly."""
+        with tempfile.TemporaryDirectory() as temp_dir:
+            output_dir = Path(temp_dir)
+
+            test_args = [
+                "pmcgrab_cli.py",
+                "--pmcids",
+                "7114487",
+                "--output-dir",
+                str(output_dir),
+            ]
+
+            with patch("sys.argv", test_args):
+                with patch(
+                    "pmcgrab.cli.pmcgrab_cli.process_single_pmc"
+                ) as mock_process:
+                    mock_process.return_value = _DUMMY_ARTICLE
+                    main()
+
+            # Verify JSON file was written
+            json_file = output_dir / "PMC7114487.json"
+            assert json_file.exists()
+            data = json.loads(json_file.read_text(encoding="utf-8"))
+            assert data["title"] == "Test Article"
+
+            # Verify summary was written
+            summary = json.loads(
+                (output_dir / "summary.json").read_text(encoding="utf-8")
+            )
+            assert summary["7114487"] is True

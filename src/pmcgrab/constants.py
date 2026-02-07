@@ -26,7 +26,6 @@ logger = logging.getLogger(__name__)
 warnings.formatwarning = (
     lambda msg, cat, *_args, **_kwargs: f"{cat.__name__}: {msg}\n\n"
 )
-warnings.filterwarnings("ignore")
 
 SUPPORTED_DTD_URLS = [
     "https://dtd.nlm.nih.gov/ncbi/pmc/articleset/nlm-articleset-2.0.dtd"
