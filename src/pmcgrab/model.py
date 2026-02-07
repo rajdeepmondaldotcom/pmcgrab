@@ -133,7 +133,9 @@ class Paper:
             self.has_data = False
             return
         self.has_data = True
-        self.last_updated = datetime.datetime.now(datetime.UTC).isoformat()
+        # Python 3.10 compatibility: datetime.UTC was added later than 3.10.
+        _utc = getattr(datetime, "UTC", datetime.timezone.utc)
+        self.last_updated = datetime.datetime.now(_utc).isoformat()
         self.pmcid = d.get("PMCID")
         self.title = d.get("Title")
         self.authors = d.get("Authors")

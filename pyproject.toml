@@ -81,7 +81,8 @@ dev = [
     "pytest>=7.0.0",
     "pytest-cov>=4.0.0",
     "pytest-xdist>=3.0.0",
-    "ruff>=0.1.0",
+    # Pin ruff to keep formatting deterministic in CI.
+    "ruff==0.15.0",
     "pre-commit>=3.0.0",
     "mypy>=1.5.0",
     "build>=0.10.0",
@@ -106,7 +107,8 @@ dev = [
     "pytest>=7.0.0",
     "pytest-cov>=4.0.0",
     "pytest-xdist>=3.0.0",
-    "ruff>=0.1.0",
+    # Pin ruff to keep formatting deterministic in CI.
+    "ruff==0.15.0",
     "pre-commit>=3.0.0",
     "mypy>=1.5.0",
     "build>=0.10.0",
@@ -150,7 +152,7 @@ path = "src/pmcgrab/__init__.py"
 [tool.ruff]
 src = ["src", "tests"]
 line-length = 88
-target-version = "py312"
+target-version = "py310"
 
 [tool.ruff.lint]
 select = [

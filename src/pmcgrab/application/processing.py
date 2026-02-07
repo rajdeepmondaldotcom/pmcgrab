@@ -121,7 +121,9 @@ def _extract_paper_dict(
                     }
                 )
 
-    now_iso = _dt.datetime.now(_dt.UTC).isoformat()
+    # Python 3.10 compatibility: datetime.UTC was added later than 3.10.
+    _utc = getattr(_dt, "UTC", _dt.timezone.utc)
+    now_iso = _dt.datetime.now(_utc).isoformat()
 
     paper_info: dict[str, str | dict | list | bool | int | None] = {
         # --- Identifiers ---
