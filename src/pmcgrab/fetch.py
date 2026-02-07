@@ -341,12 +341,6 @@ def get_xml(
     tree = xml_tree_from_string(xml_text, strip_text_styling, verbose)
     if validate:
         validate_xml(tree)
-    else:
-        warnings.warn(
-            f"Scraping XML for PMCID {pmcid} without validation.",
-            ValidationWarning,
-            stacklevel=2,
-        )
     return tree
 
 

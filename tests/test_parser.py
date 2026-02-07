@@ -45,9 +45,9 @@ SAMPLE_XML = """<?xml version='1.0' encoding='utf-8'?>
             <license-p>License text</license-p>
           </license>
         </permissions>
+        <abstract><p>Abstract text</p></abstract>
       </article-meta>
     </front>
-    <abstract><p>Abstract text</p></abstract>
     <body>
       <sec><title>Intro</title><p>Body paragraph</p></sec>
     <kwd-group kwd-group-type='author'>

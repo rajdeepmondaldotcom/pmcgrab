@@ -123,7 +123,7 @@ def gather_title(root: ET.Element) -> str | None:
         article identification and search. Missing titles indicate
         significant structural issues with the XML document.
     """
-    title_elems = root.xpath("//article-title")
+    title_elems = root.xpath("//article-meta/title-group/article-title")
     if len(title_elems) > 1:
         warnings.warn(
             "Multiple titles found; using the first.",

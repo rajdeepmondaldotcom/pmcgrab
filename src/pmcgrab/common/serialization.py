@@ -8,7 +8,9 @@ import datetime
 from inspect import cleandoc
 from typing import Any
 
+import numpy as np
 import pandas as pd
+from pandas.io.formats.style import Styler as _PandasStyler
 
 __all__: list[str] = [
     "clean_doc",
@@ -99,14 +101,30 @@ def normalize_value(val: Any):
         safely serialized to JSON for storage, API responses, and other
         downstream applications that require standard data types.
     """
+    if val is None or isinstance(val, bool | int | float | str):
+        return val
     if isinstance(val, datetime.date | datetime.datetime):
         return val.isoformat()
+    # pandas Styler wraps a DataFrame – unwrap before serializing
+    if isinstance(val, _PandasStyler):
+        return normalize_value(val.data.to_dict(orient="records"))  # type: ignore[attr-defined]
     if isinstance(val, pd.DataFrame):
-        return val.to_dict(orient="records")
+        return normalize_value(val.to_dict(orient="records"))
     if isinstance(val, pd.Series):
-        return val.to_list()
+        return normalize_value(val.to_list())
+    # numpy scalars / arrays → native Python
+    if isinstance(val, np.integer):
+        return int(val)
+    if isinstance(val, np.floating):
+        return float(val)
+    if isinstance(val, np.bool_):
+        return bool(val)
+    if isinstance(val, np.ndarray):
+        return normalize_value(val.tolist())
     if isinstance(val, dict):
         return {k: normalize_value(v) for k, v in val.items()}
-    if isinstance(val, list):
+    if isinstance(val, list | tuple):
         return [normalize_value(item) for item in val]
-    return val
+    # Last resort – convert unknown objects to their string representation
+    # so json.dump never fails on unexpected types.
+    return str(val)

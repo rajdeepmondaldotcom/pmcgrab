@@ -20,9 +20,10 @@ for pmcid in PMC_IDS:
         continue
 
     # Pretty-print a few key fields
+    abstract_text = data.get("abstract_text", "")
     print(
         f"  Title   : {data['title'][:80]}{'…' if len(data['title']) > 80 else ''}\n"
-        f"  Abstract: {data['abstract'][:120]}{'…' if len(data['abstract']) > 120 else ''}\n"
+        f"  Abstract: {abstract_text[:120]}{'…' if len(abstract_text) > 120 else ''}\n"
         f"  Authors : {len(data['authors']) if data['authors'] else 0}"
     )
 

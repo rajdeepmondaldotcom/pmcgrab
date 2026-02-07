@@ -862,7 +862,12 @@ def paper_dict_from_pmc(
     """
     if verbose:
         logger.info("Generating Paper object for PMCID=%s …", pmcid)
-    tree = get_xml(pmcid, email, download, validate, verbose=verbose)
+    if suppress_warnings:
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore")
+            tree = get_xml(pmcid, email, download, validate, verbose=verbose)
+    else:
+        tree = get_xml(pmcid, email, download, validate, verbose=verbose)
     root = tree.getroot()
     return generate_paper_dict(pmcid, root, verbose, suppress_warnings, suppress_errors)
 

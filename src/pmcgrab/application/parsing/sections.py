@@ -173,7 +173,7 @@ def gather_abstract_type(root: ET.Element) -> str | None:
     Returns:
         str | None: Abstract type attribute value, or None if not specified
     """
-    abstracts = root.xpath("//abstract")
+    abstracts = root.xpath("//article-meta/abstract")
     if abstracts:
         return abstracts[0].get("abstract-type")
     return None
@@ -244,7 +244,7 @@ def gather_abstract(
     """
     return _gather_sections(
         root,
-        xpath="//abstract",
+        xpath="//article-meta/abstract",
         missing_warning="No abstract found.",
         context="abstract",
         ref_map=ref_map,

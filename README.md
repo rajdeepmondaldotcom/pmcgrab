@@ -44,16 +44,50 @@ Python ≥ 3.10 required.
 
 ## Ways to Use
 
-### 1 · Python API
+### 1 · Python API (recommended)
+
+```python
+from pmcgrab import Paper
+
+paper = Paper.from_pmc("7181753", suppress_warnings=True)
+
+print(paper.title)
+print(paper.abstract_as_str()[:200])
+
+for section, text in paper.body_as_dict().items():
+    print(f"{section}: {len(text.split())} words")
+
+# Save to JSON
+paper.to_json()
+```
+
+### 2 · Dict-based API (for data pipelines)
 
 ```python
 from pmcgrab.application.processing import process_single_pmc
 
-article = process_single_pmc("7114487")
-print(article)
+data = process_single_pmc("7181753")
+
+print(data["title"])
+print(data["abstract_text"])       # plain-text abstract (string)
+print(data["abstract"])            # structured abstract (dict)
+print(list(data["body"].keys()))   # section titles
 ```
 
-(Use the numeric part of the PMC ID only.)
+### 3 · Command Line
+
+```bash
+# Single or multiple PMC IDs
+pmcgrab --pmcids 7181753 3539614 --output-dir ./results
+
+# From a file of IDs
+pmcgrab --from-id-file ids.txt --output-dir ./results
+
+# Local XML files (no network)
+pmcgrab --from-dir ./xml_bulk/ --output-dir ./results
+```
+
+Use the numeric part of the PMC ID only (e.g. `7181753`, not `PMC7181753`).
 
 ---
 
@@ -61,17 +95,22 @@ print(article)
 
 ```json
 {
-  "pmc_id": "7114487",
-  "title": "Machine learning approaches in cancer research",
-  "abstract": "…",
-  "body": {
-    "Introduction": "…",
-    "Methods": "…",
-    "Results": "…",
-    "Discussion": "…"
+  "pmc_id": "7181753",
+  "title": "Single-cell transcriptomes of the human skin reveal ...",
+  "abstract_text": "Human skin provides a protective barrier ...",
+  "abstract": {
+    "Background": "Human skin provides a protective barrier ...",
+    "Results": "We generated single-cell transcriptomes ..."
   },
-  "authors": [...],
-  "journal": "Nature Medicine"
+  "body": {
+    "Background": "...",
+    "Results": "...",
+    "Discussion": "...",
+    "Methods": "..."
+  },
+  "authors": [{"First_Name": "...", "Last_Name": "...", ...}],
+  "journal_title": "Genome Biology",
+  "full_text": "..."
 }
 ```
 
