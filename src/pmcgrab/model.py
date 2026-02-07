@@ -1226,7 +1226,10 @@ class TextTable(TextElement):
 
         # --- Attempt 1: pandas read_html ---
         try:
-            tables = pd.read_html(table_xml_str)
+            # Pass a file-like object to avoid pandas interpreting the string as a path.
+            from io import StringIO
+
+            tables = pd.read_html(StringIO(table_xml_str))
             if tables:
                 table_df = tables[0]
                 title = (
