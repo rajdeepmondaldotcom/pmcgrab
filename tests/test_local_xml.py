@@ -177,7 +177,7 @@ class TestParseLocalXml:
 
     def test_string_path(self, tmp_path):
         fp = _write_xml(tmp_path, "test.xml", SAMPLE_JATS_XML)
-        tree, pmcid = parse_local_xml(str(fp))
+        _tree, pmcid = parse_local_xml(str(fp))
         assert pmcid == 7181753
 
     def test_strip_text_styling_false(self, tmp_path):

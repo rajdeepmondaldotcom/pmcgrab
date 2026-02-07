@@ -44,8 +44,8 @@ import time
 __all__: list[str] = [
     "EMAIL_POOL",
     "NCBI_API_KEY",
-    "NCBI_TIMEOUT",
     "NCBI_RETRIES",
+    "NCBI_TIMEOUT",
     "next_email",
     "rate_limit_wait",
 ]
