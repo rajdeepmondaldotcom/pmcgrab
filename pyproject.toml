@@ -82,7 +82,7 @@ dev = [
     "pytest-cov>=4.0.0",
     "pytest-xdist>=3.0.0",
     # Pin ruff to keep formatting deterministic in CI.
-    "ruff==0.15.0",
+    "ruff==0.15.1",
     "pre-commit>=3.0.0",
     "mypy>=1.5.0",
     "build>=0.10.0",
@@ -108,7 +108,7 @@ dev = [
     "pytest-cov>=4.0.0",
     "pytest-xdist>=3.0.0",
     # Pin ruff to keep formatting deterministic in CI.
-    "ruff==0.15.0",
+    "ruff==0.15.1",
     "pre-commit>=3.0.0",
     "mypy>=1.5.0",
     "build>=0.10.0",
