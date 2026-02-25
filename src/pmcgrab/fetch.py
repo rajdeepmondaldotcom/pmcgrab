@@ -95,6 +95,7 @@ def fetch_pmc_xml_string(
 
     db, rettype, retmode = "pmc", "full", "xml"
     delay = 5
+    last_exc: Exception | None = None
     for _attempt in range(NCBI_RETRIES):
         try:
             rate_limit_wait()
@@ -114,12 +115,24 @@ def fetch_pmc_xml_string(
                 with open(cache_path, "w", encoding="utf-8") as f:
                     f.write(xml_text)
             return xml_text
-        except Exception:
+        except Exception as exc:
+            last_exc = exc
+            logger.warning(
+                "Attempt %d/%d failed for PMCID %s: %s",
+                _attempt + 1,
+                NCBI_RETRIES,
+                pmcid,
+                exc,
+            )
             time.sleep(delay)
             delay *= 2
     raise HTTPError(
-        f"Failed to fetch PMCID {pmcid} after retries", None, None, None, None
-    )
+        f"Failed to fetch PMCID {pmcid} after {NCBI_RETRIES} retries",
+        None,
+        None,
+        None,
+        None,
+    ) from last_exc
 
 
 def clean_xml_string(

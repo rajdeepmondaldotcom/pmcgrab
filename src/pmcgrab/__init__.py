@@ -53,7 +53,7 @@ External Service Functions:
     oai_list_sets: List OAI-PMH sets
 """
 
-__version__ = "1.0.1"
+__version__ = "1.0.2"
 
 from pmcgrab.application.processing import (
     process_local_xml_dir,
