@@ -278,7 +278,7 @@ def validate_xml(tree: ET.ElementTree) -> bool:
     filename = match.group(0)
     dtd_path = os.path.join(
         os.path.dirname(os.path.abspath(__file__)),
-        "data",
+        "resources",
         "DTDs",
         filename,
     )
