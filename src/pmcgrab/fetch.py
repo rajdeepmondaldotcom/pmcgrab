@@ -19,8 +19,10 @@ Key Functions:
 """
 
 import os
+import ssl
 import threading
 import time
+import urllib.request
 import warnings
 from io import StringIO
 from pathlib import Path
@@ -90,6 +92,7 @@ def fetch_pmc_xml_string(
     from pmcgrab.infrastructure.settings import (
         NCBI_API_KEY,
         NCBI_RETRIES,
+        PMCGRAB_SSL_VERIFY,
         rate_limit_wait,
     )
 
@@ -103,9 +106,22 @@ def fetch_pmc_xml_string(
                 Entrez.email = email
                 if NCBI_API_KEY:
                     Entrez.api_key = NCBI_API_KEY
-                handle = Entrez.efetch(
-                    db=db, id=pmcid, rettype=rettype, retmode=retmode
-                )
+                if not PMCGRAB_SSL_VERIFY:
+                    _ssl_ctx = ssl.create_default_context()
+                    _ssl_ctx.check_hostname = False
+                    _ssl_ctx.verify_mode = ssl.CERT_NONE
+                    urllib.request.install_opener(
+                        urllib.request.build_opener(
+                            urllib.request.HTTPSHandler(context=_ssl_ctx)
+                        )
+                    )
+                try:
+                    handle = Entrez.efetch(
+                        db=db, id=pmcid, rettype=rettype, retmode=retmode
+                    )
+                finally:
+                    if not PMCGRAB_SSL_VERIFY:
+                        urllib.request.install_opener(urllib.request.build_opener())
             xml_record = handle.read()
             handle.close()
             xml_text = xml_record.decode("utf-8")

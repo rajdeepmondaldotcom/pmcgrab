@@ -46,6 +46,7 @@ __all__: list[str] = [
     "NCBI_API_KEY",
     "NCBI_RETRIES",
     "NCBI_TIMEOUT",
+    "PMCGRAB_SSL_VERIFY",
     "next_email",
     "rate_limit_wait",
 ]
@@ -86,6 +87,11 @@ NCBI_API_KEY: str | None = os.getenv("NCBI_API_KEY") or None
 
 NCBI_TIMEOUT: int = int(os.getenv("PMCGRAB_TIMEOUT", "60"))
 NCBI_RETRIES: int = int(os.getenv("PMCGRAB_RETRIES", "3"))
+PMCGRAB_SSL_VERIFY: bool = os.getenv("PMCGRAB_SSL_VERIFY", "false").lower() not in (
+    "false",
+    "0",
+    "no",
+)
 
 # ---------------------------------------------------------------------------
 # Thread-safe email rotation (with lock instead of bare itertools.cycle)

@@ -29,6 +29,8 @@ from typing import Any
 
 import requests
 
+from pmcgrab.infrastructure.settings import PMCGRAB_SSL_VERIFY
+
 __all__ = [
     "cached_get",
 ]
@@ -36,6 +38,8 @@ __all__ = [
 # Module-level session for connection pooling (HTTP keep-alive)
 _session = requests.Session()
 _session.headers.update({"User-Agent": "pmcgrab"})
+if not PMCGRAB_SSL_VERIFY:
+    _session.verify = False
 
 
 def _backoff_sleep(retry: int) -> None:
