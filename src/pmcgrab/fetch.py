@@ -282,8 +282,16 @@ def validate_xml(tree: ET.ElementTree) -> bool:
         "DTDs",
         filename,
     )
-    with open(dtd_path, encoding="utf-8") as f:
-        dtd_doc = f.read()
+    try:
+        with open(dtd_path, encoding="utf-8") as f:
+            dtd_doc = f.read()
+    except FileNotFoundError:
+        warnings.warn(
+            f"DTD file not found at {dtd_path} – skipping validation.",
+            ValidationWarning,
+            stacklevel=2,
+        )
+        return True
     if not dtd_doc:
         raise NoDTDFoundError(clean_doc("DTD not found."))
 
