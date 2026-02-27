@@ -1231,17 +1231,26 @@ class TextTable(TextElement):
 
             tables = pd.read_html(StringIO(table_xml_str))
             if tables:
-                table_df = tables[0]
+                raw_df = tables[0]
+                # Flatten MultiIndex columns (produced by colspan/rowspan headers)
+                # into human-readable strings so JSON serialization never sees tuple keys.
+                if isinstance(raw_df.columns, pd.MultiIndex):
+                    flat = [
+                        " / ".join(
+                            str(c) for c in col if not str(c).startswith("Unnamed:")
+                        )
+                        for col in raw_df.columns
+                    ]
+                    raw_df.columns = [
+                        col.strip(" /") or f"Col_{i}" for i, col in enumerate(flat)
+                    ]
                 title = (
                     f"{self.label}: {self.caption}"
                     if self.label and self.caption
                     else (self.label or self.caption)
                 )
-                if title:
-                    table_df = table_df.style.set_caption(title)
+                table_df = raw_df.style.set_caption(title) if title else raw_df
                 self.df = table_df
-                # Build structured dict from pandas result
-                raw_df = tables[0]
                 self.table_dict = {
                     "id": self.table_id,
                     "label": self.label,

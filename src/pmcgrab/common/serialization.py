@@ -128,7 +128,11 @@ def normalize_value(val: Any):
     if isinstance(val, np.ndarray):
         return normalize_value(val.tolist())
     if isinstance(val, dict):
-        return {k: normalize_value(v) for k, v in val.items()}
+
+        def _safe_key(k: Any) -> str | int | float | bool | None:
+            return k if isinstance(k, str | int | float | bool) or k is None else str(k)
+
+        return {_safe_key(k): normalize_value(v) for k, v in val.items()}
     if isinstance(val, list | tuple):
         return [normalize_value(item) for item in val]
     # Last resort – convert unknown objects to their string representation
