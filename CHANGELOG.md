@@ -5,6 +5,40 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.7] - 2026-03-02
+
+### Fixed
+- **XMLSyntaxError crash on papers with consecutive self-closing `<xref/>` tags**
+  (e.g. PMC10576104): the `split_text_and_refs` regex was treating self-closing
+  tags as paired opening tags, causing multiple sibling xrefs to be bundled into
+  one invalid XML string that crashed `process_reference_map`. Fixed with a
+  negative lookbehind (`(?<!/)>`) in the paired-tag regex alternative.
+- **Wrong abstract selected when a paper has multiple `<abstract>` elements**
+  (e.g. PMC10576104, PMC12590228, PMC4643452): the parser always picked
+  `nodes[0]`, which is often a typed variant (`executive-summary`,
+  `author-highlights`, etc.) rather than the main text abstract. Now prefers
+  the untyped abstract; falls back to `nodes[0]` only when all abstracts carry
+  a type attribute.
+- **Raw XML markup leaking into abstract/body text for papers where `<list>`
+  elements are nested inside `<p>` tags** (e.g. PMC12590228, PMC4643452):
+  `TextParagraph` now pre-processes the paragraph element with a deep-copy pass
+  that converts block elements (`<list>`, `<disp-formula>`, etc.) to plain text
+  before serialisation, preventing `<list-item>` XML from appearing verbatim in
+  extracted text.
+- **`<title>`, `<list>`, `<disp-formula>` silently dropped when they appear as
+  direct children of `<abstract>` or `<body>`**: `_collect_sections` now handles
+  these with the same `_render_block_element` + synthetic `TextParagraph` path
+  that `TextSection` already used internally.
+- Added `MalformedRefTagWarning` and a defensive `try/except` around
+  `ET.fromstring` in `process_reference_map` so any remaining malformed ref-map
+  entries emit a warning and are skipped instead of crashing the parser.
+
+### Added
+- `_select_main_abstract` helper in `sections.py` for robust multi-abstract selection.
+- `_flatten_block_elements_in_paragraph` helper in `model.py` for safe in-paragraph block rendering.
+- `MalformedRefTagWarning` in `constants.py`.
+- 17 regression tests in `tests/test_regression_bugs.py` covering all fixed cases.
+
 ## [Unreleased]
 
 ### Added

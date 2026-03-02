@@ -65,7 +65,12 @@ from pmcgrab.application.parsing import content as _content
 from pmcgrab.application.parsing import contributors as _contributors
 from pmcgrab.application.parsing import metadata as _metadata
 from pmcgrab.application.parsing import sections as _sections
-from pmcgrab.constants import UnmatchedCitationWarning, UnmatchedTableWarning, logger
+from pmcgrab.constants import (
+    MalformedRefTagWarning,
+    UnmatchedCitationWarning,
+    UnmatchedTableWarning,
+    logger,
+)
 from pmcgrab.domain.value_objects import BasicBiMap
 from pmcgrab.fetch import get_xml, parse_local_xml
 from pmcgrab.model import TextFigure, TextTable
@@ -609,7 +614,15 @@ def process_reference_map(
 
     # Resolve existing placeholder references from *ref_map* ------------
     for key, item in ref_map.items():
-        root = ET.fromstring(item)
+        try:
+            root = ET.fromstring(item)
+        except ET.XMLSyntaxError:
+            warnings.warn(
+                f"Malformed reference tag in ref_map (key={key}); skipping: {item[:80]}",
+                MalformedRefTagWarning,
+                stacklevel=2,
+            )
+            continue
         if root.tag == "xref":
             rtype = root.get("ref-type")
             rid = root.get("rid")

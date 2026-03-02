@@ -138,7 +138,7 @@ _ALLOWED_TAGS = {
     "underline",
 }
 _TAG_PATTERN = re.compile(
-    r"<([a-zA-Z][\w-]*)\b[^>]*>(.*?)</\1>|<([a-zA-Z][\w-]*)\b[^/>]*/?>",
+    r"<([a-zA-Z][\w-]*)\b[^>]*(?<!/)>(.*?)</\1>|<([a-zA-Z][\w-]*)\b[^/>]*/?>",
     re.DOTALL,
 )
 

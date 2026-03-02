@@ -48,7 +48,29 @@ from pmcgrab.constants import (
     UnhandledTextTagWarning,
 )
 from pmcgrab.domain.value_objects import BasicBiMap
-from pmcgrab.model import TextParagraph, TextSection
+from pmcgrab.model import TextParagraph, TextSection, _render_block_element
+
+_BLOCK_AS_PARAGRAPH_TAGS = frozenset(
+    {
+        "list",
+        "def-list",
+        "disp-formula",
+        "disp-quote",
+        "boxed-text",
+        "preformat",
+        "code",
+        "verse-group",
+        "speech",
+        "statement",
+        "supplementary-material",
+        "table-wrap-group",
+        "alternatives",
+        "app",
+        "glossary",
+        "fn-group",
+        "ref-list",
+    }
+)
 
 __all__: list[str] = [
     "gather_abstract",
@@ -98,6 +120,18 @@ def _collect_sections(
             sections.append(TextSection(child, ref_map=ref_map))
         elif child.tag == "p":
             sections.append(TextParagraph(child, ref_map=ref_map))
+        elif child.tag == "title":
+            text = "".join(child.itertext()).strip()
+            if text:
+                synth = ET.Element("p")
+                synth.text = text
+                sections.append(TextParagraph(synth, ref_map=ref_map))
+        elif child.tag in _BLOCK_AS_PARAGRAPH_TAGS:
+            text = _render_block_element(child)
+            if text and text.strip():
+                synth = ET.Element("p")
+                synth.text = text
+                sections.append(TextParagraph(synth, ref_map=ref_map))
         else:
             warnings.warn(
                 f"Unexpected tag {child.tag} in {context}.",
@@ -167,6 +201,9 @@ def _gather_sections(
 def gather_abstract_type(root: ET.Element) -> str | None:
     """Extract the abstract type attribute (e.g., 'graphical', 'toc', 'summary').
 
+    Returns the ``abstract-type`` attribute of the *main* abstract (the one
+    without a type attribute, or the first if all are typed).
+
     Args:
         root: Root element of the PMC XML document
 
@@ -175,8 +212,26 @@ def gather_abstract_type(root: ET.Element) -> str | None:
     """
     abstracts = root.xpath("//article-meta/abstract")
     if abstracts:
-        return abstracts[0].get("abstract-type")
+        return _select_main_abstract(abstracts).get("abstract-type")
     return None
+
+
+def _select_main_abstract(nodes: list[ET.Element]) -> ET.Element:
+    """Return the primary text abstract from a list of abstract elements.
+
+    When multiple ``<abstract>`` elements exist, PMC articles often include
+    typed variants (``abstract-type="graphical"``, ``"author-highlights"``,
+    ``"executive-summary"``, etc.) alongside the main text abstract (no
+    ``abstract-type`` attribute).  This helper picks the untyped abstract
+    when available; otherwise it falls back to the first element.
+
+    Args:
+        nodes: List of ``<abstract>`` XML elements (must be non-empty).
+
+    Returns:
+        ET.Element: The preferred abstract element.
+    """
+    return next((a for a in nodes if a.get("abstract-type") is None), nodes[0])
 
 
 def gather_abstract(
@@ -242,13 +297,17 @@ def gather_abstract(
         The structured representation enables both human-readable formatting
         and machine processing for AI/ML applications.
     """
-    return _gather_sections(
-        root,
-        xpath="//article-meta/abstract",
-        missing_warning="No abstract found.",
-        context="abstract",
-        ref_map=ref_map,
-    )
+    nodes = root.xpath("//article-meta/abstract")
+    if not nodes:
+        warnings.warn("No abstract found.", UnexpectedZeroMatchWarning, stacklevel=2)
+        return None
+    if len(nodes) > 1:
+        warnings.warn(
+            "Multiple abstract tags found; using the main (untyped) abstract.",
+            UnexpectedMultipleMatchWarning,
+            stacklevel=2,
+        )
+    return _collect_sections(_select_main_abstract(nodes), "abstract", ref_map)
 
 
 def gather_body(

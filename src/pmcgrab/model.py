@@ -17,6 +17,7 @@ convenient access methods for AI/ML applications that need clean text
 extraction alongside metadata.
 """
 
+import copy
 import datetime
 import json
 import textwrap
@@ -796,7 +797,8 @@ class TextParagraph(TextElement):
         """
         super().__init__(p_root, parent, ref_map)
         self.id = p_root.get("id")
-        p_subtree = stringify_children(self.root)
+        p_node = _flatten_block_elements_in_paragraph(self.root)
+        p_subtree = stringify_children(p_node)
         self.text_with_refs = split_text_and_refs(
             p_subtree, self.get_ref_map(), element_id=self.id, on_unknown="keep"
         )
@@ -926,6 +928,62 @@ def _render_block_element(elem: ET.Element) -> str:
 
     # Generic fallback: join all text content
     return "".join(elem.itertext()).strip()
+
+
+_INLINE_BLOCK_TAGS = frozenset(
+    {
+        "list",
+        "def-list",
+        "disp-formula",
+        "disp-quote",
+        "boxed-text",
+        "preformat",
+        "code",
+        "verse-group",
+        "speech",
+        "statement",
+    }
+)
+
+
+def _flatten_block_elements_in_paragraph(p_root: ET.Element) -> ET.Element:
+    """Deep-copy a ``<p>`` element and convert nested block elements to plain text.
+
+    Some publishers nest block-level JATS elements (e.g. ``<list>``,
+    ``<disp-formula>``) directly inside ``<p>`` elements.  These survive
+    ``stringify_children`` as raw XML markup and then pass through
+    ``split_text_and_refs`` unchanged because they are not in the allowed
+    inline tag set, producing ugly output like
+    ``"<list-item id=\\"…\\"><label>•</label>…"``.
+
+    This function deep-copies the node so the original tree is never mutated,
+    then replaces every nested block element with its rendered plain-text
+    equivalent by adjusting the surrounding ``text``/``tail`` strings.
+
+    Args:
+        p_root: The ``<p>`` lxml element to process.
+
+    Returns:
+        ET.Element: A deep copy of ``p_root`` with block elements replaced by text.
+    """
+    node = copy.deepcopy(p_root)
+    for tag in _INLINE_BLOCK_TAGS:
+        for block in node.findall(f".//{tag}"):
+            parent = block.getparent()
+            if parent is None:
+                continue
+            rendered = _render_block_element(block)
+            tail = block.tail or ""
+            combined = (" " + rendered + " " + tail).strip()
+            siblings = list(parent)
+            idx = siblings.index(block)
+            if idx > 0:
+                prev = siblings[idx - 1]
+                prev.tail = (prev.tail or "") + " " + combined
+            else:
+                parent.text = (parent.text or "") + " " + combined
+            parent.remove(block)
+    return node
 
 
 class TextSection(TextElement):

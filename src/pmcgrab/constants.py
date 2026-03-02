@@ -225,6 +225,18 @@ class EmptyTextWarning(Warning):
     pass
 
 
+class MalformedRefTagWarning(Warning):
+    """Warning for ref-map entries that cannot be parsed as XML.
+
+    Issued when a reference tag stored in the internal ref-map cannot be
+    parsed by lxml. This typically occurs with consecutive self-closing xref
+    tags that were incorrectly merged into a single string. The offending
+    entry is skipped during reference resolution.
+    """
+
+    pass
+
+
 class PubmedHTTPError(Warning):
     """Warning for HTTP-related errors when accessing PubMed/PMC services.
 
