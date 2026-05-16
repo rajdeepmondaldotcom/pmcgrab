@@ -21,9 +21,7 @@ jobs:
         uses: astral-sh/setup-uv@v5
 
       - name: Install dependencies
-        run: |
-          uv sync
-          uv add --group dev pre-commit
+        run: uv sync --locked --dev
 
       - name: Run pre-commit
         run: uv run pre-commit run --all-files --show-diff-on-failure
