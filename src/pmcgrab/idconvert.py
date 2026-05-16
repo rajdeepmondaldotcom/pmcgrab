@@ -53,14 +53,15 @@ _DOI_RE = re.compile(r"^10\.\d{4,}/")
 def normalize_id(raw_id: str) -> str:
     """Normalize any publication identifier to a numeric PMCID string.
 
-    Accepts PMC IDs in various formats (PMC7181753, pmc7181753, 7181753),
-    PMIDs (plain numeric without PMC prefix -- resolved via API), and DOIs
-    (resolved via NCBI ID Converter API).
+    Accepts PMC IDs in various formats (PMC7181753, pmc7181753, 7181753)
+    and DOIs (resolved via NCBI ID Converter API). Plain numeric IDs are
+    treated as PMCIDs for backward compatibility. Use :func:`normalize_pmid`
+    when a numeric identifier is known to be a PubMed ID.
 
     Args:
         raw_id: Input identifier in any supported format:
             - PMC IDs: "PMC7181753", "pmc7181753", "PMC 7181753", "7181753"
-            - PMIDs: Numeric IDs that will be resolved via API if no PMC prefix
+            - PMIDs: Use normalize_pmid() for explicit PMID conversion
             - DOIs: "10.1038/s41586-020-2832-5"
 
     Returns:

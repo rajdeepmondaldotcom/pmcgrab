@@ -54,6 +54,17 @@ from pmcgrab.application.processing import (
 from pmcgrab.idconvert import normalize_id, normalize_pmid
 
 
+def _positive_int(value: str) -> int:
+    """Parse a strictly positive integer for worker-count flags."""
+    try:
+        parsed = int(value)
+    except ValueError as exc:
+        raise argparse.ArgumentTypeError("must be a positive integer") from exc
+    if parsed <= 0:
+        raise argparse.ArgumentTypeError("must be a positive integer")
+    return parsed
+
+
 def _parse_args() -> argparse.Namespace:
     """Parse and validate command-line arguments.
 
@@ -88,7 +99,10 @@ def _parse_args() -> argparse.Namespace:
     src.add_argument(
         "--from-id-file",
         dest="from_id_file",
-        help="Text file with one ID per line (PMCIDs, PMIDs, or DOIs)",
+        help=(
+            "Text file with one ID per line. Bare numeric IDs are treated as PMCIDs; "
+            "DOIs are converted via NCBI. Use --pmids for PubMed IDs."
+        ),
     )
     src.add_argument(
         "--from-dir",
@@ -116,7 +130,7 @@ def _parse_args() -> argparse.Namespace:
         "--batch-size",
         "--workers",
         dest="batch_size",
-        type=int,
+        type=_positive_int,
         default=10,
         help="Number of worker threads (default: 10)",
     )
@@ -142,6 +156,13 @@ def _parse_args() -> argparse.Namespace:
         "-q",
         action="store_true",
         help="Suppress progress bars (useful for piped output)",
+    )
+    from pmcgrab import __version__
+
+    p.add_argument(
+        "--version",
+        action="version",
+        version=f"%(prog)s {__version__}",
     )
 
     return p.parse_args()

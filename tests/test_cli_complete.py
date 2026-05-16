@@ -1,10 +1,15 @@
 """Comprehensive CLI tests to achieve 100% coverage of pmcgrab_cli.py."""
 
 import json
+import subprocess
+import sys
 import tempfile
 from pathlib import Path
 from unittest.mock import patch
 
+import pytest
+
+import pmcgrab
 from pmcgrab.cli.pmcgrab_cli import main
 
 # Dummy article data returned by process_single_pmc mock
@@ -20,6 +25,30 @@ _DUMMY_ARTICLE = {
 
 class TestCLIComplete:
     """Complete coverage tests for CLI module."""
+
+    def test_python_module_help_smoke(self):
+        """Test the installed module entrypoint exposes CLI help."""
+        result = subprocess.run(
+            [sys.executable, "-m", "pmcgrab", "--help"],
+            check=False,
+            capture_output=True,
+            text=True,
+        )
+
+        assert result.returncode == 0
+        assert "--pmcids" in result.stdout
+
+    def test_python_module_version_smoke(self):
+        """Test the installed module entrypoint exposes the package version."""
+        result = subprocess.run(
+            [sys.executable, "-m", "pmcgrab", "--version"],
+            check=False,
+            capture_output=True,
+            text=True,
+        )
+
+        assert result.returncode == 0
+        assert pmcgrab.__version__ in result.stdout
 
     def test_main_with_valid_args(self):
         """Test main function with valid arguments."""
@@ -158,21 +187,19 @@ class TestCLIComplete:
                     "pmcgrab.cli.pmcgrab_cli.process_single_pmc"
                 ) as mock_process:
                     mock_process.side_effect = Exception("Processing failed")
+                    main()
 
-                    try:
-                        main()
-                    except (SystemExit, Exception):
-                        pass
+            summary = json.loads((output_dir / "summary.json").read_text())
+            assert summary == {"7114487": False}
 
     def test_main_argument_parsing_edge_cases(self):
         """Test argument parsing edge cases."""
         with patch("sys.argv", ["pmcgrab_cli.py"]):
-            try:
+            with pytest.raises(SystemExit) as exc_info:
                 main()
-            except (SystemExit, Exception):
-                pass
+        assert exc_info.value.code == 2
 
-    def test_main_with_invalid_batch_size(self):
+    def test_main_with_invalid_batch_size(self, capsys):
         """Test main function with invalid batch size."""
         with tempfile.TemporaryDirectory() as temp_dir:
             output_dir = Path(temp_dir)
@@ -188,12 +215,12 @@ class TestCLIComplete:
             ]
 
             with patch("sys.argv", test_args):
-                try:
+                with pytest.raises(SystemExit) as exc_info:
                     main()
-                except (SystemExit, ValueError, Exception):
-                    pass
+        assert exc_info.value.code == 2
+        assert "must be a positive integer" in capsys.readouterr().err
 
-    def test_main_with_negative_batch_size(self):
+    def test_main_with_negative_batch_size(self, capsys):
         """Test main function with negative batch size."""
         with tempfile.TemporaryDirectory() as temp_dir:
             output_dir = Path(temp_dir)
@@ -209,51 +236,48 @@ class TestCLIComplete:
             ]
 
             with patch("sys.argv", test_args):
-                try:
+                with pytest.raises(SystemExit) as exc_info:
                     main()
-                except (SystemExit, ValueError, Exception):
-                    pass
+        assert exc_info.value.code == 2
+        assert "must be a positive integer" in capsys.readouterr().err
 
-    def test_main_with_nonexistent_output_dir(self):
-        """Test main function with non-existent output directory."""
-        nonexistent_dir = "/nonexistent/path/that/should/not/exist"
+    def test_main_with_nested_output_dir(self, tmp_path):
+        """Test main function creates a missing nested output directory."""
+        output_dir = tmp_path / "missing" / "nested"
 
         test_args = [
             "pmcgrab_cli.py",
             "--pmcids",
             "7114487",
             "--output-dir",
-            nonexistent_dir,
+            str(output_dir),
         ]
 
         with patch("sys.argv", test_args):
             with patch("pmcgrab.cli.pmcgrab_cli.process_single_pmc") as mock_process:
                 mock_process.return_value = _DUMMY_ARTICLE
+                main()
 
-                try:
-                    main()
-                except (SystemExit, FileNotFoundError, OSError, Exception):
-                    pass
+        assert (output_dir / "PMC7114487.json").exists()
 
     def test_main_help_option(self):
         """Test main function with help option."""
         test_args = ["pmcgrab_cli.py", "--help"]
 
         with patch("sys.argv", test_args):
-            try:
+            with pytest.raises(SystemExit) as exc_info:
                 main()
-            except SystemExit as e:
-                assert e.code == 0 or e.code is None
+        assert exc_info.value.code == 0
 
-    def test_main_version_option(self):
+    def test_main_version_option(self, capsys):
         """Test main function with version option (if available)."""
         test_args = ["pmcgrab_cli.py", "--version"]
 
         with patch("sys.argv", test_args):
-            try:
+            with pytest.raises(SystemExit) as exc_info:
                 main()
-            except (SystemExit, AttributeError):
-                pass
+        assert exc_info.value.code == 0
+        assert pmcgrab.__version__ in capsys.readouterr().out
 
     def test_main_verbose_option(self):
         """Test main function with verbose option (if available)."""
@@ -274,11 +298,9 @@ class TestCLIComplete:
                     "pmcgrab.cli.pmcgrab_cli.process_single_pmc"
                 ) as mock_process:
                     mock_process.return_value = _DUMMY_ARTICLE
+                    main()
 
-                    try:
-                        main()
-                    except (SystemExit, Exception):
-                        pass
+                mock_process.assert_called_once_with("7114487")
 
     def test_main_with_large_batch_size(self):
         """Test main function with very large batch size."""
@@ -317,10 +339,9 @@ class TestCLIComplete:
             ]
 
             with patch("sys.argv", test_args):
-                try:
+                with pytest.raises(SystemExit) as exc_info:
                     main()
-                except (SystemExit, Exception):
-                    pass
+        assert exc_info.value.code == 2
 
     def test_main_with_duplicate_pmcids(self):
         """Test main function with duplicate PMC IDs."""
@@ -348,10 +369,9 @@ class TestCLIComplete:
     def test_main_argument_parser_creation(self):
         """Test argument parser creation and configuration."""
         with patch("sys.argv", ["pmcgrab_cli.py", "--help"]):
-            try:
+            with pytest.raises(SystemExit) as exc_info:
                 main()
-            except SystemExit:
-                pass
+        assert exc_info.value.code == 0
 
     def test_main_with_mixed_valid_invalid_pmcids(self):
         """Test main function with mix of valid and invalid PMC IDs.
@@ -367,7 +387,7 @@ class TestCLIComplete:
                 "pmcgrab_cli.py",
                 "--pmcids",
                 "7114487",
-                "invalid",
+                "PMCinvalid",
                 "3084273",
                 "--output-dir",
                 str(output_dir),
@@ -382,6 +402,78 @@ class TestCLIComplete:
                     # "invalid" is filtered out during ID normalization,
                     # so only 2 valid IDs are processed
                     assert mock_process.call_count == 2
+
+    def test_main_resolves_pmids_before_processing(self, tmp_path):
+        """Test PMID mode converts IDs before processing."""
+        output_dir = tmp_path / "out"
+        test_args = [
+            "pmcgrab_cli.py",
+            "--pmids",
+            "33087749",
+            "--output-dir",
+            str(output_dir),
+        ]
+
+        with patch("sys.argv", test_args):
+            with patch("pmcgrab.cli.pmcgrab_cli.normalize_pmid") as mock_normalize:
+                with patch(
+                    "pmcgrab.cli.pmcgrab_cli.process_single_pmc"
+                ) as mock_process:
+                    mock_normalize.return_value = "7181753"
+                    mock_process.return_value = _DUMMY_ARTICLE
+                    main()
+
+        mock_normalize.assert_called_once_with("33087749")
+        mock_process.assert_called_once_with("7181753")
+
+    def test_main_resolves_dois_before_processing(self, tmp_path):
+        """Test DOI mode converts IDs before processing."""
+        output_dir = tmp_path / "out"
+        test_args = [
+            "pmcgrab_cli.py",
+            "--dois",
+            "10.1234/example",
+            "--output-dir",
+            str(output_dir),
+        ]
+
+        with patch("sys.argv", test_args):
+            with patch("pmcgrab.cli.pmcgrab_cli.normalize_id") as mock_normalize:
+                with patch(
+                    "pmcgrab.cli.pmcgrab_cli.process_single_pmc"
+                ) as mock_process:
+                    mock_normalize.return_value = "7181753"
+                    mock_process.return_value = _DUMMY_ARTICLE
+                    main()
+
+        mock_normalize.assert_called_once_with("10.1234/example")
+        mock_process.assert_called_once_with("7181753")
+
+    def test_main_reads_id_file_comments_and_skips_invalid_ids(self, tmp_path):
+        """Test ID-file mode skips comments, blanks, and invalid PMC IDs."""
+        ids_file = tmp_path / "ids.txt"
+        ids_file.write_text(
+            "\n# comment\nPMC7114487\nPMCbad\n3084273\n",
+            encoding="utf-8",
+        )
+        output_dir = tmp_path / "out"
+        test_args = [
+            "pmcgrab_cli.py",
+            "--from-id-file",
+            str(ids_file),
+            "--output-dir",
+            str(output_dir),
+        ]
+
+        with patch("sys.argv", test_args):
+            with patch("pmcgrab.cli.pmcgrab_cli.process_single_pmc") as mock_process:
+                mock_process.return_value = _DUMMY_ARTICLE
+                main()
+
+        assert [call.args[0] for call in mock_process.call_args_list] == [
+            "7114487",
+            "3084273",
+        ]
 
     def test_main_output_directory_handling(self):
         """Test output directory creation and handling."""
@@ -401,11 +493,9 @@ class TestCLIComplete:
                     "pmcgrab.cli.pmcgrab_cli.process_single_pmc"
                 ) as mock_process:
                     mock_process.return_value = _DUMMY_ARTICLE
+                    main()
 
-                    try:
-                        main()
-                    except Exception:
-                        pass
+            assert (output_dir / "PMC7114487.json").exists()
 
     def test_main_keyboard_interrupt(self):
         """Test main function handling keyboard interrupt."""
@@ -426,10 +516,8 @@ class TestCLIComplete:
                 ) as mock_process:
                     mock_process.side_effect = KeyboardInterrupt("User interrupted")
 
-                    try:
+                    with pytest.raises(KeyboardInterrupt):
                         main()
-                    except (KeyboardInterrupt, SystemExit):
-                        pass
 
     def test_main_writes_json_and_summary(self):
         """Test that main writes JSON files and summary correctly."""
@@ -462,3 +550,45 @@ class TestCLIComplete:
                 (output_dir / "summary.json").read_text(encoding="utf-8")
             )
             assert summary["7114487"] is True
+
+    def test_main_writes_jsonl(self, tmp_path):
+        """Test JSONL output writes all successful articles to output.jsonl."""
+        output_dir = tmp_path / "out"
+        test_args = [
+            "pmcgrab_cli.py",
+            "--pmcids",
+            "7114487",
+            "--output-dir",
+            str(output_dir),
+            "--format",
+            "jsonl",
+        ]
+
+        with patch("sys.argv", test_args):
+            with patch("pmcgrab.cli.pmcgrab_cli.process_single_pmc") as mock_process:
+                mock_process.return_value = _DUMMY_ARTICLE
+                main()
+
+        rows = (output_dir / "output.jsonl").read_text(encoding="utf-8").splitlines()
+        assert len(rows) == 1
+        assert json.loads(rows[0])["title"] == "Test Article"
+
+    def test_main_quiet_disables_progress_bar(self, tmp_path):
+        """Test quiet mode disables tqdm progress output."""
+        output_dir = tmp_path / "out"
+        test_args = [
+            "pmcgrab_cli.py",
+            "--pmcids",
+            "7114487",
+            "--output-dir",
+            str(output_dir),
+            "--quiet",
+        ]
+
+        with patch("sys.argv", test_args):
+            with patch("pmcgrab.cli.pmcgrab_cli.process_single_pmc") as mock_process:
+                with patch("pmcgrab.cli.pmcgrab_cli.tqdm") as mock_tqdm:
+                    mock_process.return_value = _DUMMY_ARTICLE
+                    main()
+
+        assert mock_tqdm.call_args.kwargs["disable"] is True
