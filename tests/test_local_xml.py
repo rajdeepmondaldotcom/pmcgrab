@@ -158,6 +158,15 @@ class TestParseLocalXml:
         _, pmcid = parse_local_xml(fp)
         assert pmcid == 7181753
 
+    def test_extracts_pmcid_attribute_with_prefix(self, tmp_path):
+        xml = SAMPLE_JATS_XML.replace(
+            '<article-id pub-id-type="pmc">7181753</article-id>',
+            '<article-id pub-id-type="pmcid">PMC7181753</article-id>',
+        )
+        fp = _write_xml(tmp_path, "article.xml", xml)
+        _, pmcid = parse_local_xml(fp)
+        assert pmcid == 7181753
+
     def test_missing_pmcid_returns_none(self, tmp_path):
         xml_no_pmcid = """\
 <?xml version="1.0" encoding="UTF-8"?>
@@ -234,6 +243,11 @@ class TestPaperDictFromLocalXml:
         d = paper_dict_from_local_xml(str(fp), suppress_errors=True)
         # Should not raise, returns empty dict or partial
         assert isinstance(d, dict)
+
+    def test_suppress_errors_covers_malformed_xml(self, tmp_path):
+        fp = _write_xml(tmp_path, "malformed.xml", "<article>")
+        d = paper_dict_from_local_xml(str(fp), suppress_errors=True)
+        assert d == {}
 
     def test_missing_pmcid_uses_zero(self, tmp_path):
         xml_no_id = """\

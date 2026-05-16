@@ -476,8 +476,10 @@ def parse_local_xml(
     # Extract PMCID from the parsed XML
     root = tree.getroot()
     pmc_id_elements = root.xpath(
-        './/article-id[@pub-id-type="pmc"]/text()'
-    ) or root.xpath('.//article-meta/article-id[@pub-id-type="pmc"]/text()')
+        './/article-id[@pub-id-type="pmc" or @pub-id-type="pmcid"]/text()'
+    ) or root.xpath(
+        './/article-meta/article-id[@pub-id-type="pmc" or @pub-id-type="pmcid"]/text()'
+    )
 
     pmcid: int | None = None
     if pmc_id_elements:

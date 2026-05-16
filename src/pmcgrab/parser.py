@@ -875,12 +875,19 @@ def paper_dict_from_pmc(
     """
     if verbose:
         logger.info("Generating Paper object for PMCID=%s …", pmcid)
-    if suppress_warnings:
-        with warnings.catch_warnings():
-            warnings.simplefilter("ignore")
+    try:
+        if suppress_warnings:
+            with warnings.catch_warnings():
+                warnings.simplefilter("ignore")
+                tree = get_xml(pmcid, email, download, validate, verbose=verbose)
+        else:
             tree = get_xml(pmcid, email, download, validate, verbose=verbose)
-    else:
-        tree = get_xml(pmcid, email, download, validate, verbose=verbose)
+    except Exception as exc:
+        if suppress_errors:
+            if verbose:
+                logger.warning("XML acquisition failed for PMCID %s: %s", pmcid, exc)
+            return {}
+        raise
     root = tree.getroot()
     return generate_paper_dict(pmcid, root, verbose, suppress_warnings, suppress_errors)
 
@@ -932,12 +939,19 @@ def paper_dict_from_local_xml(
         ...     suppress_errors=True,
         ... )
     """
-    tree, pmcid = parse_local_xml(
-        xml_path,
-        strip_text_styling=strip_text_styling,
-        validate=validate,
-        verbose=verbose,
-    )
+    try:
+        tree, pmcid = parse_local_xml(
+            xml_path,
+            strip_text_styling=strip_text_styling,
+            validate=validate,
+            verbose=verbose,
+        )
+    except Exception as exc:
+        if suppress_errors:
+            if verbose:
+                logger.warning("Local XML acquisition failed for %s: %s", xml_path, exc)
+            return {}
+        raise
     root = tree.getroot()
     effective_pmcid = pmcid if pmcid is not None else 0
     if verbose:

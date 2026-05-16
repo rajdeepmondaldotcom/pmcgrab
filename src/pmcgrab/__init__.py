@@ -53,11 +53,12 @@ External Service Functions:
     oai_list_sets: List OAI-PMH sets
 """
 
-__version__ = "1.0.6"
+__version__ = "1.0.7"
 
 from pmcgrab.application.processing import (
     process_local_xml_dir,
     process_single_local_xml,
+    process_single_pmc,
 )
 from pmcgrab.bioc import fetch_json as bioc_fetch
 from pmcgrab.fetch import get_xml, parse_local_xml
@@ -84,7 +85,6 @@ from pmcgrab.processing import (
     process_in_batches,
     process_in_batches_with_retry,
     process_pmc_ids_in_batches,
-    process_single_pmc,
 )
 
 __all__ = [

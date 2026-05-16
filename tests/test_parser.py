@@ -1,6 +1,7 @@
 import datetime
 
 import lxml.etree as ET
+import pytest
 
 from pmcgrab import parser
 from pmcgrab.model import TextParagraph, TextSection
@@ -92,3 +93,34 @@ def test_paper_dict_from_pmc(monkeypatch):
     assert d["Ethics"]["Conflicts of Interest"] == "No conflict"
     # The href extraction might fail due to namespace issues, just check structure
     assert len(d["Supplementary Material"]) > 0
+
+
+def test_paper_dict_from_pmc_suppress_errors_covers_xml_acquisition(monkeypatch):
+    def fail_get_xml(*args, **kwargs):
+        raise ET.XMLSyntaxError("bad xml", 1, 1, 1)
+
+    monkeypatch.setattr(parser, "get_xml", fail_get_xml)
+
+    d = parser.paper_dict_from_pmc(
+        1,
+        email="test@example.com",
+        validate=False,
+        suppress_errors=True,
+    )
+
+    assert d == {}
+
+
+def test_paper_dict_from_pmc_raises_acquisition_error_without_suppression(monkeypatch):
+    def fail_get_xml(*args, **kwargs):
+        raise ET.XMLSyntaxError("bad xml", 1, 1, 1)
+
+    monkeypatch.setattr(parser, "get_xml", fail_get_xml)
+
+    with pytest.raises(ET.XMLSyntaxError):
+        parser.paper_dict_from_pmc(
+            1,
+            email="test@example.com",
+            validate=False,
+            suppress_errors=False,
+        )
