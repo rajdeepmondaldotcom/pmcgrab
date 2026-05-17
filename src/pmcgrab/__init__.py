@@ -16,15 +16,15 @@ Examples:
     Basic usage for retrieving a single paper:
 
         >>> from pmcgrab import Paper
-        >>> paper = Paper.from_pmc("7181753", email="your-email@example.com")
+        >>> paper = Paper.from_pmc("7181753")
         >>> print(paper.title)
-        >>> print(paper.body["Introduction"][:500])
+        >>> print(paper.body_as_dict()["Introduction"][:500])
 
     Batch processing multiple papers:
 
-        >>> from pmcgrab import process_pmc_ids_in_batches
+        >>> from pmcgrab import process_single_pmc
         >>> pmc_ids = ["7181753", "3539614", "5454911"]
-        >>> process_pmc_ids_in_batches(pmc_ids, "./output", batch_size=8)
+        >>> results = {pmcid: process_single_pmc(pmcid) for pmcid in pmc_ids}
 
 Classes:
     Paper: Container for all parsed information about a PMC article
@@ -38,7 +38,7 @@ Functions:
     process_single_pmc: Download and parse a single PMC article
     process_single_local_xml: Parse a single local JATS XML file
     process_local_xml_dir: Batch-process a directory of local XML files
-    process_pmc_ids_in_batches: Process multiple PMC IDs concurrently
+    process_pmc_ids_in_batches: Legacy helper for processing PMC IDs in batches
     process_in_batches: Process PMC IDs in sequential chunks
     process_in_batches_with_retry: Batch processing with automatic retries
 

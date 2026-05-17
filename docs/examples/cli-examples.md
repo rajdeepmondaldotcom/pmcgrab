@@ -1,88 +1,68 @@
 # CLI Examples
 
-Practical command-line examples for common PMCGrab usage scenarios.
+Practical command-line examples for the current PMCGrab CLI.
 
-## Basic Usage
-
-### Single Article Processing
+## PMC IDs
 
 ```bash
-# Basic usage - process one article
-uv run python -m pmcgrab PMC7181753
-
-# With email specification (recommended)
-uv run uv run python -m pmcgrab --email researcher@university.edu PMC7181753
-
-# Save to custom directory
-uv run uv run python -m pmcgrab --output-dir ./papers --email researcher@university.edu PMC7181753
+uv run python -m pmcgrab --pmcids 7181753 --output-dir ./papers
+uv run python -m pmcgrab --pmcids PMC7181753 PMC3539614 --workers 4
 ```
 
-### Multiple Articles
+## PubMed IDs and DOIs
 
 ```bash
-# Process several articles at once
-uv run uv run python -m pmcgrab PMC7181753 PMC3539614 PMC5454911
-
-# With parallel processing
-uv run uv run python -m pmcgrab --workers 4 PMC7181753 PMC3539614 PMC5454911
+uv run python -m pmcgrab --pmids 33087749 --output-dir ./papers
+uv run python -m pmcgrab --dois 10.1038/s41586-020-2832-5 --output-dir ./papers
 ```
 
-## File Input
-
-### From Text File
+## Text File
 
 Create `pmcids.txt`:
 
-```
-7181753
+```text
+# Comments and blank lines are ignored.
+PMC7181753
 3539614
-5454911
-7979870
+10.1038/s41586-020-2832-5
 ```
 
 Process the list:
 
 ```bash
-uv run python -m pmcgrab --input-file pmcids.txt --email researcher@university.edu
+uv run python -m pmcgrab --from-id-file pmcids.txt --output-dir ./papers
 ```
 
-## Advanced Options
+Bare numeric values in `--from-id-file` are treated as PMC IDs. Use `--pmids` for PubMed IDs.
 
-### Batch Processing with Configuration
+## Local XML
 
 ```bash
-# Process with custom settings
+# Directory of JATS XML files.
+uv run python -m pmcgrab --from-dir ./pmc_bulk_xml --output-dir ./papers
+
+# Specific XML files.
+uv run python -m pmcgrab --from-file article1.xml article2.xml --output-dir ./papers
+```
+
+## JSONL Output
+
+```bash
 uv run python -m pmcgrab \
-    --input-file pmcids.txt \
-    --output-dir ./output \
-    --email researcher@university.edu \
-    --workers 4 \
-    --batch-size 10 \
-    --max-retries 2 \
-    --verbose
+    --pmcids 7181753 3539614 \
+    --output-dir ./papers \
+    --format jsonl
 ```
 
-### Common Parameters
+This writes `output.jsonl` plus `summary.json`.
 
-| Parameter       | Description                     | Example                    |
-| --------------- | ------------------------------- | -------------------------- |
-| `--email`       | Your email for NCBI requests    | `--email user@example.com` |
-| `--output-dir`  | Output directory for JSON files | `--output-dir ./papers`    |
-| `--workers`     | Number of parallel workers      | `--workers 4`              |
-| `--batch-size`  | Articles per batch              | `--batch-size 10`          |
-| `--max-retries` | Retry failed requests           | `--max-retries 2`          |
-| `--verbose`     | Detailed output                 | `--verbose`                |
-| `--input-file`  | Read PMC IDs from file          | `--input-file list.txt`    |
+## Common Parameters
 
-## Output
-
-PMCGrab saves each article as a JSON file:
-
-```
-output/
-├── PMC7181753.json
-├── PMC3539614.json
-└── PMC5454911.json
-```
-
-Each JSON file contains structured article data including title, abstract, body sections, authors, and metadata.
+| Parameter                   | Description                     | Example                 |
+| --------------------------- | ------------------------------- | ----------------------- |
+| `--output-dir`, `--out`     | Output directory for JSON files | `--output-dir ./papers` |
+| `--workers`, `--batch-size` | Number of worker threads        | `--workers 4`           |
+| `--format`                  | `json` or `jsonl`               | `--format jsonl`        |
+| `--verbose`                 | Enable debug logging            | `--verbose`             |
+| `--quiet`                   | Suppress progress bars          | `--quiet`               |
+| `--version`                 | Print installed version         | `--version`             |

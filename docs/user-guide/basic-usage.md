@@ -28,7 +28,6 @@ import json
 from pathlib import Path
 
 from pmcgrab.application.processing import process_single_pmc
-from pmcgrab.infrastructure.settings import next_email
 
 # The PMC IDs we want to process
 PMC_IDS = ["7114487", "3084273", "7690653", "5707528", "7979870"]
@@ -37,17 +36,16 @@ OUT_DIR = Path("pmc_output")
 OUT_DIR.mkdir(exist_ok=True)
 
 for pmcid in PMC_IDS:
-    email = next_email()
-    print(f"• Fetching PMC{pmcid} using email {email} …")
+    print(f"Fetching PMC{pmcid}...")
     data = process_single_pmc(pmcid)
     if data is None:
-        print(f"  ↳ FAILED to parse PMC{pmcid}")
+        print(f"  FAILED to parse PMC{pmcid}")
         continue
 
     # Pretty-print a few key fields
     print(
         f"  Title   : {data['title'][:80]}{'…' if len(data['title']) > 80 else ''}\n"
-        f"  Abstract: {data['abstract'][:120]}{'…' if len(data['abstract']) > 120 else ''}\n"
+        f"  Abstract: {data['abstract_text'][:120]}{'…' if len(data['abstract_text']) > 120 else ''}\n"
         f"  Authors : {len(data['authors']) if data['authors'] else 0}"
     )
 
@@ -55,7 +53,7 @@ for pmcid in PMC_IDS:
     dest = OUT_DIR / f"PMC{pmcid}.json"
     with dest.open("w", encoding="utf-8") as fh:
         json.dump(data, fh, indent=2, ensure_ascii=False)
-    print(f"  ↳ JSON saved to {dest}\n")
+    print(f"  JSON saved to {dest}\n")
 ```
 
 ## Key Features
@@ -65,10 +63,8 @@ for pmcid in PMC_IDS:
 PMCGrab automatically rotates through available email addresses for NCBI API requests:
 
 ```python
-from pmcgrab.infrastructure.settings import next_email
 
 # Each call returns the next email in rotation
-email = next_email()
 print(f"Using email: {email}")
 ```
 
@@ -101,8 +97,8 @@ data = process_single_pmc("7114487")
 # Core metadata
 print(f"PMC ID: {data['pmc_id']}")
 print(f"Title: {data['title']}")
-print(f"Journal: {data['journal']}")
-print(f"DOI: {data.get('doi', 'N/A')}")
+print(f"Journal: {data['journal_title']}")
+print(f"DOI: {data.get('article_id', {}).get('doi', 'N/A')}")
 
 # Authors
 print(f"Authors ({len(data['authors'])}):")
@@ -111,12 +107,12 @@ for author in data['authors'][:3]:
 
 # Content sections
 print(f"Sections: {list(data['body'].keys())}")
-print(f"Abstract length: {len(data['abstract'])} characters")
+print(f"Abstract length: {len(data['abstract_text'])} characters")
 
 # Additional data
 print(f"Figures: {len(data.get('figures', []))}")
 print(f"Tables: {len(data.get('tables', []))}")
-print(f"References: {len(data.get('references', []))}")
+print(f"References: {len(data.get('citations', []))}")
 ```
 
 ## Batch Processing Patterns
@@ -125,7 +121,6 @@ print(f"References: {len(data.get('references', []))}")
 
 ```python
 from pmcgrab.application.processing import process_single_pmc
-from pmcgrab.infrastructure.settings import next_email
 import json
 from pathlib import Path
 
@@ -137,7 +132,6 @@ def process_pmcids(pmcids, output_dir="results"):
     results = []
 
     for pmcid in pmcids:
-        email = next_email()
         print(f"Processing PMC{pmcid}...")
 
         data = process_single_pmc(pmcid)
@@ -194,22 +188,20 @@ Process articles from the command line:
 
 ```bash
 # Single article
-uv run python -m pmcgrab PMC7114487
+uv run python -m pmcgrab --pmcids PMC7114487
 
 # Multiple articles
-uv run python -m pmcgrab PMC7114487 PMC3084273 PMC7690653
+uv run python -m pmcgrab --pmcids PMC7114487 PMC3084273 PMC7690653
 
 # From file
 echo -e "7114487\n3084273\n7690653" > pmcids.txt
-uv run python -m pmcgrab --input-file pmcids.txt --output-dir results/
+uv run python -m pmcgrab --from-id-file pmcids.txt --output-dir results/
 
 # With custom settings
 uv run python -m pmcgrab \
+    --pmcids PMC7114487 PMC3084273 \
     --output-dir ./papers \
-    --workers 4 \
-    --batch-size 10 \
-    --email researcher@university.edu \
-    PMC7114487 PMC3084273
+    --workers 4
 ```
 
 ## Output Files
@@ -220,7 +212,10 @@ PMCGrab creates structured JSON files:
 {
   "pmc_id": "7114487",
   "title": "Machine learning approaches in cancer research",
-  "abstract": "Recent advances in machine learning have...",
+  "abstract": {
+    "Abstract": "Recent advances in machine learning have..."
+  },
+  "abstract_text": "Recent advances in machine learning have...",
   "body": {
     "Introduction": "Cancer research has evolved significantly...",
     "Methods": "We implemented a deep learning framework...",
@@ -234,12 +229,16 @@ PMCGrab creates structured JSON files:
       "Affiliation": "Cancer Research Institute"
     }
   ],
-  "journal": "Nature Medicine",
-  "pub_date": "2023-05-15",
-  "doi": "10.1038/s41591-023-02345-6",
+  "journal_title": "Nature Medicine",
+  "published_date": {
+    "epub": "2023-05-15"
+  },
+  "article_id": {
+    "doi": "10.1038/s41591-023-02345-6"
+  },
   "figures": [...],
   "tables": [...],
-  "references": [...]
+  "citations": [...]
 }
 ```
 

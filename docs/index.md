@@ -61,7 +61,10 @@ if data:
 {
   "pmc_id": "7114487",
   "title": "Machine learning approaches in cancer research",
-  "abstract": "Recent advances in machine learning have revolutionized...",
+  "abstract": {
+    "Abstract": "Recent advances in machine learning have revolutionized..."
+  },
+  "abstract_text": "Recent advances in machine learning have revolutionized...",
   "authors": [
     {
       "First_Name": "John",
@@ -75,9 +78,12 @@ if data:
     "Results": "Our model achieved 94.2% accuracy...",
     "Discussion": "These findings demonstrate the potential..."
   },
-  "journal": "Nature Medicine",
+  "journal_title": "Nature Medicine",
+  "article_id": {
+    "doi": "10.1038/s41591-023-02345-6"
+  },
   "figures": [...],
   "tables": [...],
-  "references": [...]
+  "citations": [...]
 }
 ```

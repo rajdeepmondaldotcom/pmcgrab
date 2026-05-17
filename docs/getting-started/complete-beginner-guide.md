@@ -113,10 +113,10 @@ data = process_single_pmc(pmcid)
 if data:
     print("Success! Here's what we got:")
     print(f"Title: {data['title']}")
-    print(f"Journal: {data['journal']}")
+    print(f"Journal: {data['journal_title']}")
     print(f"Number of authors: {len(data['authors'])}")
     print(f"Paper has these sections: {list(data['body'].keys())}")
-    print(f"Abstract preview: {data['abstract'][:200]}...")
+    print(f"Abstract preview: {data['abstract_text'][:200]}...")
 else:
     print("Failed to fetch the paper")
 ```
@@ -248,7 +248,7 @@ for section, content in data['body'].items():
         "content": content,
         "metadata": {
             "title": data['title'],
-            "journal": data['journal'],
+            "journal": data['journal_title'],
             "authors": [f"{a['First_Name']} {a['Last_Name']}" for a in data['authors']]
         }
     })
@@ -261,8 +261,8 @@ for section, content in data['body'].items():
 training_examples = []
 for pmcid, paper_data in all_papers.items():
     training_examples.append({
-        "input": f"Summarize this {paper_data['journal']} paper about {paper_data['title']}",
-        "output": paper_data['abstract']
+        "input": f"Summarize this {paper_data['journal_title']} paper about {paper_data['title']}",
+        "output": paper_data['abstract_text']
     })
 ```
 
@@ -280,10 +280,10 @@ for file in Path("processed_papers").glob("*.json"):
     paper_stats.append({
         "pmcid": paper['pmc_id'],
         "title": paper['title'],
-        "journal": paper['journal'],
+        "journal": paper['journal_title'],
         "num_authors": len(paper['authors']),
         "num_sections": len(paper['body']),
-        "abstract_length": len(paper['abstract']),
+        "abstract_length": len(paper['abstract_text']),
         "total_content": sum(len(content) for content in paper['body'].values())
     })
 

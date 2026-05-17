@@ -1,272 +1,151 @@
 # Architecture
 
-PMCGrab follows clean architecture principles with clear separation of concerns.
+This page documents the current PMCGrab architecture as it exists in the
+repository. It is intentionally factual: proposed improvements live in
+`docs/development/clean-code-final-plan.md`.
 
-## Overview
+## Current Shape
 
 ```mermaid
 graph TB
-    CLI[CLI Layer] --> App[Application Layer]
-    App --> Domain[Domain Layer]
-    App --> Common[Common Utilities]
-    App --> Infra[Infrastructure Layer]
-    Domain --> Models[Domain Models]
-    Common --> Utils[Utilities & Helpers]
-    Infra --> External[External APIs]
+    CLI[pmcgrab.cli.pmcgrab_cli] --> Processing[pmcgrab.application.processing]
+    Processing --> Builder[pmcgrab.application.paper_builder]
+    Processing --> Model[pmcgrab.model.Paper]
+    Builder --> Parser[pmcgrab.parser]
+    Parser --> Parsing[pmcgrab.application.parsing.*]
+    Parser --> Fetch[pmcgrab.fetch]
+    Fetch --> NCBI[NCBI Entrez / local XML]
+    Model --> Common[pmcgrab.common.*]
+    Parser --> Domain[pmcgrab.domain.value_objects]
 ```
 
-## Layer Descriptions
+PMCGrab has a modern package layout, but it is still partly transitional. Some
+legacy top-level modules remain public for compatibility, while the primary
+processing path now runs through `pmcgrab.application`.
 
-### CLI Layer (`pmcgrab.cli`)
+## Main Modules
 
-- Command-line interface
-- Argument parsing
-- User interaction
-- Progress reporting
+| Module                                         | Responsibility                                                                   |
+| ---------------------------------------------- | -------------------------------------------------------------------------------- |
+| `pmcgrab.__init__`                             | Public package exports and version.                                              |
+| `pmcgrab.__main__`                             | `python -m pmcgrab` entry point.                                                 |
+| `pmcgrab.cli.pmcgrab_cli`                      | Argparse CLI, ID conversion, progress reporting, and file writing.               |
+| `pmcgrab.application.processing`               | Pure processing helpers for network PMCID input and local XML input.             |
+| `pmcgrab.application.paper_builder`            | Builds `Paper` objects from PMCID inputs.                                        |
+| `pmcgrab.parser`                               | Public parser facade and orchestration for XML-to-dictionary extraction.         |
+| `pmcgrab.application.parsing.*`                | Focused metadata, contributor, content, and section extraction helpers.          |
+| `pmcgrab.model`                                | `Paper`, `TextSection`, `TextParagraph`, `TextTable`, and serialization helpers. |
+| `pmcgrab.fetch`                                | Network XML retrieval and local XML parsing.                                     |
+| `pmcgrab.idconvert`                            | PMC/PMID/DOI normalization and NCBI ID conversion.                               |
+| `pmcgrab.common.*`                             | Serialization, HTML cleanup, and XML text helpers.                               |
+| `pmcgrab.infrastructure.settings`              | Environment-driven settings, email rotation, timeout and rate configuration.     |
+| `pmcgrab.bioc`, `oa_service`, `oai`, `litctxp` | Lightweight NCBI service clients.                                                |
 
-### Application Layer (`pmcgrab.application`)
+## Data Flow
 
-- Use case orchestration
-- Business workflow logic
-- Paper construction
-- Content parsing coordination
-
-### Domain Layer (`pmcgrab.domain`)
-
-- Core business entities
-- Value objects
-- Domain rules
-- No external dependencies
-
-### Common Layer (`pmcgrab.common`)
-
-- Shared utilities
-- HTML cleaning
-- XML processing
-- Serialization helpers
-
-### Infrastructure Layer (`pmcgrab.infrastructure`)
-
-- External API clients
-- HTTP utilities
-- Settings management
-- I/O operations
-
-## Key Components
-
-### Paper Model
-
-The central domain entity representing a PMC article:
-
-```python
-@dataclass
-class Paper:
-    pmcid: str
-    title: str
-    authors: List[Author]
-    abstract: Dict[str, str]
-    body: Dict[str, str]
-    citations: List[Citation]
-    # ... other fields
-```
-
-### Parser System
-
-Modular parsing system with specialized parsers:
-
-- `MetadataParser`: Article metadata
-- `ContentParser`: Main content sections
-- `ContributorParser`: Authors and affiliations
-- `SectionParser`: Section organization
-
-### Processing Pipeline
+### Network PMCID
 
 ```mermaid
 sequenceDiagram
     participant User
     participant CLI
-    participant App
+    participant Processing
+    participant Builder
     participant Parser
-    participant Fetcher
+    participant Fetch
+    participant Paper
 
-    User->>CLI: pmcgrab PMC123456
-    CLI->>App: process_pmc_ids()
-    App->>Fetcher: get_xml()
-    Fetcher-->>App: XML content
-    App->>Parser: parse_paper()
-    Parser-->>App: Paper object
-    App-->>CLI: Processing result
-    CLI-->>User: JSON output
+    User->>CLI: pmcgrab --pmcids 7181753
+    CLI->>Processing: process_single_pmc("7181753")
+    Processing->>Builder: build_paper_from_pmc(...)
+    Builder->>Parser: paper_dict_from_pmc(...)
+    Parser->>Fetch: get_xml(...)
+    Fetch-->>Parser: XML root
+    Parser-->>Builder: legacy parser dictionary
+    Builder-->>Processing: Paper
+    Processing-->>CLI: normalized dictionary
+    CLI-->>User: JSON or JSONL file
 ```
 
-## Design Patterns
+### Local XML
 
-### Factory Pattern
+```mermaid
+sequenceDiagram
+    participant User
+    participant CLI
+    participant Processing
+    participant Parser
+    participant Fetch
+    participant Paper
 
-Used for creating Paper objects from various sources:
+    User->>CLI: pmcgrab --from-file article.xml
+    CLI->>Processing: process_single_local_xml(path)
+    Processing->>Parser: paper_dict_from_local_xml(path)
+    Parser->>Fetch: parse_local_xml(path)
+    Fetch-->>Parser: PMCID and XML root
+    Parser-->>Processing: legacy parser dictionary
+    Processing->>Paper: Paper(parser_dict)
+    Processing-->>CLI: normalized dictionary
+```
+
+## Public Contracts
+
+The stable high-level APIs are:
 
 ```python
-class PaperFactory:
-    @staticmethod
-    def from_pmc(pmcid: str) -> Paper:
-        # Construction logic
+from pmcgrab import Paper, process_single_pmc, process_single_local_xml
 
-    @staticmethod
-    def from_xml(xml_content: str) -> Paper:
-        # Construction logic
+paper = Paper.from_pmc("7181753")
+data = process_single_pmc("7181753")
+local = process_single_local_xml("article.xml")
 ```
 
-### Strategy Pattern
+The normalized processing dictionary uses snake_case field names:
 
-Different parsing strategies for different content types:
+- `abstract` is the structured abstract dictionary.
+- `abstract_text` is the plain-text abstract.
+- `journal_title` is the journal name.
+- `article_id` contains DOI, PMID, PMCID, and publisher IDs when available.
+- `citations` contains parsed references.
+- `published_date` contains date values keyed by publication type.
 
-```python
-class ContentParser:
-    def __init__(self, strategy: ParsingStrategy):
-        self.strategy = strategy
-
-    def parse(self, content: str) -> Dict:
-        return self.strategy.parse(content)
-```
-
-### Builder Pattern
-
-Complex Paper object construction:
-
-```python
-class PaperBuilder:
-    def add_metadata(self, metadata: Dict) -> 'PaperBuilder':
-        # Add metadata
-        return self
-
-    def add_content(self, content: Dict) -> 'PaperBuilder':
-        # Add content
-        return self
-
-    def build(self) -> Paper:
-        # Construct final Paper object
-```
-
-## Data Flow
-
-### Single Paper Processing
-
-1. **Input**: PMC ID from user
-2. **Fetch**: Download XML from NCBI
-3. **Parse**: Extract structured data
-4. **Build**: Construct Paper object
-5. **Output**: Serialize to JSON
-
-### Batch Processing
-
-1. **Input**: List of PMC IDs
-2. **Chunk**: Split into batches
-3. **Parallel**: Process batches concurrently
-4. **Aggregate**: Collect results
-5. **Report**: Generate summary
+Deprecated or legacy modules such as `pmcgrab.processing` remain importable for
+compatibility, but new code should use `pmcgrab.application.processing` or the
+top-level exports.
 
 ## Error Handling
 
-### Error Types
+The parser supports two caller choices:
 
-```python
-class PMCGrabError(Exception):
-    """Base exception for PMCGrab"""
+- `suppress_errors=False`: acquisition and parsing errors propagate.
+- `suppress_errors=True`: acquisition, local XML parsing, and parser errors are
+  converted to empty results where possible.
 
-class NetworkError(PMCGrabError):
-    """Network-related errors"""
+The CLI treats empty results as failed article processing and continues with the
+remaining IDs or files.
 
-class ParsingError(PMCGrabError):
-    """XML parsing errors"""
+## Test Boundaries
 
-class ValidationError(PMCGrabError):
-    """Data validation errors"""
-```
+Current tests live directly under `tests/`:
 
-### Error Handling Strategy
+- `test_public_api.py` protects package exports and version consistency.
+- `test_cli_complete.py` protects argparse behavior and CLI smoke paths.
+- `test_local_xml.py` protects local XML parsing and PMCID extraction.
+- `test_parser.py`, `test_model.py`, and `test_application_processing.py`
+  protect core parsing, model, and processing behavior.
+- Service-specific tests cover settings, figures, utilities, HTML cleaning, and
+  regressions.
 
-- **Fail Fast**: For critical errors
-- **Graceful Degradation**: For parsing issues
-- **Retry Logic**: For network errors
-- **User Feedback**: Clear error messages
+## Known Deepening Work
 
-## Testing Architecture
+The current implementation works, but the final clean-code plan identifies
+several deeper improvements:
 
-### Test Structure
+- Make `pmcgrab.parser` a thinner facade over explicit parser services.
+- Centralize output schema ownership for `Paper.to_dict()` and processing
+  helpers.
+- Stabilize table and figure serialization contracts.
+- Expand CLI subprocess tests around file output and ID conversion modes.
+- Move more compatibility behavior behind explicit adapters.
 
-```
-tests/
-├── unit/           # Unit tests
-├── integration/    # Integration tests
-├── e2e/           # End-to-end tests
-├── fixtures/      # Test data
-└── conftest.py    # Test configuration
-```
-
-### Test Categories
-
-- **Unit Tests**: Individual components
-- **Integration Tests**: Component interactions
-- **End-to-end Tests**: Full workflows
-- **Performance Tests**: Speed and memory usage
-
-## Configuration Management
-
-### Settings Hierarchy
-
-1. Command line arguments (highest priority)
-2. Environment variables
-3. Configuration files
-4. Default values (lowest priority)
-
-### Configuration Schema
-
-```python
-@dataclass
-class Settings:
-    email: str
-    timeout: int = 30
-    max_retries: int = 3
-    batch_size: int = 10
-    workers: int = 4
-```
-
-## Extension Points
-
-### Custom Parsers
-
-Implement the `ParserInterface`:
-
-```python
-class CustomParser(ParserInterface):
-    def parse(self, xml_root: Element) -> Dict:
-        # Custom parsing logic
-```
-
-### Custom Output Formats
-
-Implement the `SerializerInterface`:
-
-```python
-class CustomSerializer(SerializerInterface):
-    def serialize(self, paper: Paper) -> str:
-        # Custom serialization logic
-```
-
-## Performance Considerations
-
-### Optimization Strategies
-
-1. **Concurrent Processing**: Multiple workers
-2. **Caching**: XML and parsed data
-3. **Memory Management**: Streaming for large datasets
-4. **Network Optimization**: Connection pooling
-
-### Monitoring
-
-- Processing speed metrics
-- Memory usage tracking
-- Error rate monitoring
-- Network latency measurements
-
-This architecture ensures PMCGrab is maintainable, testable, and extensible while providing excellent performance for both single article and batch processing scenarios.
+Those changes are intentionally staged because they affect public API behavior.

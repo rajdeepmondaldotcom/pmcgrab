@@ -63,7 +63,7 @@ for pmcid in PMC_IDS:
     # Pretty-print a few key fields
     print(
         f"  Title   : {data['title'][:80]}{'…' if len(data['title']) > 80 else ''}\n"
-        f"  Abstract: {data['abstract'][:120]}{'…' if len(data['abstract']) > 120 else ''}\n"
+        f"  Abstract: {data['abstract_text'][:120]}{'…' if len(data['abstract_text']) > 120 else ''}\n"
         f"  Authors : {len(data['authors']) if data['authors'] else 0}"
     )
 
@@ -239,18 +239,16 @@ For command-line usage, PMCGrab provides several configuration options:
 
 ```bash
 # Basic usage
-uv run python -m pmcgrab PMC7114487
+uv run python -m pmcgrab --pmcids PMC7114487
 
 # With custom settings
 uv run python -m pmcgrab \
+    --pmcids PMC7114487 PMC3084273 \
     --output-dir ./results \
-    --workers 4 \
-    --batch-size 10 \
-    --email researcher@university.edu \
-    PMC7114487 PMC3084273
+    --workers 4
 
 # From file
-uv run python -m pmcgrab --input-file pmcids.txt --output-dir results/
+uv run python -m pmcgrab --from-id-file pmcids.txt --output-dir results/
 ```
 
 ## Best Practices

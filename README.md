@@ -454,8 +454,8 @@ export NCBI_API_KEY="your_ncbi_api_key_here"
 
 | Metric                      | Value                  |
 | --------------------------- | ---------------------- |
-| Unit tests                  | **218**                |
-| Branch coverage             | **95 %**               |
+| Unit tests                  | **158+**               |
+| Branch coverage             | Enforced in CI reports |
 | Section detection accuracy  | **98 %**               |
 | Median parse time / article | **3.1 s** (network)    |
 | Local XML parse time        | **< 0.1 s**            |

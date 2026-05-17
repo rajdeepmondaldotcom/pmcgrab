@@ -25,7 +25,7 @@ data = process_single_pmc("7114487")
 
 if data:
     print(f"Title: {data['title']}")
-    print(f"Journal: {data['journal']}")
+    print(f"Journal: {data['journal_title']}")
     print(f"Authors: {len(data['authors'])}")
     print(f"Sections: {list(data['body'].keys())}")
 ```
@@ -40,7 +40,6 @@ import json
 from pathlib import Path
 
 from pmcgrab.application.processing import process_single_pmc
-from pmcgrab.infrastructure.settings import next_email
 
 # The PMC IDs we want to process
 PMC_IDS = ["7114487", "3084273", "7690653", "5707528", "7979870"]
@@ -49,17 +48,16 @@ OUT_DIR = Path("pmc_output")
 OUT_DIR.mkdir(exist_ok=True)
 
 for pmcid in PMC_IDS:
-    email = next_email()
-    print(f"• Fetching PMC{pmcid} using email {email} …")
+    print(f"Fetching PMC{pmcid}...")
     data = process_single_pmc(pmcid)
     if data is None:
-        print(f"  ↳ FAILED to parse PMC{pmcid}")
+        print(f"  FAILED to parse PMC{pmcid}")
         continue
 
     # Pretty-print a few key fields
     print(
         f"  Title   : {data['title'][:80]}{'…' if len(data['title']) > 80 else ''}\n"
-        f"  Abstract: {data['abstract'][:120]}{'…' if len(data['abstract']) > 120 else ''}\n"
+        f"  Abstract: {data['abstract_text'][:120]}{'…' if len(data['abstract_text']) > 120 else ''}\n"
         f"  Authors : {len(data['authors']) if data['authors'] else 0}"
     )
 
@@ -67,7 +65,7 @@ for pmcid in PMC_IDS:
     dest = OUT_DIR / f"PMC{pmcid}.json"
     with dest.open("w", encoding="utf-8") as fh:
         json.dump(data, fh, indent=2, ensure_ascii=False)
-    print(f"  ↳ JSON saved to {dest}\n")
+    print(f"  JSON saved to {dest}\n")
 ```
 
 Run this example:
@@ -84,14 +82,14 @@ Each processed article returns a structured dictionary with:
 # Access the data
 print(data['pmc_id'])        # PMC ID
 print(data['title'])         # Article title
-print(data['journal'])       # Journal information
+print(data['journal_title'])       # Journal information
 
 # Authors information
 for author in data['authors'][:3]:  # First 3 authors
     print(f"{author['First_Name']} {author['Last_Name']}")
 
 # Abstract content
-print(f"Abstract: {data['abstract'][:200]}...")
+print(f"Abstract: {data['abstract_text'][:200]}...")
 
 # Main content sections
 if 'Introduction' in data['body']:
@@ -119,7 +117,10 @@ Each JSON file contains structured data:
 {
   "pmc_id": "7114487",
   "title": "Article title",
-  "abstract": "Article abstract",
+  "abstract_text": "Plain-text article abstract",
+  "abstract": {
+    "Abstract": "Structured abstract text"
+  },
   "body": {
     "Introduction": "Section content...",
     "Methods": "Section content...",
@@ -127,7 +128,7 @@ Each JSON file contains structured data:
     "Discussion": "Section content..."
   },
   "authors": [...],
-  "journal": "Journal Name",
+  "journal_title": "Journal Name",
   "figures": [...],
   "tables": [...]
 }

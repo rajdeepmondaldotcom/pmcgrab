@@ -294,10 +294,12 @@ def process_single_pmc(
         dict[str, str | dict | list] | None: Normalized article dictionary with keys:
             - pmc_id: Article identifier
             - title: Article title
-            - abstract: Plain text abstract
+            - abstract: Structured abstract sections
+            - abstract_text: Plain text abstract
             - body: Dictionary of section titles mapped to text content
             - authors: Normalized author information
-            - Journal and publication metadata
+            - article_id: DOI, PMCID, PMID, and publisher identifiers when present
+            - journal_title and other publication metadata
             - Content metadata (funding, ethics, etc.)
         Returns None if processing fails or article has no usable content.
 

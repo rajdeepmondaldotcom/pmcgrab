@@ -1,6 +1,6 @@
 # Command Line Interface
 
-PMCGrab's command-line interface for batch processing and article retrieval.
+PMCGrab's CLI lives in `pmcgrab.cli.pmcgrab_cli`.
 
 ## CLI Module
 
@@ -8,37 +8,31 @@ PMCGrab's command-line interface for batch processing and article retrieval.
 
 ## Usage Examples
 
-### Basic Commands
-
 ```bash
-# Process single paper
-uv run python -m pmcgrab PMC7181753
+# Process one PMC ID.
+uv run python -m pmcgrab --pmcids 7181753
 
-# Process multiple papers
-uv run python -m pmcgrab PMC7181753 PMC3539614 PMC5454911
+# Process multiple PMC IDs.
+uv run python -m pmcgrab --pmcids 7181753 3539614 5454911
+
+# Process PubMed IDs.
+uv run python -m pmcgrab --pmids 33087749
+
+# Process local XML without network access.
+uv run python -m pmcgrab --from-dir ./pmc_bulk_xml --output-dir ./results
 ```
 
-### Advanced Options
+## Options
 
-```bash
-# Custom output directory
-uv run python -m pmcgrab --output-dir ./results PMC7181753
-
-# Parallel processing
-uv run python -m pmcgrab --workers 8 PMC7181753 PMC3539614
-
-# From file input
-uv run python -m pmcgrab --input-file pmc_ids.txt --max-retries 3
-```
-
-### All Options
-
-- `--output-dir`: Specify output directory (default: ./pmc_output)
-- `--workers`: Number of parallel workers (default: 4)
-- `--email`: Contact email for NCBI API
-- `--input-file`: Read PMC IDs from file
-- `--max-retries`: Maximum retry attempts for failed downloads
-- `--batch-size`: Number of articles per batch
-- `--timeout`: Request timeout in seconds
-- `--verbose`: Enable verbose logging
-- `--help`: Show help message
+- `--pmcids`, `--ids`: PMC IDs to process.
+- `--pmids`: PubMed IDs to convert to PMC IDs.
+- `--dois`: DOIs to convert to PMC IDs.
+- `--from-id-file`: Text file containing identifiers.
+- `--from-dir`: Directory of local XML files.
+- `--from-file`: One or more local XML files.
+- `--output-dir`, `--out`: Output directory.
+- `--workers`, `--batch-size`: Number of worker threads.
+- `--format`: `json` or `jsonl`.
+- `--verbose`: Enable debug logging.
+- `--quiet`: Suppress progress bars.
+- `--version`: Print the installed PMCGrab version.
