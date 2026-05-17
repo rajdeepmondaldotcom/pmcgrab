@@ -10,7 +10,7 @@
       
       
       
-        <link rel="canonical" href="https://rajdeepmondaldotcom.github.io/pmcgrab/includes/mkdocs/">
+        <link rel="canonical" href="https://rajdeepmondaldotcom.github.io/pmcgrab/agents/domain/">
       
       
       
@@ -23,7 +23,7 @@
     
     
       
-        <title>Mkdocs - PMCGrab</title>
+        <title>Domain Docs - PMCGrab</title>
       
     
     
@@ -79,6 +79,11 @@
     <label class="md-overlay" for="__drawer"></label>
     <div data-md-component="skip">
       
+        
+        <a href="#domain-docs" class="md-skip">
+          Skip to content
+        </a>
+      
     </div>
     <div data-md-component="announce">
       
@@ -115,7 +120,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Mkdocs
+              Domain Docs
             
           </span>
         </div>
@@ -1477,7 +1482,7 @@
 
 
   
-    <a href="https://github.com/rajdeepmondaldotcom/pmcgrab/edit/main/docs/includes/mkdocs.md" title="Edit this page" class="md-content__button md-icon" rel="edit">
+    <a href="https://github.com/rajdeepmondaldotcom/pmcgrab/edit/main/docs/agents/domain.md" title="Edit this page" class="md-content__button md-icon" rel="edit">
       
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M10 20H6V4h7v5h5v3.1l2-2V8l-6-6H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h4zm10.2-7c.1 0 .3.1.4.2l1.3 1.3c.2.2.2.6 0 .8l-1 1-2.1-2.1 1-1c.1-.1.2-.2.4-.2m0 3.9L14.1 23H12v-2.1l6.1-6.1z"/></svg>
     </a>
@@ -1486,33 +1491,36 @@
     
       
     
-    <a href="https://github.com/rajdeepmondaldotcom/pmcgrab/raw/main/docs/includes/mkdocs.md" title="View source of this page" class="md-content__button md-icon">
+    <a href="https://github.com/rajdeepmondaldotcom/pmcgrab/raw/main/docs/agents/domain.md" title="View source of this page" class="md-content__button md-icon">
       
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M17 18c.56 0 1 .44 1 1s-.44 1-1 1-1-.44-1-1 .44-1 1-1m0-3c-2.73 0-5.06 1.66-6 4 .94 2.34 3.27 4 6 4s5.06-1.66 6-4c-.94-2.34-3.27-4-6-4m0 6.5a2.5 2.5 0 0 1-2.5-2.5 2.5 2.5 0 0 1 2.5-2.5 2.5 2.5 0 0 1 2.5 2.5 2.5 2.5 0 0 1-2.5 2.5M9.27 20H6V4h7v5h5v4.07c.7.08 1.36.25 2 .49V8l-6-6H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h4.5a8.2 8.2 0 0 1-1.23-2"/></svg>
     </a>
   
 
 
-  <h1>Mkdocs</h1>
-
-<!-- Common snippets for MkDocs -->
-
-<p>_[PMC]: PubMed Central
-_[PMCID]: PubMed Central Identifier
-_[NCBI]: National Center for Biotechnology Information
-_[XML]: eXtensible Markup Language
-_[JSON]: JavaScript Object Notation
-_[API]: Application Programming Interface
-_[CLI]: Command Line Interface
-_[RAG]: Retrieval-Augmented Generation
-_[LLM]: Large Language Model
-_[DTD]: Document Type Definition
-_[HTML]: HyperText Markup Language
-_[CSV]: Comma-Separated Values
-_[HTTP]: HyperText Transfer Protocol
-_[HTTPS]: HyperText Transfer Protocol Secure
-_[URL]: Uniform Resource Locator
-_[URI]: Uniform Resource Identifier</p>
+<h1 id="domain-docs">Domain Docs<a class="headerlink" href="#domain-docs" title="Permanent link">&para;</a></h1>
+<p>How the engineering skills should consume this repo's domain documentation when exploring the codebase.</p>
+<h2 id="layout">Layout<a class="headerlink" href="#layout" title="Permanent link">&para;</a></h2>
+<p>PMCGrab is a single-context Python package. The domain is "turn PMC/JATS article sources into clean, section-aware, AI-ready Python objects and JSON".</p>
+<p>Read these before architecture work when they exist:</p>
+<ul>
+<li><code>CONTEXT.md</code> at the repo root</li>
+<li><code>docs/adr/</code> for architecture decisions</li>
+<li><code>docs/development/architecture.md</code> for the current public architecture narrative</li>
+</ul>
+<p>If <code>CONTEXT.md</code> or <code>docs/adr/</code> does not exist, proceed silently and ground decisions in the package code, tests, README, and development docs.</p>
+<h2 id="vocabulary">Vocabulary<a class="headerlink" href="#vocabulary" title="Permanent link">&para;</a></h2>
+<p>Use the terms from the codebase and docs:</p>
+<ul>
+<li><strong>PMC ID / PMCID</strong>: PubMed Central article identifier accepted with or without the <code>PMC</code> prefix.</li>
+<li><strong>JATS XML</strong>: The article XML format PMCGrab parses from network or local files.</li>
+<li><strong>Paper</strong>: The public object-oriented representation of a parsed article.</li>
+<li><strong>Article dictionary</strong>: The normalized, JSON-serializable dictionary returned by processing helpers.</li>
+<li><strong>Local XML processing</strong>: Parsing pre-downloaded JATS XML files without network access.</li>
+<li><strong>NCBI client</strong>: A module that talks to an NCBI or PMC service.</li>
+</ul>
+<h2 id="adr-conflicts">ADR conflicts<a class="headerlink" href="#adr-conflicts" title="Permanent link">&para;</a></h2>
+<p>If a proposed cleanup contradicts an existing ADR, surface the conflict explicitly and keep the current ADR as the default source of truth.</p>
 
 
 

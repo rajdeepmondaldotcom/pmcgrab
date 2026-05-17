@@ -10,7 +10,7 @@
       
       
       
-        <link rel="canonical" href="https://rajdeepmondaldotcom.github.io/pmcgrab/includes/mkdocs/">
+        <link rel="canonical" href="https://rajdeepmondaldotcom.github.io/pmcgrab/development/clean-code-plan-audit/">
       
       
       
@@ -23,7 +23,7 @@
     
     
       
-        <title>Mkdocs - PMCGrab</title>
+        <title>Clean-Code Plan Audit - PMCGrab</title>
       
     
     
@@ -79,6 +79,11 @@
     <label class="md-overlay" for="__drawer"></label>
     <div data-md-component="skip">
       
+        
+        <a href="#clean-code-plan-audit" class="md-skip">
+          Skip to content
+        </a>
+      
     </div>
     <div data-md-component="announce">
       
@@ -115,7 +120,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Mkdocs
+              Clean-Code Plan Audit
             
           </span>
         </div>
@@ -336,7 +341,7 @@
     
     
       <li class="md-tabs__item">
-        <a href="../../development/contributing/" class="md-tabs__link">
+        <a href="../contributing/" class="md-tabs__link">
           
   
   
@@ -1225,7 +1230,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../development/contributing/" class="md-nav__link">
+      <a href="../contributing/" class="md-nav__link">
         
   
   
@@ -1253,7 +1258,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../development/setup/" class="md-nav__link">
+      <a href="../setup/" class="md-nav__link">
         
   
   
@@ -1281,7 +1286,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../development/architecture/" class="md-nav__link">
+      <a href="../architecture/" class="md-nav__link">
         
   
   
@@ -1309,7 +1314,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../development/testing/" class="md-nav__link">
+      <a href="../testing/" class="md-nav__link">
         
   
   
@@ -1477,7 +1482,7 @@
 
 
   
-    <a href="https://github.com/rajdeepmondaldotcom/pmcgrab/edit/main/docs/includes/mkdocs.md" title="Edit this page" class="md-content__button md-icon" rel="edit">
+    <a href="https://github.com/rajdeepmondaldotcom/pmcgrab/edit/main/docs/development/clean-code-plan-audit.md" title="Edit this page" class="md-content__button md-icon" rel="edit">
       
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M10 20H6V4h7v5h5v3.1l2-2V8l-6-6H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h4zm10.2-7c.1 0 .3.1.4.2l1.3 1.3c.2.2.2.6 0 .8l-1 1-2.1-2.1 1-1c.1-.1.2-.2.4-.2m0 3.9L14.1 23H12v-2.1l6.1-6.1z"/></svg>
     </a>
@@ -1486,33 +1491,113 @@
     
       
     
-    <a href="https://github.com/rajdeepmondaldotcom/pmcgrab/raw/main/docs/includes/mkdocs.md" title="View source of this page" class="md-content__button md-icon">
+    <a href="https://github.com/rajdeepmondaldotcom/pmcgrab/raw/main/docs/development/clean-code-plan-audit.md" title="View source of this page" class="md-content__button md-icon">
       
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M17 18c.56 0 1 .44 1 1s-.44 1-1 1-1-.44-1-1 .44-1 1-1m0-3c-2.73 0-5.06 1.66-6 4 .94 2.34 3.27 4 6 4s5.06-1.66 6-4c-.94-2.34-3.27-4-6-4m0 6.5a2.5 2.5 0 0 1-2.5-2.5 2.5 2.5 0 0 1 2.5-2.5 2.5 2.5 0 0 1 2.5 2.5 2.5 2.5 0 0 1-2.5 2.5M9.27 20H6V4h7v5h5v4.07c.7.08 1.36.25 2 .49V8l-6-6H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h4.5a8.2 8.2 0 0 1-1.23-2"/></svg>
     </a>
   
 
 
-  <h1>Mkdocs</h1>
-
-<!-- Common snippets for MkDocs -->
-
-<p>_[PMC]: PubMed Central
-_[PMCID]: PubMed Central Identifier
-_[NCBI]: National Center for Biotechnology Information
-_[XML]: eXtensible Markup Language
-_[JSON]: JavaScript Object Notation
-_[API]: Application Programming Interface
-_[CLI]: Command Line Interface
-_[RAG]: Retrieval-Augmented Generation
-_[LLM]: Large Language Model
-_[DTD]: Document Type Definition
-_[HTML]: HyperText Markup Language
-_[CSV]: Comma-Separated Values
-_[HTTP]: HyperText Transfer Protocol
-_[HTTPS]: HyperText Transfer Protocol Secure
-_[URL]: Uniform Resource Locator
-_[URI]: Uniform Resource Identifier</p>
+<h1 id="clean-code-plan-audit">Clean-Code Plan Audit<a class="headerlink" href="#clean-code-plan-audit" title="Permanent link">&para;</a></h1>
+<p>Status: Phase 2 audit plus Phase 6 final audit inputs.</p>
+<h2 id="audit-sources">Audit Sources<a class="headerlink" href="#audit-sources" title="Permanent link">&para;</a></h2>
+<ul>
+<li>Local code inspection of <code>src/pmcgrab</code>, <code>tests</code>, <code>.github/workflows</code>, docs, and package metadata.</li>
+<li>Strict architecture reviewer agent.</li>
+<li>Strict test/CI reviewer agent.</li>
+<li>Strict public API compatibility reviewer agent.</li>
+<li>Local verification: <code>uv run pytest -q --no-cov</code> passed with 158 tests and 34 warnings.</li>
+</ul>
+<h2 id="findings-against-the-plan">Findings Against the Plan<a class="headerlink" href="#findings-against-the-plan" title="Permanent link">&para;</a></h2>
+<h3 id="public-api-and-version">Public API and Version<a class="headerlink" href="#public-api-and-version" title="Permanent link">&para;</a></h3>
+<p>Finding:</p>
+<ul>
+<li>Historical finding, resolved in 1.0.8: <code>pyproject.toml</code> and
+  <code>src/pmcgrab/__init__.py</code> previously exposed different versions.</li>
+<li>Top-level <code>process_single_pmc</code> comes from deprecated <code>pmcgrab.processing</code>, while README recommends <code>from pmcgrab import process_single_pmc</code>.</li>
+</ul>
+<p>Plan impact:</p>
+<ul>
+<li>Slice 1 is required before release cleanup. User-Agent strings and <code>_meta.pmcgrab_version</code> are runtime behavior, not cosmetic metadata.</li>
+</ul>
+<h3 id="error-policy">Error Policy<a class="headerlink" href="#error-policy" title="Permanent link">&para;</a></h3>
+<p>Finding:</p>
+<ul>
+<li><code>paper_dict_from_local_xml(..., suppress_errors=True)</code> does not suppress XML parse errors because <code>parse_local_xml()</code> runs before <code>generate_paper_dict()</code>.</li>
+<li><code>paper_dict_from_pmc(..., suppress_errors=True)</code> has the same shape around <code>get_xml()</code>.</li>
+</ul>
+<p>Plan impact:</p>
+<ul>
+<li>Slice 2 must wrap acquisition and parsing under the same suppression policy.</li>
+</ul>
+<h3 id="local-xml-identifier-extraction">Local XML Identifier Extraction<a class="headerlink" href="#local-xml-identifier-extraction" title="Permanent link">&para;</a></h3>
+<p>Finding:</p>
+<ul>
+<li><code>parse_local_xml()</code> checks <code>pub-id-type="pmc"</code> but not <code>pub-id-type="pmcid"</code>.</li>
+<li>Existing tests and PMC-like XML use both forms.</li>
+</ul>
+<p>Plan impact:</p>
+<ul>
+<li>Slice 2 should add tests for both spellings and optional <code>PMC</code> prefix stripping.</li>
+</ul>
+<h3 id="cli">CLI<a class="headerlink" href="#cli" title="Permanent link">&para;</a></h3>
+<p>Finding:</p>
+<ul>
+<li>CLI docs advertise positional IDs, <code>--version</code>, <code>--show-config</code>, <code>--email</code>, <code>--input-file</code>, retry flags, timeout flags, and log files that argparse does not implement.</li>
+<li>CLI tests catch broad exceptions and pass, masking failures.</li>
+<li>CLI network mode reimplements concurrency instead of using the application Module.</li>
+</ul>
+<p>Plan impact:</p>
+<ul>
+<li>Slice 3 should add <code>--version</code> and input validation now.</li>
+<li>Docs should be generated from actual argparse behavior.</li>
+<li>Full <code>BatchRun</code> deepening can be deferred if tests lock current behavior first.</li>
+</ul>
+<h3 id="release-and-ci">Release and CI<a class="headerlink" href="#release-and-ci" title="Permanent link">&para;</a></h3>
+<p>Finding:</p>
+<ul>
+<li>Multiple workflows can publish to PyPI.</li>
+<li>One release workflow publishes on <code>pyproject.toml</code> changes and does not require tests.</li>
+<li>CI has mypy configured but non-blocking.</li>
+<li>Pre-commit CI mutates dependencies with <code>uv add</code>.</li>
+<li>Ruff is pinned differently in <code>pyproject.toml</code> and pre-commit.</li>
+</ul>
+<p>Plan impact:</p>
+<ul>
+<li>Slice 4 is required. Consolidating publish paths is higher priority than expanding mypy strictness, because duplicate publish paths can ship broken artifacts.</li>
+</ul>
+<h3 id="docs-and-metrics">Docs and Metrics<a class="headerlink" href="#docs-and-metrics" title="Permanent link">&para;</a></h3>
+<p>Finding:</p>
+<ul>
+<li>Architecture docs describe dataclasses and parser classes that do not exist.</li>
+<li>Several docs use nonexistent normalized output keys such as <code>journal</code>, <code>doi</code>, and <code>references</code>.</li>
+<li>README proof metrics appear stale: current test count is 158 test functions, not 218.</li>
+</ul>
+<p>Plan impact:</p>
+<ul>
+<li>Slice 5 should remove stale hard-coded proof metrics or clearly mark them as historical.</li>
+<li>Architecture docs should represent current Modules first; deepening proposals can live in the final plan.</li>
+</ul>
+<h3 id="deferred-deepening">Deferred Deepening<a class="headerlink" href="#deferred-deepening" title="Permanent link">&para;</a></h3>
+<p>Finding:</p>
+<ul>
+<li>The parser facade and serialization paths are real architecture friction, but changing them carries larger compatibility risk.</li>
+</ul>
+<p>Plan impact:</p>
+<ul>
+<li>Keep the field registry, table/figure schema, and serialization consolidation in the final plan as follow-up slices unless the first cleanup slices reveal low-risk entry points.</li>
+</ul>
+<h2 id="blockers">Blockers<a class="headerlink" href="#blockers" title="Permanent link">&para;</a></h2>
+<p>No code blockers found. The test suite currently passes without coverage.</p>
+<h2 id="audit-decision">Audit Decision<a class="headerlink" href="#audit-decision" title="Permanent link">&para;</a></h2>
+<p>Proceed with implementation in this priority order:</p>
+<ol>
+<li>Public API/version correctness.</li>
+<li>Error policy and local PMCID parsing.</li>
+<li>CLI contract and tests.</li>
+<li>Release workflow consolidation.</li>
+<li>Docs truthfulness and final architecture plan.</li>
+</ol>
 
 
 

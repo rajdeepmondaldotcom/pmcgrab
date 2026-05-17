@@ -23,7 +23,7 @@
       
       
       <link rel="icon" href="../../assets/images/favicon.png">
-      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.3">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
     
     
       
@@ -1021,116 +1021,65 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#basic-usage" class="md-nav__link">
+  <a href="#pmc-ids" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Basic Usage
+        PMC IDs
       
     </span>
   </a>
-  
-    <nav class="md-nav" aria-label="Basic Usage">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#single-article-processing" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Single Article Processing
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#multiple-articles" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Multiple Articles
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#file-input" class="md-nav__link">
+  <a href="#pubmed-ids-and-dois" class="md-nav__link">
     <span class="md-ellipsis">
       
-        File Input
+        PubMed IDs and DOIs
       
     </span>
   </a>
-  
-    <nav class="md-nav" aria-label="File Input">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#from-text-file" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        From Text File
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#advanced-options" class="md-nav__link">
+  <a href="#text-file" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Advanced Options
-      
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="Advanced Options">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#batch-processing-with-configuration" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Batch Processing with Configuration
+        Text File
       
     </span>
   </a>
   
 </li>
-        
-          <li class="md-nav__item">
+      
+        <li class="md-nav__item">
+  <a href="#local-xml" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Local XML
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#jsonl-output" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        JSONL Output
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#common-parameters" class="md-nav__link">
     <span class="md-ellipsis">
       
         Common Parameters
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#output" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Output
       
     </span>
   </a>
@@ -1674,49 +1623,43 @@
 
 
 <h1 id="cli-examples">CLI Examples<a class="headerlink" href="#cli-examples" title="Permanent link">&para;</a></h1>
-<p>Practical command-line examples for common PMCGrab usage scenarios.</p>
-<h2 id="basic-usage">Basic Usage<a class="headerlink" href="#basic-usage" title="Permanent link">&para;</a></h2>
-<h3 id="single-article-processing">Single Article Processing<a class="headerlink" href="#single-article-processing" title="Permanent link">&para;</a></h3>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="c1"># Basic usage - process one article</span>
-</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>uv<span class="w"> </span>run<span class="w"> </span>python<span class="w"> </span>-m<span class="w"> </span>pmcgrab<span class="w"> </span>PMC7181753
-</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>
-</span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a><span class="c1"># With email specification (recommended)</span>
-</span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>uv<span class="w"> </span>run<span class="w"> </span>uv<span class="w"> </span>run<span class="w"> </span>python<span class="w"> </span>-m<span class="w"> </span>pmcgrab<span class="w"> </span>--email<span class="w"> </span>researcher@university.edu<span class="w"> </span>PMC7181753
-</span><span id="__span-0-6"><a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>
-</span><span id="__span-0-7"><a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a><span class="c1"># Save to custom directory</span>
-</span><span id="__span-0-8"><a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>uv<span class="w"> </span>run<span class="w"> </span>uv<span class="w"> </span>run<span class="w"> </span>python<span class="w"> </span>-m<span class="w"> </span>pmcgrab<span class="w"> </span>--output-dir<span class="w"> </span>./papers<span class="w"> </span>--email<span class="w"> </span>researcher@university.edu<span class="w"> </span>PMC7181753
+<p>Practical command-line examples for the current PMCGrab CLI.</p>
+<h2 id="pmc-ids">PMC IDs<a class="headerlink" href="#pmc-ids" title="Permanent link">&para;</a></h2>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>uv<span class="w"> </span>run<span class="w"> </span>python<span class="w"> </span>-m<span class="w"> </span>pmcgrab<span class="w"> </span>--pmcids<span class="w"> </span><span class="m">7181753</span><span class="w"> </span>--output-dir<span class="w"> </span>./papers
+</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>uv<span class="w"> </span>run<span class="w"> </span>python<span class="w"> </span>-m<span class="w"> </span>pmcgrab<span class="w"> </span>--pmcids<span class="w"> </span>PMC7181753<span class="w"> </span>PMC3539614<span class="w"> </span>--workers<span class="w"> </span><span class="m">4</span>
 </span></code></pre></div>
-<h3 id="multiple-articles">Multiple Articles<a class="headerlink" href="#multiple-articles" title="Permanent link">&para;</a></h3>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="c1"># Process several articles at once</span>
-</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>uv<span class="w"> </span>run<span class="w"> </span>uv<span class="w"> </span>run<span class="w"> </span>python<span class="w"> </span>-m<span class="w"> </span>pmcgrab<span class="w"> </span>PMC7181753<span class="w"> </span>PMC3539614<span class="w"> </span>PMC5454911
-</span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>
-</span><span id="__span-1-4"><a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a><span class="c1"># With parallel processing</span>
-</span><span id="__span-1-5"><a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a>uv<span class="w"> </span>run<span class="w"> </span>uv<span class="w"> </span>run<span class="w"> </span>python<span class="w"> </span>-m<span class="w"> </span>pmcgrab<span class="w"> </span>--workers<span class="w"> </span><span class="m">4</span><span class="w"> </span>PMC7181753<span class="w"> </span>PMC3539614<span class="w"> </span>PMC5454911
+<h2 id="pubmed-ids-and-dois">PubMed IDs and DOIs<a class="headerlink" href="#pubmed-ids-and-dois" title="Permanent link">&para;</a></h2>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>uv<span class="w"> </span>run<span class="w"> </span>python<span class="w"> </span>-m<span class="w"> </span>pmcgrab<span class="w"> </span>--pmids<span class="w"> </span><span class="m">33087749</span><span class="w"> </span>--output-dir<span class="w"> </span>./papers
+</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>uv<span class="w"> </span>run<span class="w"> </span>python<span class="w"> </span>-m<span class="w"> </span>pmcgrab<span class="w"> </span>--dois<span class="w"> </span><span class="m">10</span>.1038/s41586-020-2832-5<span class="w"> </span>--output-dir<span class="w"> </span>./papers
 </span></code></pre></div>
-<h2 id="file-input">File Input<a class="headerlink" href="#file-input" title="Permanent link">&para;</a></h2>
-<h3 id="from-text-file">From Text File<a class="headerlink" href="#from-text-file" title="Permanent link">&para;</a></h3>
+<h2 id="text-file">Text File<a class="headerlink" href="#text-file" title="Permanent link">&para;</a></h2>
 <p>Create <code>pmcids.txt</code>:</p>
-<div class="language-text highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>7181753
-</span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>3539614
-</span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a>5454911
-</span><span id="__span-2-4"><a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a>7979870
+<div class="language-text highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a># Comments and blank lines are ignored.
+</span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>PMC7181753
+</span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a>3539614
+</span><span id="__span-2-4"><a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a>10.1038/s41586-020-2832-5
 </span></code></pre></div>
 <p>Process the list:</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>uv<span class="w"> </span>run<span class="w"> </span>python<span class="w"> </span>-m<span class="w"> </span>pmcgrab<span class="w"> </span>--input-file<span class="w"> </span>pmcids.txt<span class="w"> </span>--email<span class="w"> </span>researcher@university.edu
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>uv<span class="w"> </span>run<span class="w"> </span>python<span class="w"> </span>-m<span class="w"> </span>pmcgrab<span class="w"> </span>--from-id-file<span class="w"> </span>pmcids.txt<span class="w"> </span>--output-dir<span class="w"> </span>./papers
 </span></code></pre></div>
-<h2 id="advanced-options">Advanced Options<a class="headerlink" href="#advanced-options" title="Permanent link">&para;</a></h2>
-<h3 id="batch-processing-with-configuration">Batch Processing with Configuration<a class="headerlink" href="#batch-processing-with-configuration" title="Permanent link">&para;</a></h3>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="c1"># Process with custom settings</span>
-</span><span id="__span-4-2"><a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a>uv<span class="w"> </span>run<span class="w"> </span>python<span class="w"> </span>-m<span class="w"> </span>pmcgrab<span class="w"> </span><span class="se">\</span>
-</span><span id="__span-4-3"><a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a><span class="w">    </span>--input-file<span class="w"> </span>pmcids.txt<span class="w"> </span><span class="se">\</span>
-</span><span id="__span-4-4"><a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a><span class="w">    </span>--output-dir<span class="w"> </span>./output<span class="w"> </span><span class="se">\</span>
-</span><span id="__span-4-5"><a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a><span class="w">    </span>--email<span class="w"> </span>researcher@university.edu<span class="w"> </span><span class="se">\</span>
-</span><span id="__span-4-6"><a id="__codelineno-4-6" name="__codelineno-4-6" href="#__codelineno-4-6"></a><span class="w">    </span>--workers<span class="w"> </span><span class="m">4</span><span class="w"> </span><span class="se">\</span>
-</span><span id="__span-4-7"><a id="__codelineno-4-7" name="__codelineno-4-7" href="#__codelineno-4-7"></a><span class="w">    </span>--batch-size<span class="w"> </span><span class="m">10</span><span class="w"> </span><span class="se">\</span>
-</span><span id="__span-4-8"><a id="__codelineno-4-8" name="__codelineno-4-8" href="#__codelineno-4-8"></a><span class="w">    </span>--max-retries<span class="w"> </span><span class="m">2</span><span class="w"> </span><span class="se">\</span>
-</span><span id="__span-4-9"><a id="__codelineno-4-9" name="__codelineno-4-9" href="#__codelineno-4-9"></a><span class="w">    </span>--verbose
+<p>Bare numeric values in <code>--from-id-file</code> are treated as PMC IDs. Use <code>--pmids</code> for PubMed IDs.</p>
+<h2 id="local-xml">Local XML<a class="headerlink" href="#local-xml" title="Permanent link">&para;</a></h2>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="c1"># Directory of JATS XML files.</span>
+</span><span id="__span-4-2"><a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a>uv<span class="w"> </span>run<span class="w"> </span>python<span class="w"> </span>-m<span class="w"> </span>pmcgrab<span class="w"> </span>--from-dir<span class="w"> </span>./pmc_bulk_xml<span class="w"> </span>--output-dir<span class="w"> </span>./papers
+</span><span id="__span-4-3"><a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a>
+</span><span id="__span-4-4"><a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a><span class="c1"># Specific XML files.</span>
+</span><span id="__span-4-5"><a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a>uv<span class="w"> </span>run<span class="w"> </span>python<span class="w"> </span>-m<span class="w"> </span>pmcgrab<span class="w"> </span>--from-file<span class="w"> </span>article1.xml<span class="w"> </span>article2.xml<span class="w"> </span>--output-dir<span class="w"> </span>./papers
 </span></code></pre></div>
-<h3 id="common-parameters">Common Parameters<a class="headerlink" href="#common-parameters" title="Permanent link">&para;</a></h3>
+<h2 id="jsonl-output">JSONL Output<a class="headerlink" href="#jsonl-output" title="Permanent link">&para;</a></h2>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a>uv<span class="w"> </span>run<span class="w"> </span>python<span class="w"> </span>-m<span class="w"> </span>pmcgrab<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-5-2"><a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a><span class="w">    </span>--pmcids<span class="w"> </span><span class="m">7181753</span><span class="w"> </span><span class="m">3539614</span><span class="w"> </span><span class="se">\</span>
+</span><span id="__span-5-3"><a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a><span class="w">    </span>--output-dir<span class="w"> </span>./papers<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-5-4"><a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a><span class="w">    </span>--format<span class="w"> </span>jsonl
+</span></code></pre></div>
+<p>This writes <code>output.jsonl</code> plus <code>summary.json</code>.</p>
+<p>The JSON and JSONL output is strict JSON. Missing values from pandas/numpy
+tables and author metadata are emitted as <code>null</code>.</p>
+<h2 id="common-parameters">Common Parameters<a class="headerlink" href="#common-parameters" title="Permanent link">&para;</a></h2>
 <table>
 <thead>
 <tr>
@@ -1727,50 +1670,37 @@
 </thead>
 <tbody>
 <tr>
-<td><code>--email</code></td>
-<td>Your email for NCBI requests</td>
-<td><code>--email user@example.com</code></td>
-</tr>
-<tr>
-<td><code>--output-dir</code></td>
+<td><code>--output-dir</code>, <code>--out</code></td>
 <td>Output directory for JSON files</td>
 <td><code>--output-dir ./papers</code></td>
 </tr>
 <tr>
-<td><code>--workers</code></td>
-<td>Number of parallel workers</td>
+<td><code>--workers</code>, <code>--batch-size</code></td>
+<td>Number of worker threads</td>
 <td><code>--workers 4</code></td>
 </tr>
 <tr>
-<td><code>--batch-size</code></td>
-<td>Articles per batch</td>
-<td><code>--batch-size 10</code></td>
-</tr>
-<tr>
-<td><code>--max-retries</code></td>
-<td>Retry failed requests</td>
-<td><code>--max-retries 2</code></td>
+<td><code>--format</code></td>
+<td><code>json</code> or <code>jsonl</code></td>
+<td><code>--format jsonl</code></td>
 </tr>
 <tr>
 <td><code>--verbose</code></td>
-<td>Detailed output</td>
+<td>Enable debug logging</td>
 <td><code>--verbose</code></td>
 </tr>
 <tr>
-<td><code>--input-file</code></td>
-<td>Read PMC IDs from file</td>
-<td><code>--input-file list.txt</code></td>
+<td><code>--quiet</code></td>
+<td>Suppress progress bars</td>
+<td><code>--quiet</code></td>
+</tr>
+<tr>
+<td><code>--version</code></td>
+<td>Print installed version</td>
+<td><code>--version</code></td>
 </tr>
 </tbody>
 </table>
-<h2 id="output">Output<a class="headerlink" href="#output" title="Permanent link">&para;</a></h2>
-<p>PMCGrab saves each article as a JSON file:</p>
-<div class="language-text highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a>output/
-</span><span id="__span-5-2"><a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a>├── PMC7181753.json
-</span><span id="__span-5-3"><a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a>├── PMC3539614.json
-</span><span id="__span-5-4"><a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a>└── PMC5454911.json
-</span></code></pre></div>
-<p>Each JSON file contains structured article data including title, abstract, body sections, authors, and metadata.</p>
 
 
 

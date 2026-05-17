@@ -10,7 +10,7 @@
       
       
       
-        <link rel="canonical" href="https://rajdeepmondaldotcom.github.io/pmcgrab/includes/mkdocs/">
+        <link rel="canonical" href="https://rajdeepmondaldotcom.github.io/pmcgrab/agents/triage-labels/">
       
       
       
@@ -23,7 +23,7 @@
     
     
       
-        <title>Mkdocs - PMCGrab</title>
+        <title>Triage Labels - PMCGrab</title>
       
     
     
@@ -79,6 +79,11 @@
     <label class="md-overlay" for="__drawer"></label>
     <div data-md-component="skip">
       
+        
+        <a href="#triage-labels" class="md-skip">
+          Skip to content
+        </a>
+      
     </div>
     <div data-md-component="announce">
       
@@ -115,7 +120,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Mkdocs
+              Triage Labels
             
           </span>
         </div>
@@ -1477,7 +1482,7 @@
 
 
   
-    <a href="https://github.com/rajdeepmondaldotcom/pmcgrab/edit/main/docs/includes/mkdocs.md" title="Edit this page" class="md-content__button md-icon" rel="edit">
+    <a href="https://github.com/rajdeepmondaldotcom/pmcgrab/edit/main/docs/agents/triage-labels.md" title="Edit this page" class="md-content__button md-icon" rel="edit">
       
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M10 20H6V4h7v5h5v3.1l2-2V8l-6-6H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h4zm10.2-7c.1 0 .3.1.4.2l1.3 1.3c.2.2.2.6 0 .8l-1 1-2.1-2.1 1-1c.1-.1.2-.2.4-.2m0 3.9L14.1 23H12v-2.1l6.1-6.1z"/></svg>
     </a>
@@ -1486,33 +1491,52 @@
     
       
     
-    <a href="https://github.com/rajdeepmondaldotcom/pmcgrab/raw/main/docs/includes/mkdocs.md" title="View source of this page" class="md-content__button md-icon">
+    <a href="https://github.com/rajdeepmondaldotcom/pmcgrab/raw/main/docs/agents/triage-labels.md" title="View source of this page" class="md-content__button md-icon">
       
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M17 18c.56 0 1 .44 1 1s-.44 1-1 1-1-.44-1-1 .44-1 1-1m0-3c-2.73 0-5.06 1.66-6 4 .94 2.34 3.27 4 6 4s5.06-1.66 6-4c-.94-2.34-3.27-4-6-4m0 6.5a2.5 2.5 0 0 1-2.5-2.5 2.5 2.5 0 0 1 2.5-2.5 2.5 2.5 0 0 1 2.5 2.5 2.5 2.5 0 0 1-2.5 2.5M9.27 20H6V4h7v5h5v4.07c.7.08 1.36.25 2 .49V8l-6-6H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h4.5a8.2 8.2 0 0 1-1.23-2"/></svg>
     </a>
   
 
 
-  <h1>Mkdocs</h1>
-
-<!-- Common snippets for MkDocs -->
-
-<p>_[PMC]: PubMed Central
-_[PMCID]: PubMed Central Identifier
-_[NCBI]: National Center for Biotechnology Information
-_[XML]: eXtensible Markup Language
-_[JSON]: JavaScript Object Notation
-_[API]: Application Programming Interface
-_[CLI]: Command Line Interface
-_[RAG]: Retrieval-Augmented Generation
-_[LLM]: Large Language Model
-_[DTD]: Document Type Definition
-_[HTML]: HyperText Markup Language
-_[CSV]: Comma-Separated Values
-_[HTTP]: HyperText Transfer Protocol
-_[HTTPS]: HyperText Transfer Protocol Secure
-_[URL]: Uniform Resource Locator
-_[URI]: Uniform Resource Identifier</p>
+<h1 id="triage-labels">Triage Labels<a class="headerlink" href="#triage-labels" title="Permanent link">&para;</a></h1>
+<p>The skills speak in terms of five canonical triage roles. This file maps those roles to the actual label strings used in this repo's issue tracker.</p>
+<table>
+<thead>
+<tr>
+<th>Label in mattpocock/skills</th>
+<th>Label in our tracker</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>needs-triage</code></td>
+<td><code>needs-triage</code></td>
+<td>Maintainer needs to evaluate this issue</td>
+</tr>
+<tr>
+<td><code>needs-info</code></td>
+<td><code>needs-info</code></td>
+<td>Waiting on reporter for more information</td>
+</tr>
+<tr>
+<td><code>ready-for-agent</code></td>
+<td><code>ready-for-agent</code></td>
+<td>Fully specified, ready for an AFK agent</td>
+</tr>
+<tr>
+<td><code>ready-for-human</code></td>
+<td><code>ready-for-human</code></td>
+<td>Requires human implementation</td>
+</tr>
+<tr>
+<td><code>wontfix</code></td>
+<td><code>wontfix</code></td>
+<td>Will not be actioned</td>
+</tr>
+</tbody>
+</table>
+<p>When a skill mentions a role, use the corresponding label string from this table.</p>
 
 
 

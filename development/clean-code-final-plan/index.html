@@ -10,7 +10,7 @@
       
       
       
-        <link rel="canonical" href="https://rajdeepmondaldotcom.github.io/pmcgrab/includes/mkdocs/">
+        <link rel="canonical" href="https://rajdeepmondaldotcom.github.io/pmcgrab/development/clean-code-final-plan/">
       
       
       
@@ -23,7 +23,7 @@
     
     
       
-        <title>Mkdocs - PMCGrab</title>
+        <title>Final Clean-Code Plan - PMCGrab</title>
       
     
     
@@ -79,6 +79,11 @@
     <label class="md-overlay" for="__drawer"></label>
     <div data-md-component="skip">
       
+        
+        <a href="#final-clean-code-plan" class="md-skip">
+          Skip to content
+        </a>
+      
     </div>
     <div data-md-component="announce">
       
@@ -115,7 +120,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Mkdocs
+              Final Clean-Code Plan
             
           </span>
         </div>
@@ -336,7 +341,7 @@
     
     
       <li class="md-tabs__item">
-        <a href="../../development/contributing/" class="md-tabs__link">
+        <a href="../contributing/" class="md-tabs__link">
           
   
   
@@ -1225,7 +1230,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../development/contributing/" class="md-nav__link">
+      <a href="../contributing/" class="md-nav__link">
         
   
   
@@ -1253,7 +1258,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../development/setup/" class="md-nav__link">
+      <a href="../setup/" class="md-nav__link">
         
   
   
@@ -1281,7 +1286,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../development/architecture/" class="md-nav__link">
+      <a href="../architecture/" class="md-nav__link">
         
   
   
@@ -1309,7 +1314,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../development/testing/" class="md-nav__link">
+      <a href="../testing/" class="md-nav__link">
         
   
   
@@ -1477,7 +1482,7 @@
 
 
   
-    <a href="https://github.com/rajdeepmondaldotcom/pmcgrab/edit/main/docs/includes/mkdocs.md" title="Edit this page" class="md-content__button md-icon" rel="edit">
+    <a href="https://github.com/rajdeepmondaldotcom/pmcgrab/edit/main/docs/development/clean-code-final-plan.md" title="Edit this page" class="md-content__button md-icon" rel="edit">
       
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M10 20H6V4h7v5h5v3.1l2-2V8l-6-6H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h4zm10.2-7c.1 0 .3.1.4.2l1.3 1.3c.2.2.2.6 0 .8l-1 1-2.1-2.1 1-1c.1-.1.2-.2.4-.2m0 3.9L14.1 23H12v-2.1l6.1-6.1z"/></svg>
     </a>
@@ -1486,33 +1491,112 @@
     
       
     
-    <a href="https://github.com/rajdeepmondaldotcom/pmcgrab/raw/main/docs/includes/mkdocs.md" title="View source of this page" class="md-content__button md-icon">
+    <a href="https://github.com/rajdeepmondaldotcom/pmcgrab/raw/main/docs/development/clean-code-final-plan.md" title="View source of this page" class="md-content__button md-icon">
       
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M17 18c.56 0 1 .44 1 1s-.44 1-1 1-1-.44-1-1 .44-1 1-1m0-3c-2.73 0-5.06 1.66-6 4 .94 2.34 3.27 4 6 4s5.06-1.66 6-4c-.94-2.34-3.27-4-6-4m0 6.5a2.5 2.5 0 0 1-2.5-2.5 2.5 2.5 0 0 1 2.5-2.5 2.5 2.5 0 0 1 2.5 2.5 2.5 2.5 0 0 1-2.5 2.5M9.27 20H6V4h7v5h5v4.07c.7.08 1.36.25 2 .49V8l-6-6H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h4.5a8.2 8.2 0 0 1-1.23-2"/></svg>
     </a>
   
 
 
-  <h1>Mkdocs</h1>
-
-<!-- Common snippets for MkDocs -->
-
-<p>_[PMC]: PubMed Central
-_[PMCID]: PubMed Central Identifier
-_[NCBI]: National Center for Biotechnology Information
-_[XML]: eXtensible Markup Language
-_[JSON]: JavaScript Object Notation
-_[API]: Application Programming Interface
-_[CLI]: Command Line Interface
-_[RAG]: Retrieval-Augmented Generation
-_[LLM]: Large Language Model
-_[DTD]: Document Type Definition
-_[HTML]: HyperText Markup Language
-_[CSV]: Comma-Separated Values
-_[HTTP]: HyperText Transfer Protocol
-_[HTTPS]: HyperText Transfer Protocol Secure
-_[URL]: Uniform Resource Locator
-_[URI]: Uniform Resource Identifier</p>
+<h1 id="final-clean-code-plan">Final Clean-Code Plan<a class="headerlink" href="#final-clean-code-plan" title="Permanent link">&para;</a></h1>
+<p>Status: Phase 6 final consolidated plan.</p>
+<h2 id="anchor-decision">Anchor Decision<a class="headerlink" href="#anchor-decision" title="Permanent link">&para;</a></h2>
+<p>PMCGrab stays a Python library and CLI for converting PMC IDs and local JATS XML into AI-ready JSON. The cleanup deepens existing Modules and fixes drift. It does not replace the parser, CLI framework, package manager, or NCBI access approach.</p>
+<h2 id="implementation-order">Implementation Order<a class="headerlink" href="#implementation-order" title="Permanent link">&para;</a></h2>
+<h3 id="1-fix-public-interface-truth">1. Fix Public Interface Truth<a class="headerlink" href="#1-fix-public-interface-truth" title="Permanent link">&para;</a></h3>
+<p>Commit scope:</p>
+<ul>
+<li>Runtime version matches package version.</li>
+<li>Top-level <code>process_single_pmc</code> exports the application processing Interface.</li>
+<li>Tests lock both behaviors.</li>
+</ul>
+<p>Acceptance:</p>
+<ul>
+<li><code>pmcgrab.__version__ == importlib.metadata.version("pmcgrab")</code></li>
+<li><code>inspect.signature(pmcgrab.process_single_pmc)</code> includes <code>download</code>, <code>timeout</code>, and <code>metadata_only</code>.</li>
+</ul>
+<h3 id="2-make-error-suppression-honest">2. Make Error Suppression Honest<a class="headerlink" href="#2-make-error-suppression-honest" title="Permanent link">&para;</a></h3>
+<p>Commit scope:</p>
+<ul>
+<li><code>paper_dict_from_pmc(..., suppress_errors=True)</code> returns <code>{}</code> on XML acquisition/parsing failures.</li>
+<li><code>paper_dict_from_local_xml(..., suppress_errors=True)</code> returns <code>{}</code> on local read/XML parse failures.</li>
+<li>Local PMCID extraction accepts <code>pub-id-type="pmc"</code> and <code>pub-id-type="pmcid"</code>.</li>
+</ul>
+<p>Acceptance:</p>
+<ul>
+<li>Malformed local XML with <code>suppress_errors=True</code> does not raise.</li>
+<li>Local XML with <code>PMC123</code> under either supported PMCID attribute returns <code>123</code>.</li>
+</ul>
+<h3 id="3-tighten-cli-contract">3. Tighten CLI Contract<a class="headerlink" href="#3-tighten-cli-contract" title="Permanent link">&para;</a></h3>
+<p>Commit scope:</p>
+<ul>
+<li>Add <code>--version</code>.</li>
+<li>Validate positive worker count.</li>
+<li>Correct <code>--from-id-file</code> help text.</li>
+<li>Add tests for version, invalid workers, JSONL output, quiet mode, and ID-file resolution.</li>
+<li>Replace broad catch/pass tests with assertions where touched.</li>
+</ul>
+<p>Acceptance:</p>
+<ul>
+<li><code>python -m pmcgrab --version</code> exits 0.</li>
+<li><code>--batch-size 0</code> exits non-zero with a clear argparse error.</li>
+<li>JSONL output and <code>summary.json</code> are asserted by tests.</li>
+</ul>
+<h3 id="4-consolidate-release-safety">4. Consolidate Release Safety<a class="headerlink" href="#4-consolidate-release-safety" title="Permanent link">&para;</a></h3>
+<p>Commit scope:</p>
+<ul>
+<li>Keep a single PyPI publish path.</li>
+<li>Remove duplicate release/publish workflows or make them non-publishing.</li>
+<li>Build and smoke-test the artifact before publish.</li>
+<li>Use locked dependency installs in CI.</li>
+<li>Remove CI-time dependency mutation.</li>
+<li>Align Ruff versions.</li>
+</ul>
+<p>Acceptance:</p>
+<ul>
+<li>No workflow publishes on plain <code>pyproject.toml</code> changes.</li>
+<li>Tag publish workflow runs build/import/CLI smoke checks before <code>uv publish</code>.</li>
+<li>CI does not call <code>uv add</code>.</li>
+</ul>
+<h3 id="5-make-docs-match-code">5. Make Docs Match Code<a class="headerlink" href="#5-make-docs-match-code" title="Permanent link">&para;</a></h3>
+<p>Commit scope:</p>
+<ul>
+<li>Update architecture docs to describe actual Modules and deferred deepening work.</li>
+<li>Update output examples to use current normalized keys.</li>
+<li>Remove stale test and coverage proof claims or replace them with current verified values.</li>
+<li>Keep research and audit docs in <code>docs/development</code>.</li>
+</ul>
+<p>Acceptance:</p>
+<ul>
+<li>Docs no longer advertise unsupported CLI flags as current behavior.</li>
+<li>Docs no longer show <code>data["journal"]</code>, <code>data["doi"]</code>, or <code>data["references"]</code> for normalized processing output.</li>
+</ul>
+<h2 id="deferred-follow-up-issues">Deferred Follow-Up Issues<a class="headerlink" href="#deferred-follow-up-issues" title="Permanent link">&para;</a></h2>
+<p>These remain important, but they should be implemented after this cleanup branch lands:</p>
+<ul>
+<li>Parser field registry for <code>build_complete_paper_dict</code>.</li>
+<li>Explicit serialized schemas for tables and figures.</li>
+<li>Dedicated network/local XML source Adapters.</li>
+<li>Gradual mypy enforcement expansion after the current error set is measured.</li>
+</ul>
+<h2 id="final-audit-notes">Final Audit Notes<a class="headerlink" href="#final-audit-notes" title="Permanent link">&para;</a></h2>
+<ul>
+<li>The highest release risk is duplicate publishing, not parser aesthetics.</li>
+<li>The highest compatibility risk is the top-level deprecated export.</li>
+<li>The highest reliability gap is error suppression not covering acquisition.</li>
+<li>The highest documentation risk is examples using keys that do not exist.</li>
+</ul>
+<h2 id="verification-commands">Verification Commands<a class="headerlink" href="#verification-commands" title="Permanent link">&para;</a></h2>
+<p>Run before final commit:</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>uv<span class="w"> </span>run<span class="w"> </span>ruff<span class="w"> </span>check<span class="w"> </span>.
+</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>uv<span class="w"> </span>run<span class="w"> </span>ruff<span class="w"> </span>format<span class="w"> </span>--check<span class="w"> </span>.
+</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>uv<span class="w"> </span>run<span class="w"> </span>pytest<span class="w"> </span>-q<span class="w"> </span>--no-cov
+</span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>uv<span class="w"> </span>run<span class="w"> </span>pytest
+</span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>uv<span class="w"> </span>build
+</span><span id="__span-0-6"><a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>python<span class="w"> </span>-m<span class="w"> </span>pmcgrab<span class="w"> </span>--help
+</span><span id="__span-0-7"><a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>python<span class="w"> </span>-m<span class="w"> </span>pmcgrab<span class="w"> </span>--version
+</span></code></pre></div>
+<p>Do not run Terraform commands.</p>
 
 
 

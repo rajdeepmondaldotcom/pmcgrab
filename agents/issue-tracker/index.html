@@ -10,7 +10,7 @@
       
       
       
-        <link rel="canonical" href="https://rajdeepmondaldotcom.github.io/pmcgrab/includes/mkdocs/">
+        <link rel="canonical" href="https://rajdeepmondaldotcom.github.io/pmcgrab/agents/issue-tracker/">
       
       
       
@@ -23,7 +23,7 @@
     
     
       
-        <title>Mkdocs - PMCGrab</title>
+        <title>Issue tracker: GitHub - PMCGrab</title>
       
     
     
@@ -79,6 +79,11 @@
     <label class="md-overlay" for="__drawer"></label>
     <div data-md-component="skip">
       
+        
+        <a href="#issue-tracker-github" class="md-skip">
+          Skip to content
+        </a>
+      
     </div>
     <div data-md-component="announce">
       
@@ -115,7 +120,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Mkdocs
+              Issue tracker: GitHub
             
           </span>
         </div>
@@ -1477,7 +1482,7 @@
 
 
   
-    <a href="https://github.com/rajdeepmondaldotcom/pmcgrab/edit/main/docs/includes/mkdocs.md" title="Edit this page" class="md-content__button md-icon" rel="edit">
+    <a href="https://github.com/rajdeepmondaldotcom/pmcgrab/edit/main/docs/agents/issue-tracker.md" title="Edit this page" class="md-content__button md-icon" rel="edit">
       
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M10 20H6V4h7v5h5v3.1l2-2V8l-6-6H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h4zm10.2-7c.1 0 .3.1.4.2l1.3 1.3c.2.2.2.6 0 .8l-1 1-2.1-2.1 1-1c.1-.1.2-.2.4-.2m0 3.9L14.1 23H12v-2.1l6.1-6.1z"/></svg>
     </a>
@@ -1486,33 +1491,29 @@
     
       
     
-    <a href="https://github.com/rajdeepmondaldotcom/pmcgrab/raw/main/docs/includes/mkdocs.md" title="View source of this page" class="md-content__button md-icon">
+    <a href="https://github.com/rajdeepmondaldotcom/pmcgrab/raw/main/docs/agents/issue-tracker.md" title="View source of this page" class="md-content__button md-icon">
       
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M17 18c.56 0 1 .44 1 1s-.44 1-1 1-1-.44-1-1 .44-1 1-1m0-3c-2.73 0-5.06 1.66-6 4 .94 2.34 3.27 4 6 4s5.06-1.66 6-4c-.94-2.34-3.27-4-6-4m0 6.5a2.5 2.5 0 0 1-2.5-2.5 2.5 2.5 0 0 1 2.5-2.5 2.5 2.5 0 0 1 2.5 2.5 2.5 2.5 0 0 1-2.5 2.5M9.27 20H6V4h7v5h5v4.07c.7.08 1.36.25 2 .49V8l-6-6H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h4.5a8.2 8.2 0 0 1-1.23-2"/></svg>
     </a>
   
 
 
-  <h1>Mkdocs</h1>
-
-<!-- Common snippets for MkDocs -->
-
-<p>_[PMC]: PubMed Central
-_[PMCID]: PubMed Central Identifier
-_[NCBI]: National Center for Biotechnology Information
-_[XML]: eXtensible Markup Language
-_[JSON]: JavaScript Object Notation
-_[API]: Application Programming Interface
-_[CLI]: Command Line Interface
-_[RAG]: Retrieval-Augmented Generation
-_[LLM]: Large Language Model
-_[DTD]: Document Type Definition
-_[HTML]: HyperText Markup Language
-_[CSV]: Comma-Separated Values
-_[HTTP]: HyperText Transfer Protocol
-_[HTTPS]: HyperText Transfer Protocol Secure
-_[URL]: Uniform Resource Locator
-_[URI]: Uniform Resource Identifier</p>
+<h1 id="issue-tracker-github">Issue tracker: GitHub<a class="headerlink" href="#issue-tracker-github" title="Permanent link">&para;</a></h1>
+<p>Issues and PRDs for this repo live as GitHub issues. Use the <code>gh</code> CLI for issue-tracker operations when local work needs to be published.</p>
+<h2 id="conventions">Conventions<a class="headerlink" href="#conventions" title="Permanent link">&para;</a></h2>
+<ul>
+<li><strong>Create an issue</strong>: <code>gh issue create --title "..." --body "..."</code></li>
+<li><strong>Read an issue</strong>: <code>gh issue view &lt;number&gt; --comments</code></li>
+<li><strong>List issues</strong>: <code>gh issue list --state open --json number,title,body,labels,comments</code></li>
+<li><strong>Comment on an issue</strong>: <code>gh issue comment &lt;number&gt; --body "..."</code></li>
+<li><strong>Apply or remove labels</strong>: <code>gh issue edit &lt;number&gt; --add-label "..."</code> or <code>--remove-label "..."</code></li>
+<li><strong>Close an issue</strong>: <code>gh issue close &lt;number&gt; --comment "..."</code></li>
+</ul>
+<p>Infer the repository from <code>git remote -v</code>; <code>gh</code> does this automatically when run inside the clone.</p>
+<h2 id="when-a-skill-says-publish-to-the-issue-tracker">When a skill says "publish to the issue tracker"<a class="headerlink" href="#when-a-skill-says-publish-to-the-issue-tracker" title="Permanent link">&para;</a></h2>
+<p>Create a GitHub issue in <code>rajdeepmondaldotcom/pmcgrab</code>.</p>
+<h2 id="when-a-skill-says-fetch-the-relevant-ticket">When a skill says "fetch the relevant ticket"<a class="headerlink" href="#when-a-skill-says-fetch-the-relevant-ticket" title="Permanent link">&para;</a></h2>
+<p>Run <code>gh issue view &lt;number&gt; --comments</code>.</p>
 
 
 

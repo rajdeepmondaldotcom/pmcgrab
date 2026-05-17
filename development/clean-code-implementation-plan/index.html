@@ -10,7 +10,7 @@
       
       
       
-        <link rel="canonical" href="https://rajdeepmondaldotcom.github.io/pmcgrab/includes/mkdocs/">
+        <link rel="canonical" href="https://rajdeepmondaldotcom.github.io/pmcgrab/development/clean-code-implementation-plan/">
       
       
       
@@ -23,7 +23,7 @@
     
     
       
-        <title>Mkdocs - PMCGrab</title>
+        <title>PMCGrab Clean-Code Implementation Plan - PMCGrab</title>
       
     
     
@@ -79,6 +79,11 @@
     <label class="md-overlay" for="__drawer"></label>
     <div data-md-component="skip">
       
+        
+        <a href="#pmcgrab-clean-code-implementation-plan" class="md-skip">
+          Skip to content
+        </a>
+      
     </div>
     <div data-md-component="announce">
       
@@ -115,7 +120,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Mkdocs
+              PMCGrab Clean-Code Implementation Plan
             
           </span>
         </div>
@@ -336,7 +341,7 @@
     
     
       <li class="md-tabs__item">
-        <a href="../../development/contributing/" class="md-tabs__link">
+        <a href="../contributing/" class="md-tabs__link">
           
   
   
@@ -1225,7 +1230,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../development/contributing/" class="md-nav__link">
+      <a href="../contributing/" class="md-nav__link">
         
   
   
@@ -1253,7 +1258,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../development/setup/" class="md-nav__link">
+      <a href="../setup/" class="md-nav__link">
         
   
   
@@ -1281,7 +1286,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../development/architecture/" class="md-nav__link">
+      <a href="../architecture/" class="md-nav__link">
         
   
   
@@ -1309,7 +1314,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../development/testing/" class="md-nav__link">
+      <a href="../testing/" class="md-nav__link">
         
   
   
@@ -1477,7 +1482,7 @@
 
 
   
-    <a href="https://github.com/rajdeepmondaldotcom/pmcgrab/edit/main/docs/includes/mkdocs.md" title="Edit this page" class="md-content__button md-icon" rel="edit">
+    <a href="https://github.com/rajdeepmondaldotcom/pmcgrab/edit/main/docs/development/clean-code-implementation-plan.md" title="Edit this page" class="md-content__button md-icon" rel="edit">
       
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M10 20H6V4h7v5h5v3.1l2-2V8l-6-6H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h4zm10.2-7c.1 0 .3.1.4.2l1.3 1.3c.2.2.2.6 0 .8l-1 1-2.1-2.1 1-1c.1-.1.2-.2.4-.2m0 3.9L14.1 23H12v-2.1l6.1-6.1z"/></svg>
     </a>
@@ -1486,33 +1491,167 @@
     
       
     
-    <a href="https://github.com/rajdeepmondaldotcom/pmcgrab/raw/main/docs/includes/mkdocs.md" title="View source of this page" class="md-content__button md-icon">
+    <a href="https://github.com/rajdeepmondaldotcom/pmcgrab/raw/main/docs/development/clean-code-implementation-plan.md" title="View source of this page" class="md-content__button md-icon">
       
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M17 18c.56 0 1 .44 1 1s-.44 1-1 1-1-.44-1-1 .44-1 1-1m0-3c-2.73 0-5.06 1.66-6 4 .94 2.34 3.27 4 6 4s5.06-1.66 6-4c-.94-2.34-3.27-4-6-4m0 6.5a2.5 2.5 0 0 1-2.5-2.5 2.5 2.5 0 0 1 2.5-2.5 2.5 2.5 0 0 1 2.5 2.5 2.5 2.5 0 0 1-2.5 2.5M9.27 20H6V4h7v5h5v4.07c.7.08 1.36.25 2 .49V8l-6-6H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h4.5a8.2 8.2 0 0 1-1.23-2"/></svg>
     </a>
   
 
 
-  <h1>Mkdocs</h1>
-
-<!-- Common snippets for MkDocs -->
-
-<p>_[PMC]: PubMed Central
-_[PMCID]: PubMed Central Identifier
-_[NCBI]: National Center for Biotechnology Information
-_[XML]: eXtensible Markup Language
-_[JSON]: JavaScript Object Notation
-_[API]: Application Programming Interface
-_[CLI]: Command Line Interface
-_[RAG]: Retrieval-Augmented Generation
-_[LLM]: Large Language Model
-_[DTD]: Document Type Definition
-_[HTML]: HyperText Markup Language
-_[CSV]: Comma-Separated Values
-_[HTTP]: HyperText Transfer Protocol
-_[HTTPS]: HyperText Transfer Protocol Secure
-_[URL]: Uniform Resource Locator
-_[URI]: Uniform Resource Identifier</p>
+<h1 id="pmcgrab-clean-code-implementation-plan">PMCGrab Clean-Code Implementation Plan<a class="headerlink" href="#pmcgrab-clean-code-implementation-plan" title="Permanent link">&para;</a></h1>
+<p>Status: Phase 3 revision, grounded in the current codebase and reviewer audit findings.</p>
+<h2 id="goal">Goal<a class="headerlink" href="#goal" title="Permanent link">&para;</a></h2>
+<p>Make PMCGrab easier to trust, maintain, and release without changing its core product direction: convert PMC IDs or local JATS XML into clean, section-aware, AI-ready Python objects and JSON.</p>
+<p>This plan does not redesign PMCGrab into a new architecture. It deepens the Modules that already exist, tightens public Interfaces, and fixes drift between code, tests, docs, and release automation.</p>
+<h2 id="current-shape">Current Shape<a class="headerlink" href="#current-shape" title="Permanent link">&para;</a></h2>
+<p>PMCGrab currently has these important Modules:</p>
+<ul>
+<li><code>pmcgrab.model.Paper</code>: public object Interface for parsed articles.</li>
+<li><code>pmcgrab.parser</code>: XML-to-internal-dictionary orchestration.</li>
+<li><code>pmcgrab.application.processing</code>: programmatic processing Interface for normalized article dictionaries.</li>
+<li><code>pmcgrab.cli.pmcgrab_cli</code>: CLI Adapter over processing and file output.</li>
+<li><code>pmcgrab.fetch</code>: network and local XML acquisition.</li>
+<li><code>pmcgrab.processing</code>: deprecated legacy batch Adapter retained for compatibility.</li>
+</ul>
+<p>The code works, but several Interfaces are shallow or misleading:</p>
+<ul>
+<li>Top-level <code>from pmcgrab import process_single_pmc</code> points at the deprecated Adapter instead of the application Module.</li>
+<li>Runtime <code>pmcgrab.__version__</code> diverges from <code>pyproject.toml</code>.</li>
+<li><code>suppress_errors=True</code> only protects parser work after XML acquisition has already succeeded.</li>
+<li>Local XML PMCID extraction accepts <code>pub-id-type="pmc"</code> but misses <code>pub-id-type="pmcid"</code>.</li>
+<li>CLI docs and tests describe behavior that differs from actual <code>argparse</code>.</li>
+<li>Release workflows can publish from multiple paths, including paths that do not require tests first.</li>
+</ul>
+<h2 id="implementation-slices">Implementation Slices<a class="headerlink" href="#implementation-slices" title="Permanent link">&para;</a></h2>
+<h3 id="slice-1-public-interface-and-version-truth">Slice 1: Public Interface and Version Truth<a class="headerlink" href="#slice-1-public-interface-and-version-truth" title="Permanent link">&para;</a></h3>
+<p>Files:</p>
+<ul>
+<li><code>src/pmcgrab/__init__.py</code></li>
+<li><code>pyproject.toml</code></li>
+<li><code>docs/about/citation.md</code></li>
+<li><code>tests/</code></li>
+</ul>
+<p>Changes:</p>
+<ul>
+<li>Make top-level <code>process_single_pmc</code> export the application Module's function.</li>
+<li>Keep <code>pmcgrab.processing</code> as the explicit deprecated Adapter.</li>
+<li>Set <code>pmcgrab.__version__</code> to match <code>pyproject.toml</code>.</li>
+<li>Add tests that root exports have the expected signature and version stays synchronized with installed metadata.</li>
+</ul>
+<p>Benefits:</p>
+<ul>
+<li>Better Leverage: callers get the current processing Interface from the package root.</li>
+<li>Better Locality: deprecated behavior stays isolated in <code>pmcgrab.processing</code>.</li>
+</ul>
+<h3 id="slice-2-acquisition-error-policy-and-local-pmcid-parsing">Slice 2: Acquisition Error Policy and Local PMCID Parsing<a class="headerlink" href="#slice-2-acquisition-error-policy-and-local-pmcid-parsing" title="Permanent link">&para;</a></h3>
+<p>Files:</p>
+<ul>
+<li><code>src/pmcgrab/parser.py</code></li>
+<li><code>src/pmcgrab/fetch.py</code></li>
+<li><code>tests/test_local_xml.py</code></li>
+<li><code>tests/test_regression_bugs.py</code></li>
+</ul>
+<p>Changes:</p>
+<ul>
+<li>Apply <code>suppress_errors=True</code> around network and local XML acquisition, not only around <code>generate_paper_dict</code>.</li>
+<li>Accept both <code>pub-id-type="pmc"</code> and <code>pub-id-type="pmcid"</code> for local XML.</li>
+<li>Add malformed-local-XML regression tests.</li>
+<li>Add tests for both PMCID attribute spellings.</li>
+</ul>
+<p>Benefits:</p>
+<ul>
+<li>Better Leverage: batch callers can trust one suppression flag across the full pipeline.</li>
+<li>Better Locality: identifier extraction rules live where local XML is parsed.</li>
+</ul>
+<h3 id="slice-3-cli-adapter-correctness">Slice 3: CLI Adapter Correctness<a class="headerlink" href="#slice-3-cli-adapter-correctness" title="Permanent link">&para;</a></h3>
+<p>Files:</p>
+<ul>
+<li><code>src/pmcgrab/cli/pmcgrab_cli.py</code></li>
+<li><code>src/pmcgrab/__main__.py</code></li>
+<li><code>tests/test_cli_complete.py</code></li>
+<li><code>tests/test_cli_contract.py</code> or equivalent focused tests</li>
+<li><code>docs/user-guide/cli.md</code></li>
+<li><code>docs/api/cli.md</code></li>
+<li><code>docs/examples/cli-examples.md</code></li>
+</ul>
+<p>Changes:</p>
+<ul>
+<li>Add <code>--version</code> using argparse's built-in version action.</li>
+<li>Validate <code>--batch-size/--workers</code> as a positive integer.</li>
+<li>Correct help text for <code>--from-id-file</code>: bare numeric IDs are treated as PMC IDs; PMIDs need <code>--pmids</code>.</li>
+<li>Prefer the application Module for processing and keep CLI code focused on args, progress, and output files.</li>
+<li>Replace broad catch/pass CLI tests with assertions on exit behavior, output files, JSONL, and summary.</li>
+<li>Update CLI docs from actual <code>--help</code> output.</li>
+</ul>
+<p>Benefits:</p>
+<ul>
+<li>Better Depth: CLI becomes a thin Adapter instead of duplicating processing orchestration.</li>
+<li>Better test signal: broken CLI behavior fails tests instead of being swallowed.</li>
+</ul>
+<h3 id="slice-4-release-and-ci-safety">Slice 4: Release and CI Safety<a class="headerlink" href="#slice-4-release-and-ci-safety" title="Permanent link">&para;</a></h3>
+<p>Files:</p>
+<ul>
+<li><code>.github/workflows/ci.yml</code></li>
+<li><code>.github/workflows/pre-commit.yml</code></li>
+<li><code>.github/workflows/publish-on-tag.yml</code></li>
+<li><code>.github/workflows/release.yml</code></li>
+<li><code>.github/workflows/publish.yml</code></li>
+<li><code>.pre-commit-config.yaml</code></li>
+</ul>
+<p>Changes:</p>
+<ul>
+<li>Keep one PyPI publish path.</li>
+<li>Ensure publish builds the package, installs the wheel, imports <code>pmcgrab</code>, and runs <code>python -m pmcgrab --help</code> before upload.</li>
+<li>Remove duplicate release/publish workflows or convert them to non-publishing release-note automation.</li>
+<li>Use <code>uv sync --locked</code> in CI so dependency resolution is reproducible.</li>
+<li>Remove CI-time <code>uv add</code>.</li>
+<li>Align Ruff versions between <code>pyproject.toml</code> and pre-commit.</li>
+</ul>
+<p>Benefits:</p>
+<ul>
+<li>Better Locality: release responsibility lives in one workflow.</li>
+<li>Lower deployment risk: a publish path must prove the built artifact imports and exposes the CLI.</li>
+</ul>
+<h3 id="slice-5-documentation-truthfulness">Slice 5: Documentation Truthfulness<a class="headerlink" href="#slice-5-documentation-truthfulness" title="Permanent link">&para;</a></h3>
+<p>Files:</p>
+<ul>
+<li><code>docs/development/architecture.md</code></li>
+<li><code>docs/development/testing.md</code></li>
+<li>README and user-guide pages that describe output keys.</li>
+</ul>
+<p>Changes:</p>
+<ul>
+<li>Replace imaginary classes and Interfaces in architecture docs with the actual Modules.</li>
+<li>Update output examples to use <code>abstract_text</code>, <code>journal_title</code>, <code>article_id</code>, and <code>citations</code>.</li>
+<li>Remove or regenerate stale test/coverage counts.</li>
+<li>Add a small schema snapshot test for normalized article dictionaries.</li>
+</ul>
+<p>Benefits:</p>
+<ul>
+<li>Better Leverage for maintainers and agents: docs point to real seams.</li>
+<li>Lower support burden: examples use keys that exist at runtime.</li>
+</ul>
+<h3 id="slice-6-deferred-deepening-work">Slice 6: Deferred Deepening Work<a class="headerlink" href="#slice-6-deferred-deepening-work" title="Permanent link">&para;</a></h3>
+<p>These are valuable but larger than the first cleanup pass:</p>
+<ul>
+<li>Introduce a field registry for <code>build_complete_paper_dict</code>.</li>
+<li>Define explicit table and figure serialization schemas.</li>
+<li>Introduce explicit XML source Adapters for network and local sources.</li>
+</ul>
+<p>These should be implemented after the public Interface, error policy, CLI, and release paths are stable.</p>
+<h2 id="verification-plan">Verification Plan<a class="headerlink" href="#verification-plan" title="Permanent link">&para;</a></h2>
+<p>Run:</p>
+<ul>
+<li><code>uv run ruff check .</code></li>
+<li><code>uv run ruff format --check .</code></li>
+<li><code>uv run pytest -q --no-cov</code></li>
+<li><code>uv run pytest</code></li>
+<li><code>uv build</code></li>
+<li>install the wheel in a temp venv and run:</li>
+<li><code>python -c "import pmcgrab; print(pmcgrab.__version__)"</code></li>
+<li><code>python -m pmcgrab --help</code></li>
+</ul>
+<p>Do not run Terraform commands.</p>
 
 
 
