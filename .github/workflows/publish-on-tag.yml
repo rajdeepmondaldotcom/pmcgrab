@@ -6,7 +6,7 @@ on:
       - "v*"
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
   build-and-publish:
@@ -50,3 +50,34 @@ jobs:
         env:
           UV_PUBLISH_TOKEN: ${{ secrets.PYPI_TOKEN }}
         run: uv publish --check-url https://pypi.org/simple
+
+      - name: Create GitHub release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          python - <<'PY' > release-notes.md
+          import os
+          import re
+          from pathlib import Path
+
+          tag = os.environ["GITHUB_REF_NAME"]
+          version = tag.removeprefix("v")
+          changelog = Path("CHANGELOG.md").read_text(encoding="utf-8")
+          pattern = rf"^## \[{re.escape(version)}\].*?(?=^## \[|\Z)"
+          match = re.search(pattern, changelog, flags=re.MULTILINE | re.DOTALL)
+          if match:
+              print(match.group(0).strip())
+          else:
+              print(f"Release {tag}")
+          PY
+
+          if gh release view "$GITHUB_REF_NAME" >/dev/null 2>&1; then
+            gh release edit "$GITHUB_REF_NAME" \
+              --title "pmcgrab ${GITHUB_REF_NAME#v}" \
+              --notes-file release-notes.md
+            gh release upload "$GITHUB_REF_NAME" dist/* --clobber
+          else
+            gh release create "$GITHUB_REF_NAME" dist/* \
+              --title "pmcgrab ${GITHUB_REF_NAME#v}" \
+              --notes-file release-notes.md
+          fi

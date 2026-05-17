@@ -160,6 +160,7 @@ nav:
       - Development Setup: development/setup.md
       - Architecture: development/architecture.md
       - Testing: development/testing.md
+      - Release Process: development/release-process.md
   - About:
       - License: about/license.md
       - Citation: about/citation.md

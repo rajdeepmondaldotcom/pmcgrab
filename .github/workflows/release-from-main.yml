@@ -1,0 +1,121 @@
+name: Release from main
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Version to release, without the leading v. Leave blank to read pyproject.toml."
+        required: false
+        type: string
+
+permissions:
+  contents: write
+
+concurrency:
+  group: release-from-main
+  cancel-in-progress: false
+
+jobs:
+  create-release-tag:
+    name: Create release tag
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    if: github.ref == 'refs/heads/main'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - uses: astral-sh/setup-uv@v5
+
+      - name: Resolve release version
+        id: version
+        env:
+          VERSION_INPUT: ${{ inputs.version }}
+        run: |
+          python - <<'PY' >> "$GITHUB_OUTPUT"
+          import os
+          import tomllib
+          from pathlib import Path
+
+          configured = tomllib.loads(Path("pyproject.toml").read_text())["project"]["version"]
+          requested = os.environ.get("VERSION_INPUT", "").strip()
+          if requested and requested != configured:
+              raise SystemExit(
+                  f"Requested version {requested} does not match pyproject.toml version {configured}"
+              )
+          print(f"version={configured}")
+          print(f"tag=v{configured}")
+          PY
+
+      - name: Check release does not already exist
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+          TAG: ${{ steps.version.outputs.tag }}
+        run: |
+          if git ls-remote --exit-code --tags origin "refs/tags/${TAG}" >/dev/null 2>&1; then
+            echo "Tag ${TAG} already exists." >&2
+            exit 1
+          fi
+
+          python - <<'PY'
+          import os
+          import urllib.error
+          import urllib.request
+
+          version = os.environ["VERSION"]
+          url = f"https://pypi.org/pypi/pmcgrab/{version}/json"
+          try:
+              with urllib.request.urlopen(url, timeout=30):
+                  raise SystemExit(f"pmcgrab {version} already exists on PyPI.")
+          except urllib.error.HTTPError as exc:
+              if exc.code != 404:
+                  raise
+          PY
+
+      - name: Install dependencies
+        run: uv sync --locked --all-groups
+
+      - name: Run linting
+        run: |
+          uv run ruff check .
+          uv run ruff format --check .
+
+      - name: Run tests
+        run: uv run pytest -q --no-cov
+
+      - name: Build distributions
+        run: uv build
+
+      - name: Smoke test built wheel
+        run: |
+          python -m venv .venv-smoke
+          . .venv-smoke/bin/activate
+          python -m pip install --upgrade pip
+          python -m pip install dist/*.whl
+          python -c "import pmcgrab; print(pmcgrab.__version__)"
+          python -m pmcgrab --help
+          python -m pmcgrab --version
+
+      - name: Push release tag
+        env:
+          TAG: ${{ steps.version.outputs.tag }}
+          VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git tag -a "$TAG" -m "pmcgrab $VERSION" "$GITHUB_SHA"
+          git push origin "$TAG"
+
+      - name: Publish handoff
+        env:
+          TAG: ${{ steps.version.outputs.tag }}
+        run: |
+          {
+            echo "Created ${TAG} from main."
+            echo "The Publish to PyPI (on tag) workflow will build, test, publish to PyPI, and create the GitHub Release."
+          } >> "$GITHUB_STEP_SUMMARY"
