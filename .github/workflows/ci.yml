@@ -47,7 +47,7 @@ jobs:
         uses: codecov/codecov-action@v6.0.0
         if: matrix.os == 'ubuntu-latest' && matrix.python-version == '3.12'
         with:
-          file: ./coverage.xml
+          files: ./coverage.xml
           fail_ci_if_error: false
 
   security:
