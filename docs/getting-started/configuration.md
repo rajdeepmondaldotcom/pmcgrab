@@ -4,7 +4,15 @@ PMCGrab provides simple configuration options optimized for the `process_single_
 
 ## Email Management
 
-PMCGrab automatically manages email rotation for NCBI API compliance:
+PMCGrab uses an email address when identifying itself to NCBI Entrez. For
+production or high-volume work, set `PMCGRAB_EMAILS` to one or more real
+contact addresses for your project or institution:
+
+```bash
+export PMCGRAB_EMAILS="you@university.edu,colleague@lab.org"
+```
+
+The runtime rotates through the configured addresses:
 
 ```python
 from pmcgrab.infrastructure.settings import next_email
@@ -14,7 +22,8 @@ email = next_email()
 print(f"Using email: {email}")
 ```
 
-The system automatically rotates through available email addresses to ensure proper rate limiting and compliance with NCBI guidelines.
+The package includes a maintainer contact as a quick-start fallback, but your
+own contact email is the right default for published pipelines.
 
 ## Basic Usage Pattern
 
@@ -29,7 +38,7 @@ email = next_email()  # Automatic email rotation
 data = process_single_pmc("7114487")
 
 if data:
-    print(f"Successfully processed: {data['title']}")
+    print(f"Successfully processed: {data['title']['main']}")
 else:
     print("Processing failed")
 ```
@@ -61,10 +70,13 @@ for pmcid in PMC_IDS:
         continue
 
     # Pretty-print a few key fields
+    title = data["title"]["main"]
+    abstract_blocks = data["content"]["abstract"][0]["blocks"]
+    abstract_preview = abstract_blocks[0]["text"] if abstract_blocks else ""
     print(
-        f"  Title   : {data['title'][:80]}{'…' if len(data['title']) > 80 else ''}\n"
-        f"  Abstract: {data['abstract_text'][:120]}{'…' if len(data['abstract_text']) > 120 else ''}\n"
-        f"  Authors : {len(data['authors']) if data['authors'] else 0}"
+        f"  Title   : {title[:80]}{'…' if len(title) > 80 else ''}\n"
+        f"  Abstract: {abstract_preview[:120]}{'…' if len(abstract_preview) > 120 else ''}\n"
+        f"  Authors : {len(data['contributors']['authors'])}"
     )
 
     # Persist full JSON
@@ -94,7 +106,7 @@ def robust_processing(pmcids):
             data = process_single_pmc(pmcid)
             if data is not None:
                 successful.append((pmcid, data))
-                print(f"Success PMC{pmcid}: {data['title'][:50]}...")
+                print(f"Success PMC{pmcid}: {data['title']['main'][:50]}...")
             else:
                 failed.append(pmcid)
                 print(f"Error PMC{pmcid}: No data returned")
@@ -179,7 +191,7 @@ def process_with_progress(pmcids, output_dir="results"):
                 json.dump(data, f, indent=2, ensure_ascii=False)
 
             successful += 1
-            tqdm.write(f"Success {data['title'][:40]}...")
+            tqdm.write(f"Success {data['title']['main'][:40]}...")
         else:
             tqdm.write(f"Error PMC{pmcid}: Failed")
 
@@ -298,7 +310,7 @@ def production_processing(pmcids, base_output_dir="production"):
                 json.dump(data, f, indent=2, ensure_ascii=False)
 
             stats['successful'] += 1
-            logger.info(f"Success: {data['title'][:50]}...")
+            logger.info(f"Success: {data['title']['main'][:50]}...")
         else:
             stats['failed'] += 1
             stats['failed_ids'].append(pmcid)

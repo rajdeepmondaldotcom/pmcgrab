@@ -27,7 +27,6 @@ from pathlib import Path
 import lxml.etree as ET
 import pandas as pd
 
-from pmcgrab.common.serialization import normalize_value
 from pmcgrab.common.xml_processing import (
     remove_mhtml_tags,
     split_text_and_refs,
@@ -307,95 +306,9 @@ class Paper:
             dict: Dictionary with all paper fields normalized for JSON.
                   Returns ``{"has_data": False}`` if no data is available.
         """
-        if not self.has_data:
-            return {"has_data": False}
+        from pmcgrab.common.paper_output import paper_to_output_dict
 
-        d = {
-            "pmc_id": str(self.pmcid) if self.pmcid else "",
-            "title": self.title or "",
-            "has_data": self.has_data,
-            "abstract": self.abstract_as_dict(),
-            "abstract_text": self.abstract_as_str(),
-            "body": self.body_as_dict(),
-            "toc": self.get_toc(),
-            "authors": self.authors if self.authors is not None else [],
-            "non_author_contributors": (
-                self.non_author_contributors
-                if self.non_author_contributors is not None
-                and not isinstance(self.non_author_contributors, str)
-                else []
-            ),
-            "article_id": self.article_id if self.article_id is not None else {},
-            "journal_title": (
-                self.journal_title if self.journal_title is not None else ""
-            ),
-            "journal_id": self.journal_id if self.journal_id is not None else {},
-            "issn": self.issn if self.issn is not None else {},
-            "publisher_name": (
-                self.publisher_name if self.publisher_name is not None else ""
-            ),
-            "publisher_location": (
-                self.publisher_location if self.publisher_location is not None else ""
-            ),
-            "article_types": (
-                self.article_types if self.article_types is not None else []
-            ),
-            "article_categories": (
-                self.article_categories if self.article_categories is not None else []
-            ),
-            "keywords": self.keywords if self.keywords is not None else [],
-            "published_date": (
-                self.published_date if self.published_date is not None else {}
-            ),
-            "history_dates": (
-                self.history_dates if self.history_dates is not None else {}
-            ),
-            "volume": self.volume if self.volume is not None else "",
-            "issue": self.issue if self.issue is not None else "",
-            "fpage": self.fpage if self.fpage is not None else "",
-            "lpage": self.lpage if self.lpage is not None else "",
-            "permissions": self.permissions if self.permissions is not None else {},
-            "copyright": self.copyright if self.copyright is not None else "",
-            "license": self.license if self.license is not None else "",
-            "citations": self.citations if self.citations is not None else [],
-            "tables": self.tables if self.tables is not None else [],
-            "figures": self.figures if self.figures is not None else [],
-            "equations": self.equations if self.equations is not None else [],
-            "funding": self.funding if self.funding is not None else [],
-            "ethics": self.ethics if self.ethics is not None else {},
-            "supplementary_material": (
-                self.supplementary if self.supplementary is not None else []
-            ),
-            "footnote": self.footnote if self.footnote is not None else "",
-            "acknowledgements": (
-                self.acknowledgements if self.acknowledgements is not None else []
-            ),
-            "notes": self.notes if self.notes is not None else [],
-            "custom_meta": self.custom_meta if self.custom_meta is not None else {},
-            "elocation_id": self.elocation_id if self.elocation_id is not None else "",
-            "counts": self.counts if self.counts is not None else {},
-            "self_uri": self.self_uri if self.self_uri is not None else [],
-            "related_articles": (
-                self.related_articles if self.related_articles is not None else []
-            ),
-            "conference": self.conference if self.conference is not None else {},
-            "version_history": getattr(self, "version_history", None) or [],
-            # Phase 5 additions
-            "subtitle": getattr(self, "subtitle", None) or "",
-            "author_notes": getattr(self, "author_notes", None) or {},
-            "appendices": getattr(self, "appendices", None) or [],
-            "glossary": getattr(self, "glossary", None) or [],
-            "translated_titles": getattr(self, "translated_titles", None) or [],
-            "translated_abstracts": getattr(self, "translated_abstracts", None) or [],
-            "abstract_type": getattr(self, "abstract_type", None) or "",
-            "tex_equations": getattr(self, "tex_equations", None) or [],
-            # Nested / paragraph-level body views
-            "body_nested": self.body_as_nested_dict(),
-            "paragraphs": self.body_as_paragraphs(),
-            "full_text": self.full_text(),
-            "last_updated": getattr(self, "last_updated", ""),
-        }
-        return {k: normalize_value(v) for k, v in d.items()}
+        return paper_to_output_dict(self) or {"has_data": False}
 
     def to_json(self, *, indent: int = 2, ensure_ascii: bool = False) -> str:
         """Return the Paper as a JSON string.
@@ -407,7 +320,12 @@ class Paper:
         Returns:
             str: JSON representation of the paper
         """
-        return json.dumps(self.to_dict(), indent=indent, ensure_ascii=ensure_ascii)
+        return json.dumps(
+            self.to_dict(),
+            indent=indent,
+            ensure_ascii=ensure_ascii,
+            allow_nan=False,
+        )
 
     # -----------------------------------------------------------------
     # String representations
@@ -869,15 +787,15 @@ def _render_block_element(elem: ET.Element) -> str:
         # Prefer <tex-math>, fall back to <mml:math>, then itertext
         tex = elem.find("tex-math")
         if tex is not None and tex.text:
-            return tex.text.strip()
+            return str(tex.text).strip()
         mml = elem.find("{http://www.w3.org/1998/Math/MathML}math")
         if mml is not None:
-            return ET.tostring(mml, encoding="unicode")
+            return str(ET.tostring(mml, encoding="unicode"))
         alt = elem.find("alternatives")
         if alt is not None:
             tex2 = alt.find("tex-math")
             if tex2 is not None and tex2.text:
-                return tex2.text.strip()
+                return str(tex2.text).strip()
         return "".join(elem.itertext()).strip()
 
     if tag == "disp-quote":
@@ -942,6 +860,37 @@ _INLINE_BLOCK_TAGS = frozenset(
         "verse-group",
         "speech",
         "statement",
+    }
+)
+
+_SECTION_BLOCK_AS_PARAGRAPH_TAGS = frozenset(
+    {
+        "list",
+        "def-list",
+        "disp-formula",
+        "disp-quote",
+        "boxed-text",
+        "preformat",
+        "code",
+        "verse-group",
+        "speech",
+        "statement",
+        "supplementary-material",
+        "table-wrap-group",
+        "alternatives",
+        "app",
+        "glossary",
+        "fn-group",
+        "ref-list",
+    }
+)
+
+_SECTION_SKIP_TAGS = frozenset(
+    {
+        "label",
+        "caption",
+        "object-id",
+        "target",
     }
 )
 
@@ -1040,41 +989,7 @@ class TextSection(TextElement):
         """
         super().__init__(sec_root, parent, ref_map)
         self.title: str | None = None
-        self.children: list[TextSection | TextParagraph | TextTable] = []
-
-        # Tags handled by converting their full text content into a
-        # synthetic TextParagraph so that the content is never lost.
-        _BLOCK_AS_PARAGRAPH_TAGS = frozenset(
-            {
-                "list",
-                "def-list",
-                "disp-formula",
-                "disp-quote",
-                "boxed-text",
-                "preformat",
-                "code",
-                "verse-group",
-                "speech",
-                "statement",
-                "supplementary-material",
-                "table-wrap-group",
-                "alternatives",
-                "app",
-                "glossary",
-                "fn-group",
-                "ref-list",
-            }
-        )
-        # Tags that are purely structural / metadata and can be silently
-        # skipped without losing body text.
-        _SKIP_TAGS = frozenset(
-            {
-                "label",
-                "caption",
-                "object-id",
-                "target",
-            }
-        )
+        self.children: list[TextSection | TextParagraph | TextTable | TextFigure] = []
 
         for child in sec_root:
             if child.tag == "title":
@@ -1102,7 +1017,7 @@ class TextSection(TextElement):
                 self.children.append(
                     TextFigure(child, parent=self, ref_map=self.get_ref_map())
                 )
-            elif child.tag in _BLOCK_AS_PARAGRAPH_TAGS:
+            elif child.tag in _SECTION_BLOCK_AS_PARAGRAPH_TAGS:
                 # Render the entire block element as text so content is
                 # never silently dropped.  We create a synthetic <p>
                 # wrapper so it flows through the normal TextParagraph
@@ -1113,7 +1028,7 @@ class TextSection(TextElement):
                     self.children.append(
                         TextParagraph(synth, parent=self, ref_map=self.get_ref_map())
                     )
-            elif child.tag in _SKIP_TAGS:
+            elif child.tag in _SECTION_SKIP_TAGS:
                 pass  # structural metadata, not body text
             else:
                 # Last resort: extract any text content so nothing is lost

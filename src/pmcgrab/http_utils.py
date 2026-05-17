@@ -64,7 +64,7 @@ def _backoff_sleep(retry: int) -> None:
 
 
 def cached_get(
-    url: str, params: dict[str, Any] | None = None, **kwargs
+    url: str, params: dict[str, Any] | None = None, **kwargs: Any
 ) -> requests.Response:
     """HTTP GET request with automatic retry logic and in-memory caching.
 
@@ -119,8 +119,8 @@ def cached_get(
         * Different parameters create separate cache entries
 
     Note:
-        The cache is process-local and not thread-safe for writes.
-        For multi-process applications, consider external caching solutions.
+        The cache is process-local and guarded by a thread lock. For
+        multi-process applications, consider external caching solutions.
     """
     if params:
         # Deterministic string key for cache

@@ -41,8 +41,10 @@ import argparse
 import json
 import logging
 import sys
+from collections.abc import Callable
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path
+from typing import TextIO
 
 from tqdm import tqdm
 
@@ -189,17 +191,142 @@ def _resolve_ids_from_file(filepath: str) -> list[str]:
     return resolved
 
 
-def _write_result(data: dict, name: str, out_dir: Path, fmt: str, jsonl_fh=None):
+def _write_result(
+    data: dict, name: str, out_dir: Path, fmt: str, jsonl_fh: TextIO | None = None
+) -> None:
     """Write a single result in the chosen format."""
     if fmt == "jsonl" and jsonl_fh is not None:
-        jsonl_fh.write(json.dumps(data, ensure_ascii=False) + "\n")
+        jsonl_fh.write(json.dumps(data, ensure_ascii=False, allow_nan=False) + "\n")
     else:
         dest = out_dir / f"{name}.json"
         with dest.open("w", encoding="utf-8") as fh:
-            json.dump(data, fh, indent=2, ensure_ascii=False)
+            json.dump(data, fh, indent=2, ensure_ascii=False, allow_nan=False)
 
 
-def main() -> None:
+def _process_local_directory(
+    args: argparse.Namespace, out_dir: Path, jsonl_fh: TextIO | None
+) -> dict[str, bool] | None:
+    """Process all XML files in a local directory."""
+    dir_path = Path(args.from_dir)
+    if not dir_path.is_dir():
+        print(f"Error: {dir_path} is not a directory", file=sys.stderr)
+        return None
+
+    xml_files = sorted(dir_path.glob("*.xml"))
+    if not xml_files:
+        print(f"No XML files found in {dir_path}", file=sys.stderr)
+        return None
+
+    results: dict[str, bool] = {}
+    with tqdm(
+        total=len(xml_files),
+        desc="Processing local XML",
+        unit="file",
+        disable=args.quiet,
+    ) as bar:
+        parsed = process_local_xml_dir(dir_path, workers=args.batch_size)
+        for name, data in parsed.items():
+            success = data is not None
+            if success and data is not None:
+                _write_result(data, name, out_dir, args.output_format, jsonl_fh)
+            results[name] = success
+            bar.update(1)
+    return results
+
+
+def _process_local_files(
+    args: argparse.Namespace, out_dir: Path, jsonl_fh: TextIO | None
+) -> dict[str, bool]:
+    """Process explicit local XML files."""
+    results: dict[str, bool] = {}
+    with tqdm(
+        total=len(args.from_files),
+        desc="Processing local XML",
+        unit="file",
+        disable=args.quiet,
+    ) as bar:
+        for xml_path in args.from_files:
+            fp = Path(xml_path)
+            data = process_single_local_xml(fp)
+            name = fp.stem
+            success = data is not None
+            if success and data is not None:
+                _write_result(data, name, out_dir, args.output_format, jsonl_fh)
+            results[name] = success
+            bar.update(1)
+    return results
+
+
+def _resolve_network_ids(args: argparse.Namespace) -> list[str]:
+    """Resolve CLI network-mode identifiers to normalized PMC IDs."""
+    pmc_ids: list[str] = []
+    normalizer: Callable[[str], str]
+
+    if args.pmcids:
+        normalizer = normalize_id
+        raw_ids = args.pmcids
+    elif args.pmids:
+        normalizer = normalize_pmid
+        raw_ids = args.pmids
+    elif args.dois:
+        normalizer = normalize_id
+        raw_ids = args.dois
+    elif args.from_id_file:
+        return _resolve_ids_from_file(args.from_id_file)
+    else:
+        return []
+
+    for raw_id in raw_ids:
+        try:
+            pmc_ids.append(normalizer(raw_id))
+        except ValueError as e:
+            print(f"Warning: {e}", file=sys.stderr)
+    return pmc_ids
+
+
+def _process_network_ids(
+    args: argparse.Namespace,
+    pmc_ids: list[str],
+    out_dir: Path,
+    jsonl_fh: TextIO | None,
+) -> dict[str, bool]:
+    """Download/process PMC IDs concurrently and write successful outputs."""
+    results: dict[str, bool] = {}
+    with tqdm(
+        total=len(pmc_ids),
+        desc="Processing PMC IDs",
+        unit="paper",
+        disable=args.quiet,
+    ) as bar:
+        with ThreadPoolExecutor(max_workers=args.batch_size) as executor:
+            future_to_pid = {
+                executor.submit(process_single_pmc, pid): pid for pid in pmc_ids
+            }
+            for future in as_completed(future_to_pid):
+                pid = future_to_pid[future]
+                try:
+                    data = future.result()
+                except Exception:
+                    data = None
+                success = data is not None
+                if success and data is not None:
+                    _write_result(
+                        data, f"PMC{pid}", out_dir, args.output_format, jsonl_fh
+                    )
+                results[pid] = success
+                bar.update(1)
+    return results
+
+
+def _write_summary(results: dict[str, bool], out_dir: Path) -> Path:
+    """Write the CLI summary file and return its path."""
+    summary_path = out_dir / "summary.json"
+    with summary_path.open("w", encoding="utf-8") as jf:
+        json.dump(results, jf, indent=2, allow_nan=False)
+    return summary_path
+
+
+def main() -> int:
     """Main CLI entry point for batch PMC article processing."""
     args = _parse_args()
 
@@ -214,139 +341,34 @@ def main() -> None:
     out_dir = Path(args.output_dir)
     out_dir.mkdir(parents=True, exist_ok=True)
 
-    results: dict[str, bool] = {}
-    disable_bar = args.quiet
     jsonl_fh = None
     if args.output_format == "jsonl":
         jsonl_fh = (out_dir / "output.jsonl").open("w", encoding="utf-8")
 
     try:
-        # -----------------------------------------------------------------
-        # Local directory mode
-        # -----------------------------------------------------------------
         if args.from_dir:
-            dir_path = Path(args.from_dir)
-            if not dir_path.is_dir():
-                print(f"Error: {dir_path} is not a directory")
-                return
-
-            xml_files = sorted(dir_path.glob("*.xml"))
-            if not xml_files:
-                print(f"No XML files found in {dir_path}")
-                return
-
-            bar = tqdm(
-                total=len(xml_files),
-                desc="Processing local XML",
-                unit="file",
-                disable=disable_bar,
-            )
-            parsed = process_local_xml_dir(dir_path, workers=args.batch_size)
-            for name, data in parsed.items():
-                success = data is not None
-                if success and data is not None:
-                    _write_result(data, name, out_dir, args.output_format, jsonl_fh)
-                results[name] = success
-                bar.update(1)
-            bar.close()
-
-        # -----------------------------------------------------------------
-        # Local file(s) mode
-        # -----------------------------------------------------------------
+            results = _process_local_directory(args, out_dir, jsonl_fh)
+            if results is None:
+                return 2
         elif args.from_files:
-            bar = tqdm(
-                total=len(args.from_files),
-                desc="Processing local XML",
-                unit="file",
-                disable=disable_bar,
-            )
-            for xml_path in args.from_files:
-                fp = Path(xml_path)
-                data = process_single_local_xml(fp)
-                name = fp.stem
-                success = data is not None
-                if success and data is not None:
-                    _write_result(data, name, out_dir, args.output_format, jsonl_fh)
-                results[name] = success
-                bar.update(1)
-            bar.close()
-
-        # -----------------------------------------------------------------
-        # Network mode -- resolve IDs and process concurrently
-        # -----------------------------------------------------------------
+            results = _process_local_files(args, out_dir, jsonl_fh)
         else:
-            # Resolve IDs from various sources
-            pmc_ids: list[str] = []
-
-            if args.pmcids:
-                for raw_id in args.pmcids:
-                    try:
-                        pmc_ids.append(normalize_id(raw_id))
-                    except ValueError as e:
-                        print(f"Warning: {e}", file=sys.stderr)
-
-            elif args.pmids:
-                for pmid in args.pmids:
-                    try:
-                        pmc_ids.append(normalize_pmid(pmid))
-                    except ValueError as e:
-                        print(f"Warning: {e}", file=sys.stderr)
-
-            elif args.dois:
-                for doi in args.dois:
-                    try:
-                        pmc_ids.append(normalize_id(doi))
-                    except ValueError as e:
-                        print(f"Warning: {e}", file=sys.stderr)
-
-            elif args.from_id_file:
-                pmc_ids = _resolve_ids_from_file(args.from_id_file)
-
+            pmc_ids = _resolve_network_ids(args)
             if not pmc_ids:
                 print("No valid PMC IDs to process.", file=sys.stderr)
-                return
-
-            # Process concurrently using ThreadPoolExecutor
-            bar = tqdm(
-                total=len(pmc_ids),
-                desc="Processing PMC IDs",
-                unit="paper",
-                disable=disable_bar,
-            )
-            with ThreadPoolExecutor(max_workers=args.batch_size) as executor:
-                future_to_pid = {
-                    executor.submit(process_single_pmc, pid): pid for pid in pmc_ids
-                }
-                for future in as_completed(future_to_pid):
-                    pid = future_to_pid[future]
-                    try:
-                        data = future.result()
-                    except Exception:
-                        data = None
-                    success = data is not None
-                    if success and data is not None:
-                        _write_result(
-                            data, f"PMC{pid}", out_dir, args.output_format, jsonl_fh
-                        )
-                    results[pid] = success
-                    bar.update(1)
-            bar.close()
+                return 2
+            results = _process_network_ids(args, pmc_ids, out_dir, jsonl_fh)
 
     finally:
         if jsonl_fh is not None:
             jsonl_fh.close()
 
-    # -----------------------------------------------------------------
-    # Summary
-    # -----------------------------------------------------------------
-    summary_path = out_dir / "summary.json"
-    with open(summary_path, "w", encoding="utf-8") as jf:
-        json.dump(results, jf, indent=2)
-
+    summary_path = _write_summary(results, out_dir)
     total = len(results)
     ok = sum(1 for v in results.values() if v)
     print(f"\nDone: {ok}/{total} succeeded.  Summary written to {summary_path}")
+    return 0 if ok > 0 else 1
 
 
 if __name__ == "__main__":
-    main()
+    raise SystemExit(main())

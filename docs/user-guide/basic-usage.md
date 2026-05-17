@@ -13,9 +13,9 @@ from pmcgrab.application.processing import process_single_pmc
 data = process_single_pmc("7114487")
 
 if data:
-    print(f"Title: {data['title']}")
-    print(f"Authors: {len(data['authors'])}")
-    print(f"Sections: {list(data['body'].keys())}")
+    print(f"Title: {data['title']['main']}")
+    print(f"Authors: {len(data['contributors']['authors'])}")
+    print(f"Sections: {[section['title'] for section in data['content']['sections']]}")
 ```
 
 ## Complete Working Example
@@ -43,10 +43,13 @@ for pmcid in PMC_IDS:
         continue
 
     # Pretty-print a few key fields
+    title = data["title"]["main"]
+    abstract_blocks = data["content"]["abstract"][0]["blocks"]
+    abstract_preview = abstract_blocks[0]["text"] if abstract_blocks else ""
     print(
-        f"  Title   : {data['title'][:80]}{'…' if len(data['title']) > 80 else ''}\n"
-        f"  Abstract: {data['abstract_text'][:120]}{'…' if len(data['abstract_text']) > 120 else ''}\n"
-        f"  Authors : {len(data['authors']) if data['authors'] else 0}"
+        f"  Title   : {title[:80]}{'…' if len(title) > 80 else ''}\n"
+        f"  Abstract: {abstract_preview[:120]}{'…' if len(abstract_preview) > 120 else ''}\n"
+        f"  Authors : {len(data['contributors']['authors'])}"
     )
 
     # Persist full JSON
@@ -95,24 +98,25 @@ Each article returns a comprehensive dictionary:
 data = process_single_pmc("7114487")
 
 # Core metadata
-print(f"PMC ID: {data['pmc_id']}")
-print(f"Title: {data['title']}")
-print(f"Journal: {data['journal_title']}")
-print(f"DOI: {data.get('article_id', {}).get('doi', 'N/A')}")
+print(f"PMC ID: {data['identifiers']['pmc_id']}")
+print(f"Title: {data['title']['main']}")
+print(f"Journal: {data['publication']['journal']['title']}")
+print(f"DOI: {data['identifiers']['doi'] or 'N/A'}")
 
 # Authors
-print(f"Authors ({len(data['authors'])}):")
-for author in data['authors'][:3]:
+print(f"Authors ({len(data['contributors']['authors'])}):")
+for author in data['contributors']['authors'][:3]:
     print(f"  - {author['First_Name']} {author['Last_Name']}")
 
 # Content sections
-print(f"Sections: {list(data['body'].keys())}")
-print(f"Abstract length: {len(data['abstract_text'])} characters")
+print(f"Sections: {[section['title'] for section in data['content']['sections']]}")
+abstract_blocks = data["content"]["abstract"][0]["blocks"]
+print(f"Abstract length: {len(abstract_blocks[0]['text'])} characters")
 
 # Additional data
-print(f"Figures: {len(data.get('figures', []))}")
-print(f"Tables: {len(data.get('tables', []))}")
-print(f"References: {len(data.get('citations', []))}")
+print(f"Figures: {len(data['assets']['figures'])}")
+print(f"Tables: {len(data['assets']['tables'])}")
+print(f"References: {len(data['assets']['citations'])}")
 ```
 
 ## Batch Processing Patterns
@@ -210,35 +214,46 @@ PMCGrab creates structured JSON files:
 
 ```json
 {
-  "pmc_id": "7114487",
-  "title": "Machine learning approaches in cancer research",
-  "abstract": {
-    "Abstract": "Recent advances in machine learning have..."
-  },
-  "abstract_text": "Recent advances in machine learning have...",
-  "body": {
-    "Introduction": "Cancer research has evolved significantly...",
-    "Methods": "We implemented a deep learning framework...",
-    "Results": "Our model achieved 94.2% accuracy...",
-    "Discussion": "These findings demonstrate the potential..."
-  },
-  "authors": [
-    {
-      "First_Name": "John",
-      "Last_Name": "Doe",
-      "Affiliation": "Cancer Research Institute"
-    }
-  ],
-  "journal_title": "Nature Medicine",
-  "published_date": {
-    "epub": "2023-05-15"
-  },
-  "article_id": {
+  "schema_version": 2,
+  "identifiers": {
+    "pmc_id": "7114487",
+    "pmcid": "PMC7114487",
     "doi": "10.1038/s41591-023-02345-6"
   },
-  "figures": [...],
-  "tables": [...],
-  "citations": [...]
+  "title": {
+    "main": "Machine learning approaches in cancer research",
+    "subtitle": "",
+    "translated": []
+  },
+  "contributors": {
+    "authors": [
+      {
+        "First_Name": "John",
+        "Last_Name": "Doe",
+        "Affiliation": "Cancer Research Institute"
+      }
+    ]
+  },
+  "publication": {
+    "journal": { "title": "Nature Medicine" },
+    "dates": { "published": { "epub": "2023-05-15" } }
+  },
+  "content": {
+    "abstract": [
+      {
+        "title": "Abstract",
+        "blocks": [
+          { "type": "paragraph", "text": "Recent advances in machine learning have..." }
+        ]
+      }
+    ],
+    "sections": [...]
+  },
+  "assets": {
+    "figures": [...],
+    "tables": [...],
+    "citations": [...]
+  }
 }
 ```
 

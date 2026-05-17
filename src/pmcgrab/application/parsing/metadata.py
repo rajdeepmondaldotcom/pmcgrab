@@ -13,7 +13,7 @@ Key Features:
     * **Comprehensive Coverage**: All major bibliographic metadata fields
     * **Error Handling**: Graceful handling of missing or malformed metadata
     * **Warning System**: Alerts for data quality issues and unexpected structures
-    * **Type Safety**: Full type annotations for reliable integration
+    * **Type Safety**: Typed helper interfaces for reliable integration
 
 Metadata Categories:
     * **Journal Information**: Titles, IDs, ISSN, publisher details
@@ -316,7 +316,7 @@ def gather_publisher_name(root: ET.Element) -> str | list[str]:
     return pubs[0].text if len(pubs) == 1 else [p.text for p in pubs]
 
 
-def gather_publisher_location(root: ET.Element) -> str | list[str]:
+def gather_publisher_location(root: ET.Element) -> str | list[str] | None:
     """Extract publisher location(s) from PMC XML.
 
     Retrieves the geographic location of the publisher, which provides
@@ -358,7 +358,9 @@ def gather_publisher_location(root: ET.Element) -> str | list[str]:
     locs = root.xpath("//journal-meta/publisher/publisher-loc")
     if not locs:
         return None
-    return locs[0].text if len(locs) == 1 else [loc.text for loc in locs]
+    if len(locs) == 1:
+        return str(locs[0].text) if locs[0].text is not None else None
+    return [str(loc.text) for loc in locs if loc.text is not None]
 
 
 # ---------------------------------------------------------------------------
@@ -726,7 +728,7 @@ def gather_volume(root: ET.Element) -> str | None:
     if not vol:
         warnings.warn("No volume found.", UnexpectedZeroMatchWarning, stacklevel=2)
         return None
-    return vol[0]
+    return str(vol[0])
 
 
 def gather_issue(root: ET.Element) -> str | None:
@@ -783,7 +785,7 @@ def gather_issue(root: ET.Element) -> str | None:
     if not iss:
         warnings.warn("No issue found.", UnexpectedZeroMatchWarning, stacklevel=2)
         return None
-    return iss[0]
+    return str(iss[0])
 
 
 # ---------------------------------------------------------------------------
@@ -791,7 +793,7 @@ def gather_issue(root: ET.Element) -> str | None:
 # ---------------------------------------------------------------------------
 
 
-def gather_keywords(root: ET.Element):
+def gather_keywords(root: ET.Element) -> list[str | dict[str, list[str]]] | None:
     """Extract keywords and subject terms from PMC XML.
 
     Retrieves author-provided keywords and subject classifications
@@ -854,7 +856,7 @@ def gather_keywords(root: ET.Element):
     for group in root.xpath("//kwd-group"):
         group_type = group.get("kwd-group-type")
         words = [
-            kwd.text.strip()
+            str(kwd.text).strip()
             for kwd in group.xpath("kwd")
             if kwd.text and kwd.text.strip()
         ]
@@ -870,7 +872,7 @@ def gather_keywords(root: ET.Element):
         "//article-meta/article-categories/subj-group[@subj-group-type='keyword']"
     ):
         words = [
-            subj.text.strip()
+            str(subj.text).strip()
             for subj in subj_grp.xpath("subject")
             if subj.text and subj.text.strip()
         ]

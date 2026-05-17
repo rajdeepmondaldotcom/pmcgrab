@@ -42,8 +42,6 @@ class NoDTDFoundError(Exception):
     or cannot be located in the expected DTD file directory.
     """
 
-    pass
-
 
 class TimeoutException(Exception):
     """Raised when an operation exceeds its allocated time limit.
@@ -53,10 +51,8 @@ class TimeoutException(Exception):
     indefinitely on problematic content or network issues.
     """
 
-    pass
 
-
-def timeout_handler(_signum, _frame):
+def timeout_handler(_signum: int, _frame: object | None) -> None:
     """Signal handler that raises TimeoutException on SIGALRM.
 
     This function is registered as the handler for SIGALRM signals
@@ -84,11 +80,11 @@ def timeout_handler(_signum, _frame):
 # referencing ``signal.SIGALRM`` still works cross-platform.
 # ---------------------------------------------------------------------------
 try:
-    _sigalrm = signal.SIGALRM  # type: ignore[attr-defined]
-    signal.signal(_sigalrm, timeout_handler)  # type: ignore[arg-type]
+    _sigalrm = signal.SIGALRM
+    signal.signal(_sigalrm, timeout_handler)
 except (AttributeError, ValueError):
     # Provide a dummy attribute for compatibility (used only in unit tests).
-    signal.SIGALRM = 0  # type: ignore[attr-defined]
+    signal.SIGALRM = 0  # type: ignore[misc, assignment]
     if not hasattr(signal, "alarm"):
 
         def _noop_alarm(_secs: int) -> None:
@@ -112,8 +108,6 @@ class ReversedBiMapComparisonWarning(Warning):
     produce unexpected results or are deprecated in favor of better alternatives.
     """
 
-    pass
-
 
 class ValidationWarning(Warning):
     """Warning for XML validation issues that don't prevent parsing.
@@ -122,8 +116,6 @@ class ValidationWarning(Warning):
     processed. Indicates potential data quality issues that may affect
     parsing accuracy or completeness.
     """
-
-    pass
 
 
 class MultipleTitleWarning(Warning):
@@ -134,8 +126,6 @@ class MultipleTitleWarning(Warning):
     PMCGrab uses the first title found.
     """
 
-    pass
-
 
 class UnhandledTextTagWarning(Warning):
     """Warning for XML tags that don't have specific handling logic.
@@ -144,8 +134,6 @@ class UnhandledTextTagWarning(Warning):
     handled by the current parsing logic. Content may still be processed
     but formatting or structure could be lost.
     """
-
-    pass
 
 
 class ReadHTMLFailure(Warning):
@@ -156,8 +144,6 @@ class ReadHTMLFailure(Warning):
     HTML constructs.
     """
 
-    pass
-
 
 class UnexpectedMultipleMatchWarning(Warning):
     """Warning when XPath queries return more results than expected.
@@ -166,8 +152,6 @@ class UnexpectedMultipleMatchWarning(Warning):
     one was expected. PMCGrab typically uses the first match but this
     may indicate structural variations in the XML.
     """
-
-    pass
 
 
 class UnexpectedZeroMatchWarning(Warning):
@@ -178,8 +162,6 @@ class UnexpectedZeroMatchWarning(Warning):
     differences between articles.
     """
 
-    pass
-
 
 class UnmatchedCitationWarning(Warning):
     """Warning for citation references that cannot be resolved.
@@ -188,8 +170,6 @@ class UnmatchedCitationWarning(Warning):
     elements that don't exist or cannot be parsed properly. The
     reference may be preserved but without full bibliographic data.
     """
-
-    pass
 
 
 class UnmatchedTableWarning(Warning):
@@ -200,8 +180,6 @@ class UnmatchedTableWarning(Warning):
     be preserved but without structured table data.
     """
 
-    pass
-
 
 class UnexpectedTagWarning(Warning):
     """Warning for XML tags that appear in unexpected contexts.
@@ -211,8 +189,6 @@ class UnexpectedTagWarning(Warning):
     indicate publisher-specific variations or evolving standards.
     """
 
-    pass
-
 
 class EmptyTextWarning(Warning):
     """Warning for text elements that are unexpectedly empty.
@@ -221,8 +197,6 @@ class EmptyTextWarning(Warning):
     to be empty or contain only whitespace. May indicate incomplete
     content or structural issues in the source XML.
     """
-
-    pass
 
 
 class MalformedRefTagWarning(Warning):
@@ -234,8 +208,6 @@ class MalformedRefTagWarning(Warning):
     entry is skipped during reference resolution.
     """
 
-    pass
-
 
 class PubmedHTTPError(Warning):
     """Warning for HTTP-related errors when accessing PubMed/PMC services.
@@ -244,5 +216,3 @@ class PubmedHTTPError(Warning):
     timeouts, or other connectivity issues. May be transient and suitable
     for retry attempts.
     """
-
-    pass

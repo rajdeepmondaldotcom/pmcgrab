@@ -41,7 +41,9 @@ __all__: list[str] = [
 ]
 
 
-def _compile_patterns(removals: list[str], replaces: dict[str, str]):
+def _compile_patterns(
+    removals: list[str], replaces: dict[str, str]
+) -> tuple[list[str], dict[str, str]]:
     """Compile tag lists into regex patterns for removal and replacement.
 
     Internal helper function that converts user-specified tag lists into
@@ -187,7 +189,7 @@ _DEFAULT_COMBINED_REMOVE_RE = re.compile(
 
 def _build_single_pass_re(
     remove_patterns: list[str], replace_patterns: dict[str, str]
-) -> tuple[re.Pattern, dict[str, str]]:
+) -> tuple[re.Pattern[str], dict[str, str]]:
     """Build a single compiled regex that handles both removals and replacements.
 
     Returns a compiled pattern and a mapping from named groups to replacement
@@ -252,4 +254,4 @@ def strip_html_text_styling(
     if verbose:
         logger.info("Using single-pass cleaning regex")
 
-    return _SINGLE_PASS_RE.sub(_single_pass_replacer, text)
+    return str(_SINGLE_PASS_RE.sub(_single_pass_replacer, text))

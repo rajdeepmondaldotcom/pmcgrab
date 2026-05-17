@@ -273,10 +273,15 @@ class TestProcessSingleLocalXml:
         fp = _write_xml(tmp_path, "PMC7181753.xml", SAMPLE_JATS_XML)
         result = process_single_local_xml(fp)
         assert result is not None
-        assert result["title"] == "Local XML Test Article"
-        assert result["pmc_id"] == "7181753"
-        assert isinstance(result["body"], dict)
-        assert len(result["body"]) >= 4
+        assert result["schema_version"] == 2
+        assert result["title"]["main"] == "Local XML Test Article"
+        assert result["identifiers"]["pmc_id"] == "7181753"
+        assert len(result["content"]["sections"]) >= 4
+        assert "body" not in result
+        assert "body_nested" not in result
+        assert "paragraphs" not in result
+        assert "abstract_text" not in result
+        assert "full_text" not in result
 
     def test_returns_none_for_empty_xml(self, tmp_path):
         fp = _write_xml(tmp_path, "empty.xml", "<article></article>")
@@ -291,10 +296,11 @@ class TestProcessSingleLocalXml:
         fp = _write_xml(tmp_path, "test.xml", SAMPLE_JATS_XML)
         result = process_single_local_xml(fp)
         assert result is not None
-        assert "Introduction" in result["body"]
-        assert "Methods" in result["body"]
-        assert "Results" in result["body"]
-        assert "Discussion" in result["body"]
+        section_titles = {section["title"] for section in result["content"]["sections"]}
+        assert "Introduction" in section_titles
+        assert "Methods" in section_titles
+        assert "Results" in section_titles
+        assert "Discussion" in section_titles
 
 
 # ===================================================================
@@ -364,7 +370,8 @@ class TestCLILocalFlags:
         json_file = out_dir / "PMC7181753.json"
         assert json_file.exists()
         data = json.loads(json_file.read_text(encoding="utf-8"))
-        assert data["title"] == "Local XML Test Article"
+        assert data["schema_version"] == 2
+        assert data["title"]["main"] == "Local XML Test Article"
 
     def test_cli_from_dir(self, tmp_path):
         xml_dir = tmp_path / "xml_input"
@@ -398,7 +405,7 @@ class TestCLILocalFlags:
         ):
             from pmcgrab.cli.pmcgrab_cli import main
 
-            main()
+            assert main() == 2
 
         captured = capsys.readouterr()
-        assert "not a directory" in captured.out
+        assert "not a directory" in captured.err

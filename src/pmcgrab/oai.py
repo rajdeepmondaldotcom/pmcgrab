@@ -47,6 +47,7 @@ from __future__ import annotations
 
 import xml.etree.ElementTree as ET
 from collections.abc import Generator, Iterator
+from typing import Any
 
 from pmcgrab.http_utils import cached_get
 
@@ -72,7 +73,7 @@ class OAIPMHError(RuntimeError):
 # ---------------------- Low-level helpers -----------------------------
 
 
-def _request(verb: str, **params) -> ET.Element:
+def _request(verb: str, **params: Any) -> ET.Element:
     """Execute OAI-PMH request with error handling.
 
     Internal helper function that constructs and executes OAI-PMH requests
@@ -422,8 +423,8 @@ def list_sets() -> list[dict[str, str]]:
     for s in root.findall("{*}ListSets/{*}set"):
         sets.append(
             {
-                "setSpec": s.findtext("{*}setSpec"),
-                "setName": s.findtext("{*}setName"),
+                "setSpec": s.findtext("{*}setSpec") or "",
+                "setName": s.findtext("{*}setName") or "",
             }
         )
     return sets

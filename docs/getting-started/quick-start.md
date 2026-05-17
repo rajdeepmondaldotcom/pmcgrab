@@ -24,10 +24,10 @@ from pmcgrab.application.processing import process_single_pmc
 data = process_single_pmc("7114487")
 
 if data:
-    print(f"Title: {data['title']}")
-    print(f"Journal: {data['journal_title']}")
-    print(f"Authors: {len(data['authors'])}")
-    print(f"Sections: {list(data['body'].keys())}")
+    print(f"Title: {data['title']['main']}")
+    print(f"Journal: {data['publication']['journal']['title']}")
+    print(f"Authors: {len(data['contributors']['authors'])}")
+    print(f"Sections: {[section['title'] for section in data['content']['sections']]}")
 ```
 
 ## Complete Example - Process Multiple Articles
@@ -55,10 +55,13 @@ for pmcid in PMC_IDS:
         continue
 
     # Pretty-print a few key fields
+    title = data["title"]["main"]
+    abstract_blocks = data["content"]["abstract"][0]["blocks"]
+    abstract_preview = abstract_blocks[0]["text"] if abstract_blocks else ""
     print(
-        f"  Title   : {data['title'][:80]}{'…' if len(data['title']) > 80 else ''}\n"
-        f"  Abstract: {data['abstract_text'][:120]}{'…' if len(data['abstract_text']) > 120 else ''}\n"
-        f"  Authors : {len(data['authors']) if data['authors'] else 0}"
+        f"  Title   : {title[:80]}{'…' if len(title) > 80 else ''}\n"
+        f"  Abstract: {abstract_preview[:120]}{'…' if len(abstract_preview) > 120 else ''}\n"
+        f"  Authors : {len(data['contributors']['authors'])}"
     )
 
     # Persist full JSON
@@ -80,22 +83,22 @@ Each processed article returns a structured dictionary with:
 
 ```python
 # Access the data
-print(data['pmc_id'])        # PMC ID
-print(data['title'])         # Article title
-print(data['journal_title'])       # Journal information
+print(data['identifiers']['pmc_id'])           # PMC ID
+print(data['title']['main'])                   # Article title
+print(data['publication']['journal']['title']) # Journal information
 
 # Authors information
-for author in data['authors'][:3]:  # First 3 authors
+for author in data['contributors']['authors'][:3]:  # First 3 authors
     print(f"{author['First_Name']} {author['Last_Name']}")
 
 # Abstract content
-print(f"Abstract: {data['abstract_text'][:200]}...")
+abstract_blocks = data["content"]["abstract"][0]["blocks"]
+print(f"Abstract: {abstract_blocks[0]['text'][:200]}...")
 
 # Main content sections
-if 'Introduction' in data['body']:
-    print(f"Introduction: {data['body']['Introduction'][:200]}...")
-if 'Methods' in data['body']:
-    print(f"Methods: {data['body']['Methods'][:200]}...")
+for section in data["content"]["sections"]:
+    if section["title"] in {"Introduction", "Methods"} and section["blocks"]:
+        print(f"{section['title']}: {section['blocks'][0]['text'][:200]}...")
 ```
 
 ## Output Structure
@@ -115,22 +118,37 @@ Each JSON file contains structured data:
 
 ```json
 {
-  "pmc_id": "7114487",
-  "title": "Article title",
-  "abstract_text": "Plain-text article abstract",
-  "abstract": {
-    "Abstract": "Structured abstract text"
+  "schema_version": 2,
+  "identifiers": {
+    "pmc_id": "7114487",
+    "pmcid": "PMC7114487"
   },
-  "body": {
-    "Introduction": "Section content...",
-    "Methods": "Section content...",
-    "Results": "Section content...",
-    "Discussion": "Section content..."
+  "title": {
+    "main": "Article title",
+    "subtitle": "",
+    "translated": []
   },
-  "authors": [...],
-  "journal_title": "Journal Name",
-  "figures": [...],
-  "tables": [...]
+  "contributors": {
+    "authors": [...]
+  },
+  "publication": {
+    "journal": { "title": "Journal Name" }
+  },
+  "content": {
+    "abstract": [
+      {
+        "title": "Abstract",
+        "blocks": [
+          { "type": "paragraph", "text": "Structured abstract text" }
+        ]
+      }
+    ],
+    "sections": [...]
+  },
+  "assets": {
+    "figures": [...],
+    "tables": [...]
+  }
 }
 ```
 
@@ -166,7 +184,7 @@ data = process_single_pmc(pmcid)
 if data is None:
     print(f"Failed to process PMC{pmcid}")
 else:
-    print(f"Successfully processed: {data['title']}")
+    print(f"Successfully processed: {data['title']['main']}")
 ```
 
 ## What's Next?

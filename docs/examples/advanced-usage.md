@@ -23,11 +23,13 @@ def process_with_filtering(pmcids, output_dir="filtered_output"):
         if not data:
             continue
 
-        if len(data["abstract_text"]) < 500:
+        abstract_blocks = data["content"]["abstract"][0]["blocks"]
+        abstract_text = abstract_blocks[0]["text"] if abstract_blocks else ""
+        if len(abstract_text) < 500:
             print(f"Skipping PMC{pmcid}: abstract too short")
             continue
 
-        output_file = output_path / f"PMC{data['pmc_id']}.json"
+        output_file = output_path / f"PMC{data['identifiers']['pmc_id']}.json"
         output_file.write_text(
             json.dumps(data, indent=2, ensure_ascii=False),
             encoding="utf-8",
@@ -59,15 +61,19 @@ def create_papers_dataframe(pmcids):
 
         rows.append(
             {
-                "pmcid": data["pmc_id"],
-                "title": data["title"],
-                "journal": data["journal_title"],
-                "published_date": data["published_date"],
-                "doi": data["article_id"].get("doi"),
-                "author_count": len(data["authors"]),
-                "abstract_length": len(data["abstract_text"]),
-                "section_count": len(data["body"]),
-                "word_count": data["word_count"],
+                "pmcid": data["identifiers"]["pmc_id"],
+                "title": data["title"]["main"],
+                "journal": data["publication"]["journal"]["title"],
+                "published_date": data["publication"]["dates"]["published"],
+                "doi": data["identifiers"]["doi"],
+                "author_count": len(data["contributors"]["authors"]),
+                "abstract_length": sum(
+                    len(block["text"])
+                    for section in data["content"]["abstract"]
+                    for block in section["blocks"]
+                    if block["type"] == "paragraph"
+                ),
+                "section_count": len(data["content"]["sections"]),
             }
         )
 
@@ -75,7 +81,7 @@ def create_papers_dataframe(pmcids):
 
 
 df = create_papers_dataframe(["7181753", "3539614", "3084273"])
-print(df[["pmcid", "journal", "section_count", "word_count"]])
+print(df[["pmcid", "journal", "section_count"]])
 ```
 
 ## Retry Failed Network Calls
@@ -138,5 +144,5 @@ results = process_local_xml_dir("./pmc_bulk_xml", workers=16)
 parsed = [data for data in results.values() if data]
 
 print(f"Parsed {len(parsed)} articles")
-print(f"Total words: {sum(item['word_count'] for item in parsed)}")
+print(f"Total top-level sections: {sum(len(item['content']['sections']) for item in parsed)}")
 ```

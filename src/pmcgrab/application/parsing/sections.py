@@ -212,7 +212,8 @@ def gather_abstract_type(root: ET.Element) -> str | None:
     """
     abstracts = root.xpath("//article-meta/abstract")
     if abstracts:
-        return _select_main_abstract(abstracts).get("abstract-type")
+        abstract_type = _select_main_abstract(abstracts).get("abstract-type")
+        return str(abstract_type) if abstract_type is not None else None
     return None
 
 

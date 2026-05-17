@@ -50,40 +50,58 @@ from pmcgrab.application.processing import process_single_pmc
 data = process_single_pmc("7114487")
 
 if data:
-    print(f"Title: {data['title']}")
-    print(f"Authors: {len(data['authors'])}")
-    print(f"Sections: {list(data['body'].keys())}")
+    print(f"Title: {data['title']['main']}")
+    print(f"Authors: {len(data['contributors']['authors'])}")
+    print(f"Sections: {[section['title'] for section in data['content']['sections']]}")
 ```
 
 ## Example Output
 
 ```json
 {
-  "pmc_id": "7114487",
-  "title": "Machine learning approaches in cancer research",
-  "abstract": {
-    "Abstract": "Recent advances in machine learning have revolutionized..."
-  },
-  "abstract_text": "Recent advances in machine learning have revolutionized...",
-  "authors": [
-    {
-      "First_Name": "John",
-      "Last_Name": "Doe",
-      "Affiliation": "Cancer Research Institute"
-    }
-  ],
-  "body": {
-    "Introduction": "Cancer research has evolved significantly...",
-    "Methods": "We implemented a deep learning framework...",
-    "Results": "Our model achieved 94.2% accuracy...",
-    "Discussion": "These findings demonstrate the potential..."
-  },
-  "journal_title": "Nature Medicine",
-  "article_id": {
+  "schema_version": 2,
+  "identifiers": {
+    "pmc_id": "7114487",
+    "pmcid": "PMC7114487",
     "doi": "10.1038/s41591-023-02345-6"
   },
-  "figures": [...],
-  "tables": [...],
-  "citations": [...]
+  "title": {
+    "main": "Machine learning approaches in cancer research",
+    "subtitle": "",
+    "translated": []
+  },
+  "contributors": {
+    "authors": [
+      {
+        "First_Name": "John",
+        "Last_Name": "Doe",
+        "Affiliation": "Cancer Research Institute"
+      }
+    ]
+  },
+  "publication": {
+    "journal": {
+      "title": "Nature Medicine"
+    }
+  },
+  "content": {
+    "abstract": [
+      {
+        "title": "Abstract",
+        "blocks": [
+          {
+            "type": "paragraph",
+            "text": "Recent advances in machine learning have revolutionized..."
+          }
+        ]
+      }
+    ],
+    "sections": [...]
+  },
+  "assets": {
+    "figures": [...],
+    "tables": [...],
+    "citations": [...]
+  }
 }
 ```

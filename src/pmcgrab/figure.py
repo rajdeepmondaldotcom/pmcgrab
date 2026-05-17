@@ -33,7 +33,7 @@ class TextFigure:
 
     Attributes:
         root (ET.Element): Original XML figure element
-        parent (Optional[TextFigure]): Parent element for API compatibility
+        parent (object | None): Parent text element for API compatibility
         ref_map (BasicBiMap): Reference map for cross-reference resolution
         fig_dict (dict): Dictionary containing extracted figure metadata with keys:
             - "Label": Figure label text (e.g., "Figure 1")
@@ -60,7 +60,7 @@ class TextFigure:
     def __init__(
         self,
         fig_root: ET.Element,
-        parent: "TextFigure | None" = None,
+        parent: object | None = None,
         ref_map: BasicBiMap | None = None,
     ) -> None:
         """Initialize TextFigure from PMC XML figure element.
@@ -71,7 +71,7 @@ class TextFigure:
 
         Args:
             fig_root: XML figure element (<fig>) from PMC document
-            parent: Parent figure element for API compatibility (unused)
+            parent: Parent text element for API compatibility (unused)
             ref_map: Reference map for cross-reference resolution (optional)
 
         Note:

@@ -16,7 +16,7 @@ The notebook covers:
 
 1. **Download the notebook**:
    - **[View on GitHub](https://github.com/rajdeepmondaldotcom/pmcgrab/blob/main/examples/pmcgrab_tutorial.ipynb)** (renders properly)
-   - **[Direct download](../../examples/pmcgrab_tutorial.ipynb)** (local file)
+   - **[Direct download](https://raw.githubusercontent.com/rajdeepmondaldotcom/pmcgrab/main/examples/pmcgrab_tutorial.ipynb)** (notebook file)
 
 2. **Install dependencies**:
 
@@ -105,4 +105,4 @@ After completing the notebook:
 **Ready to turn scientific literature into AI-ready data?**
 
 - **[View notebook on GitHub](https://github.com/rajdeepmondaldotcom/pmcgrab/blob/main/examples/pmcgrab_tutorial.ipynb)** (fully rendered)
-- **[Download notebook](../../examples/pmcgrab_tutorial.ipynb)** and start exploring!
+- **[Download notebook](https://raw.githubusercontent.com/rajdeepmondaldotcom/pmcgrab/main/examples/pmcgrab_tutorial.ipynb)** and start exploring!

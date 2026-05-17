@@ -19,12 +19,15 @@ import json
 import os
 import time
 import warnings
+from collections.abc import Sequence
 from concurrent.futures import ThreadPoolExecutor, as_completed
+from typing import Any
 
 from tqdm import tqdm
 
 # Delegate to the application-layer implementation instead of duplicating code.
 from pmcgrab.application.processing import process_single_pmc as _app_process_single
+from pmcgrab.common.paper_output import ArticleOutput
 
 _DEPRECATION_MSG = (
     "pmcgrab.processing is deprecated and will be removed in a future version. "
@@ -32,7 +35,7 @@ _DEPRECATION_MSG = (
 )
 
 
-def process_single_pmc(pmc_id: str) -> dict[str, str | dict | list] | None:
+def process_single_pmc(pmc_id: str) -> ArticleOutput | None:
     """Legacy single PMC article processing function.
 
     .. deprecated:: 0.6.0
@@ -56,10 +59,10 @@ def process_single_pmc(pmc_id: str) -> dict[str, str | dict | list] | None:
 
 
 def process_pmc_ids_in_batches(
-    pmc_ids: list[str],
+    pmc_ids: Sequence[str],
     base_directory: str | None = None,
     batch_size: int = 16,
-):
+) -> dict[str, bool]:
     """Process multiple PMC IDs concurrently with progress tracking and file output.
 
     Args:
@@ -73,7 +76,7 @@ def process_pmc_ids_in_batches(
 
     warnings.warn(_DEPRECATION_MSG, DeprecationWarning, stacklevel=2)
 
-    def _wrapper(pmc_id: str):
+    def _wrapper(pmc_id: str) -> tuple[str, bool]:
         info = _app_process_single(pmc_id)
         if base_directory and info:
             file_path = os.path.join(base_directory, f"PMC{pmc_id}.json")
@@ -110,6 +113,8 @@ def process_pmc_ids_in_batches(
                 else:
                     failed += 1
             except Exception:
+                pmcid = futures[future]
+                results[pmcid] = False
                 failed += 1
             total_processed += 1
             elapsed = time.time() - start_time
@@ -127,7 +132,12 @@ def process_pmc_ids_in_batches(
     return results
 
 
-def process_in_batches(pmc_ids, base_directory, chunk_size=100, parallel_workers=16):
+def process_in_batches(
+    pmc_ids: Sequence[str],
+    base_directory: str,
+    chunk_size: int = 100,
+    parallel_workers: int = 16,
+) -> None:
     """Process large PMC ID collections in manageable sequential chunks.
 
     Args:
@@ -146,21 +156,35 @@ def process_in_batches(pmc_ids, base_directory, chunk_size=100, parallel_workers
 
 
 def _check_output_file(base_directory: str, pmc_id: str) -> bool:
-    """Check if an output file exists and has valid body content."""
+    """Check if an output file exists and has usable article content."""
     file_path = os.path.join(base_directory, f"PMC{pmc_id}.json")
     if not os.path.exists(file_path):
         return False
     try:
         with open(file_path, encoding="utf-8") as f:
             data = json.load(f)
-        return bool(data.get("body"))
+        return _has_usable_content(data)
     except Exception:
         return False
 
 
+def _has_usable_content(data: Any) -> bool:
+    """Return True for canonical v2 output, with a v1 fallback for old files."""
+    if not isinstance(data, dict):
+        return False
+    content = data.get("content")
+    if isinstance(content, dict) and content.get("sections"):
+        return True
+    return bool(data.get("body"))
+
+
 def process_in_batches_with_retry(
-    pmc_ids, base_directory, chunk_size=100, parallel_workers=16, max_retries=3
-):
+    pmc_ids: Sequence[str],
+    base_directory: str,
+    chunk_size: int = 100,
+    parallel_workers: int = 16,
+    max_retries: int = 3,
+) -> None:
     """Robust batch processing with automatic failure detection and retry logic.
 
     Args:

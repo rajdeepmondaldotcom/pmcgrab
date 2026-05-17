@@ -10,6 +10,13 @@ def test_process_single_pmc_returns_none_for_invalid(monkeypatch):
     assert out is None
 
 
+def test_process_single_pmc_returns_none_for_empty_paper(monkeypatch):
+    monkeypatch.setattr(
+        app_proc, "build_paper_from_pmc", lambda *a, **kw: app_proc.Paper({})
+    )
+    assert app_proc.process_single_pmc("999999") is None
+
+
 def test_process_pmc_ids_success(monkeypatch):
     # Fake builder returns minimal Paper-like object
 

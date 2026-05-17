@@ -4,19 +4,8 @@ Functions for processing PMC articles efficiently.
 
 ## Primary Processing Function
 
-The recommended way to process PMC articles:
-
-### process_single_pmc
-
-::: pmcgrab.application.processing.process_single_pmc
-options:
-show_source: true
-show_root_heading: true
-show_root_toc_entry: false
-show_object_full_path: false
-show_category_heading: false
-show_signature_annotations: true
-heading_level: 3
+The recommended way to process PMC articles is `process_single_pmc()`. See the
+[Core API](core.md#process_single_pmc) for the generated function reference.
 
 ## Recommended Usage Pattern
 
@@ -41,10 +30,13 @@ for pmcid in PMC_IDS:
         continue
 
     # Pretty-print a few key fields
+    title = data["title"]["main"]
+    abstract_blocks = data["content"]["abstract"][0]["blocks"]
+    abstract_preview = abstract_blocks[0]["text"] if abstract_blocks else ""
     print(
-        f"  Title   : {data['title'][:80]}{'…' if len(data['title']) > 80 else ''}\n"
-        f"  Abstract: {data['abstract_text'][:120]}{'…' if len(data['abstract_text']) > 120 else ''}\n"
-        f"  Authors : {len(data['authors']) if data['authors'] else 0}"
+        f"  Title   : {title[:80]}{'…' if len(title) > 80 else ''}\n"
+        f"  Abstract: {abstract_preview[:120]}{'…' if len(abstract_preview) > 120 else ''}\n"
+        f"  Authors : {len(data['contributors']['authors'])}"
     )
 
     # Persist full JSON
@@ -56,16 +48,6 @@ for pmcid in PMC_IDS:
 
 ## Email Management
 
-### next_email
-
-::: pmcgrab.infrastructure.settings.next_email
-options:
-show_source: true
-show_root_heading: true
-show_root_toc_entry: false
-show_object_full_path: false
-show_category_heading: false
-show_signature_annotations: true
-heading_level: 3
-
-This function automatically rotates through available email addresses for NCBI API requests, ensuring proper rate limiting and compliance.
+`next_email()` automatically rotates through available email addresses for NCBI
+API requests, ensuring proper rate limiting and compliance. See the
+[Core API](core.md#next_email) for the generated function reference.

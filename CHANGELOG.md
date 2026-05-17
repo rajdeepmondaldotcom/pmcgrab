@@ -5,6 +5,21 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.8] - 2026-05-17
+
+### Fixed
+- Emit strict JSON by normalizing pandas/numpy missing values and non-finite
+  floats to `null` before serialization.
+- Restore DOI and PMID conversion by using the current NCBI ID Converter API
+  endpoint.
+- Return non-zero CLI statuses for invalid inputs and all-failed processing.
+- Enable TLS certificate verification by default for network calls.
+- Avoid creating a local `data/` directory unless XML caching is requested.
+
+### Changed
+- Updated public examples and claims to match the v2 grouped JSON schema and
+  current project guarantees.
+
 ## [1.0.7] - 2026-03-02
 
 ### Fixed

@@ -16,7 +16,8 @@ Status: Phase 2 audit plus Phase 6 final audit inputs.
 
 Finding:
 
-- `pyproject.toml` declares version `1.0.7`, while `src/pmcgrab/__init__.py` exposes `1.0.6`.
+- Historical finding, resolved in 1.0.8: `pyproject.toml` and
+  `src/pmcgrab/__init__.py` previously exposed different versions.
 - Top-level `process_single_pmc` comes from deprecated `pmcgrab.processing`, while README recommends `from pmcgrab import process_single_pmc`.
 
 Plan impact:

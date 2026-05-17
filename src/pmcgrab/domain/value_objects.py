@@ -30,7 +30,9 @@ def make_hashable(value: Any) -> Hashable:
         return tuple(sorted((k, make_hashable(v)) for k, v in value.items()))
     if isinstance(value, list):
         return tuple(make_hashable(item) for item in value)
-    return value
+    if isinstance(value, Hashable):
+        return value
+    return repr(value)
 
 
 class BasicBiMap(dict[Hashable, Any]):
@@ -52,7 +54,7 @@ class BasicBiMap(dict[Hashable, Any]):
     # ------------------------------------------------------------------
     # dict API overrides
     # ------------------------------------------------------------------
-    def __setitem__(self, key: Hashable, value: Any) -> None:  # type: ignore[override]
+    def __setitem__(self, key: Hashable, value: Any) -> None:
         # Remove old reverse mapping if key already exists
         if key in self:
             old_value = self.get(key)
@@ -66,7 +68,7 @@ class BasicBiMap(dict[Hashable, Any]):
     # ------------------------------------------------------------------
     # Equality semantics
     # ------------------------------------------------------------------
-    def __eq__(self, other: object) -> bool:  # type: ignore[override]
+    def __eq__(self, other: object) -> bool:
         if not isinstance(other, dict):
             return False
         if not super().__eq__(other):

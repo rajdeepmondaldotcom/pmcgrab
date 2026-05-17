@@ -65,6 +65,16 @@ results/
 ```
 
 `summary.json` maps each input name or PMC ID to `true` or `false`.
+Article files and JSONL rows are strict JSON: missing table/author values are
+written as `null`, never as non-standard `NaN` literals.
+
+## Exit Codes
+
+| Code | Meaning                                                    |
+| ---- | ---------------------------------------------------------- |
+| `0`  | At least one requested article was processed successfully. |
+| `1`  | Inputs were valid, but every requested article failed.     |
+| `2`  | CLI usage or input validation failed.                      |
 
 ## Performance and Logging
 

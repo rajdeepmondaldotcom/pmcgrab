@@ -56,6 +56,9 @@ uv run python -m pmcgrab \
 
 This writes `output.jsonl` plus `summary.json`.
 
+The JSON and JSONL output is strict JSON. Missing values from pandas/numpy
+tables and author metadata are emitted as `null`.
+
 ## Common Parameters
 
 | Parameter                   | Description                     | Example                 |

@@ -8,7 +8,8 @@ For a complete hands-on experience, check out our interactive Jupyter notebook:
 
 **[PMCGrab Tutorial Notebook](https://github.com/rajdeepmondaldotcom/pmcgrab/blob/main/examples/pmcgrab_tutorial.ipynb)**
 
-You can also download it directly: [pmcgrab_tutorial.ipynb](../../examples/pmcgrab_tutorial.ipynb)
+You can also download it directly from GitHub:
+[pmcgrab_tutorial.ipynb](https://raw.githubusercontent.com/rajdeepmondaldotcom/pmcgrab/main/examples/pmcgrab_tutorial.ipynb)
 
 This notebook covers:
 
@@ -46,10 +47,13 @@ for pmcid in PMC_IDS:
         continue
 
     # Pretty-print a few key fields
+    title = data["title"]["main"]
+    abstract_blocks = data["content"]["abstract"][0]["blocks"]
+    abstract_preview = abstract_blocks[0]["text"] if abstract_blocks else ""
     print(
-        f"  Title   : {data['title'][:80]}{'…' if len(data['title']) > 80 else ''}\n"
-        f"  Abstract: {data['abstract_text'][:120]}{'…' if len(data['abstract_text']) > 120 else ''}\n"
-        f"  Authors : {len(data['authors']) if data['authors'] else 0}"
+        f"  Title   : {title[:80]}{'…' if len(title) > 80 else ''}\n"
+        f"  Abstract: {abstract_preview[:120]}{'…' if len(abstract_preview) > 120 else ''}\n"
+        f"  Authors : {len(data['contributors']['authors'])}"
     )
 
     # Persist full JSON

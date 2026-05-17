@@ -6,13 +6,14 @@ variables. This enables behavior modification without code changes,
 supporting different deployment environments and user preferences.
 
 The primary configuration managed here is the email pool used for NCBI
-Entrez API authentication, which is required for accessing PMC content.
-The system supports both default test emails and user-provided alternatives.
+Entrez API identification, which NCBI requests for responsible API access.
+Production users should set ``PMCGRAB_EMAILS`` to one or more real contact
+addresses for their project or institution.
 
 Key Features:
     * Environment variable configuration support
     * Thread-safe email rotation for concurrent processing
-    * Fallback to default test emails
+    * Fallback maintainer contact for quick-start usage
     * 12-factor app compliance for deployment flexibility
 
 Environment Variables:
@@ -20,8 +21,8 @@ Environment Variables:
                    Example: "user1@example.com,user2@example.com"
 
 Default Behavior:
-    If no environment override is provided, uses a pool of test email addresses
-    that are rotated in round-robin fashion to distribute API requests.
+    If no environment override is provided, uses the package maintainer contact.
+    Set ``PMCGRAB_EMAILS`` for production or high-volume use.
 
 Thread Safety:
     Email rotation uses itertools.cycle which provides thread-safe iteration
@@ -55,18 +56,7 @@ __all__: list[str] = [
 # Email pool – used when querying NCBI Entrez
 # ---------------------------------------------------------------------------
 
-_DEFAULT_EMAIL_POOL: list[str] = [
-    "bk68g1gx@test.com",
-    "wkv1h06c@sample.com",
-    "m42touro@sample.com",
-    "vy8u7tsx@test.com",
-    "8xsqaxke@sample.com",
-    "cilml02q@sample.com",
-    "1s1ywssv@demo.com",
-    "pfd4bf0y@demo.com",
-    "hvjhnv7o@test.com",
-    "vtirmn0j@sample.com",
-]
+_DEFAULT_EMAIL_POOL: list[str] = ["rajdeep@rajdeepmondal.com"]
 
 _env_emails = os.getenv("PMCGRAB_EMAILS")
 if _env_emails:
@@ -87,7 +77,7 @@ NCBI_API_KEY: str | None = os.getenv("NCBI_API_KEY") or None
 
 NCBI_TIMEOUT: int = int(os.getenv("PMCGRAB_TIMEOUT", "60"))
 NCBI_RETRIES: int = int(os.getenv("PMCGRAB_RETRIES", "3"))
-PMCGRAB_SSL_VERIFY: bool = os.getenv("PMCGRAB_SSL_VERIFY", "false").lower() not in (
+PMCGRAB_SSL_VERIFY: bool = os.getenv("PMCGRAB_SSL_VERIFY", "true").lower() not in (
     "false",
     "0",
     "no",

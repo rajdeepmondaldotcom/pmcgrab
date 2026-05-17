@@ -16,15 +16,13 @@ That wall steals hours from **RAG pipelines, knowledge-graph builds, LLM fine-tu
 
 ## The Hidden Cost of "I'll Just Parse It Myself"
 
-| Task                        | Manual / ad-hoc         | **PMCGrab**                                  |
-| --------------------------- | ----------------------- | -------------------------------------------- |
-| Install dependencies        | 5-10 min                | **~2 s** (`uv add pmcgrab`)                  |
-| Convert one article to JSON | 15-30 min               | **~3 s** (network) / **instant** (local XML) |
-| Capture every IMRaD section | Hope & regex            | **98 % detection accuracy\***                |
-| Parallel processing         | Bash loops & temp files | `--workers N` flag                           |
-| Edge-case maintenance       | Yours forever           | **200+ tests**, active upkeep                |
-
-**\*Evaluated on 7,500 PMC papers used in a disease-specific knowledge-graph pipeline.**
+| Task                        | Manual / ad-hoc         | **PMCGrab**                                 |
+| --------------------------- | ----------------------- | ------------------------------------------- |
+| Install dependencies        | Package hunting         | One package install                         |
+| Convert one article to JSON | 15-30 min               | One API call or CLI command                 |
+| Capture article sections    | Hope & regex            | Parsed section tree with headings preserved |
+| Parallel processing         | Bash loops & temp files | `--workers N` flag                          |
+| Edge-case maintenance       | Yours forever           | Automated tests and regression cases        |
 
 At \$50/hour, hand-parsing 100 papers burns **\$1,000+**.
 PMCGrab does the same job for \$0 -- within minutes -- so you can focus on _using_ the information instead of extracting it.
@@ -160,10 +158,10 @@ data = process_single_pmc("7181753")
 # From local XML
 data = process_single_local_xml("path/to/article.xml")
 
-print(data["title"])
-print(data["abstract_text"])       # Plain-text abstract
-print(data["abstract"])            # Structured abstract (dict)
-print(list(data["body"].keys()))   # Section titles
+print(data["title"]["main"])
+print(data["identifiers"]["doi"])
+print(data["content"]["abstract"])   # Ordered abstract sections
+print([section["title"] for section in data["content"]["sections"]])
 ```
 
 ---
@@ -189,7 +187,7 @@ data = process_single_local_xml("./pmc_bulk/PMC7181753.xml")
 results = process_local_xml_dir("./pmc_bulk/", workers=16)
 for filename, data in results.items():
     if data:
-        print(f"{filename}: {data['title'][:60]}")
+        print(f"{filename}: {data['title']['main'][:60]}")
 ```
 
 **CLI:**
@@ -280,59 +278,134 @@ Every parsed article produces a comprehensive JSON structure:
 
 ```json
 {
-  "pmc_id": "7181753",
-  "title": "Single-cell transcriptomes of the human skin reveal ...",
-  "abstract_text": "Fibroblasts are an essential cell population ...",
-  "abstract": {
-    "Abstract": "Fibroblasts are an essential cell population ..."
-  },
-  "body": {
-    "Introduction": "The skin is the outermost protective barrier ...",
-    "Results": "The anatomy of the skin can vary ...",
-    "Discussion": "Single-cell transcriptomics currently represents ...",
-    "Methods": "Skin specimens for single-cell RNA sequencing ..."
-  },
-  "body_nested": {
-    "Results": {
-      "scRNA-seq analysis of sun-protected human skin": { "_text": "..." },
-      "Functional and spatial signatures": { "_text": "..." }
-    }
-  },
-  "paragraphs": [
-    {
-      "section": "Introduction",
-      "subsection": null,
-      "paragraph_index": 0,
-      "text": "..."
-    }
-  ],
-  "authors": [
-    {
-      "First_Name": "...",
-      "Last_Name": "...",
-      "Email": "...",
-      "Affiliations": "..."
-    }
-  ],
-  "article_id": {
+  "schema_version": 2,
+  "has_data": true,
+  "identifiers": {
+    "pmc_id": "7181753",
     "pmcid": "PMC7181753",
+    "pmid": "32327715",
     "doi": "10.1038/s42003-020-0922-4",
-    "pmid": "32327715"
+    "publisher_id": "",
+    "other": {}
   },
-  "journal_title": "Communications Biology",
-  "keywords": ["fibroblasts", "skin aging", "single-cell RNA-seq"],
-  "published_date": { "epub": "2020-04-24" },
-  "citations": [
-    { "title": "...", "authors": "...", "doi": "...", "pmid": "..." }
-  ],
-  "tables": [{ "label": "Table 1", "caption": "...", "data": "..." }],
-  "figures": [{ "label": "Fig. 1", "caption": "...", "graphic": "..." }],
-  "permissions": {
-    "Copyright Statement": "...",
-    "License Type": "Creative Commons"
+  "title": {
+    "main": "Single-cell transcriptomes of the human skin reveal ...",
+    "subtitle": "",
+    "translated": []
   },
-  "funding": ["..."],
-  "full_text": "..."
+  "contributors": {
+    "authors": [
+      {
+        "First_Name": "...",
+        "Last_Name": "...",
+        "Email": "...",
+        "Affiliations": "..."
+      }
+    ],
+    "non_author_contributors": [],
+    "author_notes": {}
+  },
+  "publication": {
+    "journal": {
+      "title": "Communications Biology",
+      "alternate_titles": [],
+      "ids": {},
+      "issn": {}
+    },
+    "publisher": {
+      "name": "",
+      "alternate_names": [],
+      "location": "",
+      "alternate_locations": []
+    },
+    "classification": {
+      "article_types": ["research-article"],
+      "article_categories": []
+    },
+    "dates": {
+      "published": { "epub": "2020-04-24" },
+      "history": {},
+      "version_history": []
+    },
+    "issue": {
+      "volume": "",
+      "issue": "",
+      "first_page": "",
+      "last_page": "",
+      "elocation_id": ""
+    },
+    "conference": {}
+  },
+  "content": {
+    "abstract_type": "",
+    "abstract": [
+      {
+        "id": "",
+        "title": "Abstract",
+        "level": 0,
+        "blocks": [
+          { "type": "paragraph", "id": "", "text": "Fibroblasts are ..." }
+        ],
+        "children": []
+      }
+    ],
+    "translated_abstracts": [],
+    "sections": [
+      {
+        "id": "s1",
+        "title": "Introduction",
+        "level": 1,
+        "blocks": [
+          { "type": "paragraph", "id": "p1", "text": "The skin is ..." }
+        ],
+        "children": []
+      }
+    ],
+    "appendices": [],
+    "glossary": [],
+    "footnotes": "",
+    "acknowledgements": [],
+    "notes": []
+  },
+  "assets": {
+    "citations": [
+      { "title": "...", "authors": "...", "doi": "...", "pmid": "..." }
+    ],
+    "tables": [
+      { "id": "t1", "label": "Table 1", "caption": "...", "rows": [] }
+    ],
+    "figures": [
+      {
+        "id": "f1",
+        "label": "Fig. 1",
+        "caption": "...",
+        "link": "",
+        "alternate_links": []
+      }
+    ],
+    "equations": { "mathml": [], "tex": [] },
+    "supplementary_material": []
+  },
+  "compliance": {
+    "permissions": {},
+    "copyright": "",
+    "license": "",
+    "ethics": {},
+    "funding": []
+  },
+  "metadata": {
+    "keywords": ["fibroblasts", "skin aging", "single-cell RNA-seq"],
+    "counts": {},
+    "self_uri": [],
+    "related_articles": [],
+    "custom_meta": {}
+  },
+  "provenance": {
+    "pmcgrab_version": "1.0.8",
+    "parse_timestamp": "2024-01-01T00:00:00+00:00",
+    "source": "ncbi_entrez",
+    "xml_source_path": ""
+  }
 }
 ```
 
@@ -343,7 +416,7 @@ Every parsed article produces a comprehensive JSON structure:
 The `Paper` class extracts and normalizes **40+ fields** from each PMC article:
 
 **Content:**
-title, subtitle, abstract (plain text + structured), body (flat / nested / paragraphs), full text, table of contents, footnotes, acknowledgements, notes, appendices, glossary
+title, subtitle, translated titles, abstract sections, ordered body section tree, footnotes, acknowledgements, notes, appendices, glossary
 
 **Authors & Contributors:**
 authors (as pandas DataFrame with names, emails, affiliations), non-author contributors, author notes
@@ -352,7 +425,7 @@ authors (as pandas DataFrame with names, emails, affiliations), non-author contr
 journal ID, journal title, ISSN, publisher name & location, volume, issue, first/last page, elocation ID, article types, article categories
 
 **Identifiers:**
-PMC ID, PMID, DOI, publisher ID (all in one `article_id` dict)
+PMC ID, PMCID, PMID, DOI, publisher ID, and other article identifiers
 
 **Dates:**
 publication dates (epub, ppub, collection), manuscript history dates (received, accepted, revised)
@@ -418,7 +491,7 @@ Better input --> better retrieval --> better answers.
    `--workers` fans out across CPU cores; automatic email rotation and a token-bucket rate limiter respect NCBI limits so large harvests don't throttle.
 
 4. **Modern Python Stack**
-   Type-safe (`mypy` strict mode), linted (`ruff`), CI-checked on Ubuntu, macOS, and Windows across Python 3.10-3.13.
+   Typed public interfaces, linted (`ruff`), CI-checked on Ubuntu, macOS, and Windows across Python 3.10-3.13.
 
 5. **Bulk XML Support**
    Point at a directory of pre-downloaded JATS XML files and parse them locally -- orders of magnitude faster, no network required. Ideal for the [PMC FTP bulk export](https://ftp.ncbi.nlm.nih.gov/pub/pmc/).
@@ -429,19 +502,20 @@ Better input --> better retrieval --> better answers.
 
 PMCGrab follows the [12-factor app](https://12factor.net/) methodology. All settings are configurable via environment variables:
 
-| Variable          | Description                                               | Default            |
-| ----------------- | --------------------------------------------------------- | ------------------ |
-| `PMCGRAB_EMAILS`  | Comma-separated email pool for NCBI Entrez authentication | Built-in test pool |
-| `NCBI_API_KEY`    | NCBI API key -- enables 10 req/s instead of 3 req/s       | None               |
-| `PMCGRAB_TIMEOUT` | Timeout in seconds for network operations                 | `60`               |
-| `PMCGRAB_RETRIES` | Number of retry attempts for Entrez API calls             | `3`                |
+| Variable             | Description                                             | Default            |
+| -------------------- | ------------------------------------------------------- | ------------------ |
+| `PMCGRAB_EMAILS`     | Comma-separated contact emails for NCBI Entrez requests | Maintainer contact |
+| `NCBI_API_KEY`       | NCBI API key -- enables 10 req/s instead of 3 req/s     | None               |
+| `PMCGRAB_TIMEOUT`    | Timeout in seconds for network operations               | `60`               |
+| `PMCGRAB_RETRIES`    | Number of retry attempts for Entrez API calls           | `3`                |
+| `PMCGRAB_SSL_VERIFY` | Verify TLS certificates for HTTP requests               | `true`             |
 
 **Rate limiting** is enforced automatically across all threads via a token-bucket limiter:
 
 - **Without** an API key: 3 requests/second
 - **With** an API key: 10 requests/second
 
-To set your own email and API key:
+For production or high-volume use, set your own email and API key:
 
 ```bash
 export PMCGRAB_EMAILS="you@university.edu,colleague@lab.org"
@@ -452,16 +526,13 @@ export NCBI_API_KEY="your_ncbi_api_key_here"
 
 ## Proof at a Glance
 
-| Metric                      | Value                  |
-| --------------------------- | ---------------------- |
-| Unit tests                  | **158+**               |
-| Branch coverage             | Enforced in CI reports |
-| Section detection accuracy  | **98 %**               |
-| Median parse time / article | **3.1 s** (network)    |
-| Local XML parse time        | **< 0.1 s**            |
-| Largest batch processed     | **7,500 articles**     |
-| CI platforms                | Ubuntu, macOS, Windows |
-| Python versions tested      | 3.10, 3.11, 3.12, 3.13 |
+| Signal                 | Value                                      |
+| ---------------------- | ------------------------------------------ |
+| Test suite             | Unit, CLI, local XML, and regression tests |
+| JSON contract          | Strict JSON output, no `NaN` literals      |
+| Local XML mode         | Parses pre-downloaded JATS without network |
+| CI platforms           | Ubuntu, macOS, Windows                     |
+| Python versions tested | 3.10, 3.11, 3.12, 3.13                     |
 
 ---
 

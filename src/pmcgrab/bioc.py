@@ -80,4 +80,5 @@ def fetch_json(pmcid: str) -> dict[str, Any]:
     from pmcgrab import __version__
 
     resp = cached_get(url, headers={"User-Agent": f"pmcgrab/{__version__}"})
-    return json.loads(resp.text)
+    data = json.loads(resp.text)
+    return data if isinstance(data, dict) else {"data": data}

@@ -5,6 +5,7 @@ used from *any* layer.
 from __future__ import annotations
 
 import datetime
+import math
 from inspect import cleandoc
 from typing import Any
 
@@ -14,9 +15,11 @@ import pandas as pd
 # Styler requires optional dependency `jinja2` in pandas; keep this import optional
 # so pmcgrab can be imported even in minimal environments.
 try:
-    from pandas.io.formats.style import Styler as _PandasStyler
+    from pandas.io.formats.style import Styler
 except Exception:  # pragma: no cover
-    _PandasStyler = None  # type: ignore[assignment]
+    Styler = None
+
+_PandasStyler: type[Any] | None = Styler
 
 __all__: list[str] = [
     "clean_doc",
@@ -61,7 +64,7 @@ def clean_doc(text: str) -> str:
     return "".join(filter(None, cleaned_lines))
 
 
-def normalize_value(val: Any):
+def normalize_value(val: Any) -> Any:
     """Recursively normalize data structures into JSON-serializable primitives.
 
     Converts complex Python objects into basic data types that can be
@@ -107,13 +110,17 @@ def normalize_value(val: Any):
         safely serialized to JSON for storage, API responses, and other
         downstream applications that require standard data types.
     """
-    if val is None or isinstance(val, bool | int | float | str):
+    if val is None or _is_missing_scalar(val):
+        return None
+    if isinstance(val, bool | int | str):
+        return val
+    if isinstance(val, float):
         return val
     if isinstance(val, datetime.date | datetime.datetime):
         return val.isoformat()
     # pandas Styler wraps a DataFrame – unwrap before serializing
     if _PandasStyler is not None and isinstance(val, _PandasStyler):
-        return normalize_value(val.data.to_dict(orient="records"))  # type: ignore[attr-defined]
+        return normalize_value(val.data.to_dict(orient="records"))
     if isinstance(val, pd.DataFrame):
         return normalize_value(val.to_dict(orient="records"))
     if isinstance(val, pd.Series):
@@ -122,7 +129,7 @@ def normalize_value(val: Any):
     if isinstance(val, np.integer):
         return int(val)
     if isinstance(val, np.floating):
-        return float(val)
+        return None if not np.isfinite(val) else float(val)
     if isinstance(val, np.bool_):
         return bool(val)
     if isinstance(val, np.ndarray):
@@ -138,3 +145,16 @@ def normalize_value(val: Any):
     # Last resort – convert unknown objects to their string representation
     # so json.dump never fails on unexpected types.
     return str(val)
+
+
+def _is_missing_scalar(val: Any) -> bool:
+    """Return True for scalar missing/non-finite values that JSON cannot encode."""
+    if val is pd.NA or val is pd.NaT:
+        return True
+    if isinstance(val, float):
+        return math.isnan(val) or math.isinf(val)
+    if isinstance(val, np.floating):
+        return not bool(np.isfinite(val))
+    if isinstance(val, np.datetime64):
+        return bool(np.isnat(val))
+    return False

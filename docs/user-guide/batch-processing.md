@@ -29,7 +29,7 @@ for pmcid in PMC_IDS:
         failed.append(pmcid)
         continue
 
-    (OUT_DIR / f"PMC{data['pmc_id']}.json").write_text(
+    (OUT_DIR / f"PMC{data['identifiers']['pmc_id']}.json").write_text(
         json.dumps(data, indent=2, ensure_ascii=False),
         encoding="utf-8",
     )
@@ -72,7 +72,7 @@ results = process_local_xml_dir("./pmc_bulk_xml", workers=16)
 
 for filename, data in results.items():
     if data:
-        print(filename, data["title"])
+        print(filename, data["title"]["main"])
 ```
 
 The returned dictionary maps each XML filename stem to a normalized article

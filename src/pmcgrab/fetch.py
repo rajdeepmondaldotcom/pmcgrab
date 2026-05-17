@@ -24,6 +24,7 @@ import threading
 import time
 import urllib.request
 import warnings
+from email.message import Message
 from io import StringIO
 from pathlib import Path
 from urllib.error import HTTPError
@@ -79,16 +80,17 @@ def fetch_pmc_xml_string(
 
     Note:
         Respects NCBI rate limits with 5-second delays between retry attempts.
-        Creates data/ directory automatically if it doesn't exist.
+        Creates the local data/ cache directory only when ``download=True``.
     """
-    os.makedirs("data", exist_ok=True)
     cache_path = os.path.join("data", f"entrez_download_PMCID={pmcid}.xml")
-    if download and os.path.exists(cache_path):
-        with open(cache_path, encoding="utf-8") as f:
-            cached_xml = f.read()
-        if verbose:
-            logger.info("Using cached XML for PMCID %s", pmcid)
-        return cached_xml
+    if download:
+        os.makedirs("data", exist_ok=True)
+        if os.path.exists(cache_path):
+            with open(cache_path, encoding="utf-8") as f:
+                cached_xml = f.read()
+            if verbose:
+                logger.info("Using cached XML for PMCID %s", pmcid)
+            return cached_xml
     from pmcgrab.infrastructure.settings import (
         NCBI_API_KEY,
         NCBI_RETRIES,
@@ -103,9 +105,9 @@ def fetch_pmc_xml_string(
         try:
             rate_limit_wait()
             with _entrez_lock:
-                Entrez.email = email
+                Entrez.email = email  # type: ignore[assignment]
                 if NCBI_API_KEY:
-                    Entrez.api_key = NCBI_API_KEY
+                    Entrez.api_key = NCBI_API_KEY  # type: ignore[assignment]
                 if not PMCGRAB_SSL_VERIFY:
                     _ssl_ctx = ssl.create_default_context()
                     _ssl_ctx.check_hostname = False
@@ -124,7 +126,7 @@ def fetch_pmc_xml_string(
                         urllib.request.install_opener(urllib.request.build_opener())
             xml_record = handle.read()
             handle.close()
-            xml_text = xml_record.decode("utf-8")
+            xml_text = str(xml_record.decode("utf-8"))
             if verbose:
                 logger.info("Fetched XML (first 100 chars): %s", xml_text[:100])
             if download:
@@ -143,10 +145,10 @@ def fetch_pmc_xml_string(
             time.sleep(delay)
             delay *= 2
     raise HTTPError(
+        f"PMCID:{pmcid}",
+        502,
         f"Failed to fetch PMCID {pmcid} after {NCBI_RETRIES} retries",
-        None,
-        None,
-        None,
+        Message(),
         None,
     ) from last_exc
 
@@ -275,6 +277,8 @@ def validate_xml(tree: ET.ElementTree) -> bool:
         )
         return True
     match = END_OF_URL_PATTERN.search(url)
+    if match is None:
+        raise NoDTDFoundError(f"Could not determine DTD filename from URL: {url}")
     filename = match.group(0)
     dtd_path = os.path.join(
         os.path.dirname(os.path.abspath(__file__)),
@@ -297,7 +301,7 @@ def validate_xml(tree: ET.ElementTree) -> bool:
 
     try:
         dtd = ET.DTD(StringIO(dtd_doc))
-        return dtd.validate(tree)
+        return bool(dtd.validate(tree))
     except ET.DTDParseError as e:
         # Handle DTD parsing errors (including entity amplification limits)
         error_msg = str(e)

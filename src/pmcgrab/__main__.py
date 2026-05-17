@@ -23,4 +23,4 @@ Notes:
 from pmcgrab.cli.pmcgrab_cli import main
 
 if __name__ == "__main__":  # pragma: no cover
-    main()
+    raise SystemExit(main())

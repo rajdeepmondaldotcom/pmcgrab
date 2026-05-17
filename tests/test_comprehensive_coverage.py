@@ -406,6 +406,24 @@ class TestFetchModuleEdgeCases:
         assert "Test" in result
         assert mock_efetch.call_count == 2
 
+    @patch("pmcgrab.fetch.Entrez.efetch")
+    def test_fetch_without_download_does_not_create_data_directory(
+        self, mock_efetch, tmp_path, monkeypatch
+    ):
+        """Fetching without cache enabled should not create local artifacts."""
+        mock_handle = MagicMock()
+        mock_handle.read.return_value = (
+            b"<pmc-articleset><article><title>Test</title></article></pmc-articleset>"
+        )
+        mock_efetch.return_value = mock_handle
+        monkeypatch.chdir(tmp_path)
+
+        with patch("pmcgrab.infrastructure.settings.rate_limit_wait"):
+            result = fetch_pmc_xml_string(12345, "test@example.com")
+
+        assert "Test" in result
+        assert not (tmp_path / "data").exists()
+
     def test_clean_xml_string_edge_cases(self):
         """Test XML string cleaning with edge cases."""
         # Test with HTML entities

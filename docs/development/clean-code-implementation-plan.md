@@ -149,7 +149,6 @@ These are valuable but larger than the first cleanup pass:
 
 - Introduce a field registry for `build_complete_paper_dict`.
 - Define explicit table and figure serialization schemas.
-- Consolidate `Paper.to_dict` and application `_extract_paper_dict` behind one serialization Module.
 - Introduce explicit XML source Adapters for network and local sources.
 
 These should be implemented after the public Interface, error policy, CLI, and release paths are stable.

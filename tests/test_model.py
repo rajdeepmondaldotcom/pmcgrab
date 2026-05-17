@@ -64,6 +64,16 @@ class TestPaper:
         paper_with_data = Paper({"PMCID": 12345, "Title": "Test Title"})
         assert paper_with_data.has_data  # Has data now
 
+    def test_empty_paper_to_dict(self):
+        """Test empty Paper serialization uses the v2 envelope."""
+        data = Paper({}).to_dict()
+
+        assert data["schema_version"] == 2
+        assert data["has_data"] is False
+        assert data["content"]["sections"] == []
+        assert data["assets"]["tables"] == []
+        assert data["provenance"]["pmcgrab_version"]
+
 
 class TestTextSection:
     """Test the TextSection class."""

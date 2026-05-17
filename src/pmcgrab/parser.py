@@ -58,6 +58,8 @@ DTD validation, HTML cleaning, and external service wrappers.
 """
 
 import warnings
+from collections.abc import Callable
+from typing import Any, NoReturn
 
 import lxml.etree as ET
 
@@ -290,12 +292,12 @@ def gather_subtitle(root: ET.Element) -> str | None:
     return None
 
 
-def gather_author_notes(root: ET.Element) -> dict[str, str | list[str]] | None:
+def gather_author_notes(root: ET.Element) -> dict[str, Any] | None:
     """Extract author-notes: correspondence, present addresses, footnotes."""
     notes_el = root.xpath("//article-meta/author-notes")
     if not notes_el:
         return None
-    result: dict[str, str | list[str]] = {}
+    result: dict[str, Any] = {}
     # Correspondence
     corresp = []
     for c in notes_el[0].xpath("corresp"):
@@ -377,7 +379,7 @@ def gather_tex_equations(root: ET.Element) -> list[str] | None:
 
 def _parse_citation(
     citation_root: ET.Element,
-) -> dict[str, list[str] | str] | str:
+) -> dict[str, Any] | str:
     """Parse a citation XML element into structured reference information.
 
     Extracts bibliographic information from a PMC citation element, including
@@ -388,7 +390,7 @@ def _parse_citation(
         citation_root: XML element containing citation information (<ref>)
 
     Returns:
-        dict[str, list[str] | str] | str: Structured citation dictionary with keys:
+        dict[str, Any] | str: Structured citation dictionary with keys:
             - authors: List of author names as "Given Surname"
             - title: Article title
             - source: Journal/source name
@@ -464,7 +466,7 @@ def _parse_citation(
             break
 
     # --- Build result dict ---
-    result: dict[str, list[str] | str | None | bool] = {
+    result: dict[str, Any] = {
         "authors": author_names,
         "has_etal": has_etal,
         "publication_type": pub_type,
@@ -533,7 +535,9 @@ def _parse_citation(
     return result
 
 
-def _extract_xpath_text(root: ET.Element, xpath: str, *, multiple: bool = False):
+def _extract_xpath_text(
+    root: ET.Element, xpath: str, *, multiple: bool = False
+) -> str | list[str] | None:
     """Extract text content from XML elements matching the given XPath.
 
     Utility function for safely extracting text from XML elements with
@@ -563,7 +567,8 @@ def _extract_xpath_text(root: ET.Element, xpath: str, *, multiple: bool = False)
         return [] if multiple else None
     if multiple:
         return [el.text for el in matches if el is not None and el.text is not None]
-    return matches[0].text
+    text = matches[0].text
+    return str(text) if text is not None else None
 
 
 def process_reference_map(
@@ -603,7 +608,7 @@ def process_reference_map(
     """
     if ref_map is None:
         ref_map = BasicBiMap()
-    cleaned: dict[int, TextTable | TextFigure | dict[str, str] | str] = {}
+    cleaned: dict[Any, Any] = {}
 
     # Fallback: if the ref_map is empty populate it from <ref> elements so that
     # downstream logic and tests receive *something* meaningful to work with.
@@ -624,105 +629,9 @@ def process_reference_map(
             )
             continue
         if root.tag == "xref":
-            rtype = root.get("ref-type")
-            rid = root.get("rid")
-            if rtype == "bibr":
-                if not rid:
-                    warnings.warn(
-                        "Citation without reference id",
-                        UnmatchedCitationWarning,
-                        stacklevel=2,
-                    )
-                    continue
-                matches = paper_root.xpath(f"//ref[@id='{rid}']")
-                if not matches:
-                    warnings.warn(
-                        "Citation id not found", UnmatchedCitationWarning, stacklevel=2
-                    )
-                    continue
-                cleaned[key] = _parse_citation(matches[0])
-            elif rtype == "table":
-                if not rid:
-                    warnings.warn(
-                        "Table ref without id", UnmatchedTableWarning, stacklevel=2
-                    )
-                    continue
-                matches = paper_root.xpath(f"//table-wrap[@id='{rid}']")
-                if matches:
-                    cleaned[key] = TextTable(matches[0])
-            elif rtype == "fig":
-                if not rid:
-                    continue
-                matches = paper_root.xpath(f"//fig[@id='{rid}']")
-                if matches:
-                    cleaned[key] = TextFigure(matches[0])
-            elif rtype == "fn" and rid:
-                # Footnote references
-                matches = paper_root.xpath(f"//fn[@id='{rid}']")
-                if matches:
-                    cleaned[key] = "".join(matches[0].itertext()).strip()
-            elif rtype == "supplementary-material" and rid:
-                matches = paper_root.xpath(f"//supplementary-material[@id='{rid}']")
-                if matches:
-                    cleaned[key] = {
-                        "type": "supplementary-material",
-                        "id": rid,
-                        "text": "".join(matches[0].itertext()).strip(),
-                    }
-            elif rtype == "disp-formula" and rid:
-                matches = paper_root.xpath(f"//disp-formula[@id='{rid}']")
-                if matches:
-                    cleaned[key] = {
-                        "type": "formula",
-                        "id": rid,
-                        "text": "".join(matches[0].itertext()).strip(),
-                    }
-            elif rtype == "app" and rid:
-                matches = paper_root.xpath(f"//app[@id='{rid}']")
-                if matches:
-                    cleaned[key] = {
-                        "type": "appendix",
-                        "id": rid,
-                        "text": "".join(matches[0].itertext()).strip()[:200],
-                    }
-            elif rtype == "sec" and rid:
-                matches = paper_root.xpath(f"//sec[@id='{rid}']")
-                if matches:
-                    title = matches[0].find("title")
-                    cleaned[key] = {
-                        "type": "section",
-                        "id": rid,
-                        "title": (
-                            "".join(title.itertext()).strip()
-                            if title is not None
-                            else ""
-                        ),
-                    }
-            elif rtype == "boxed-text" and rid:
-                matches = paper_root.xpath(f"//boxed-text[@id='{rid}']")
-                if matches:
-                    cleaned[key] = {
-                        "type": "boxed-text",
-                        "id": rid,
-                        "text": "".join(matches[0].itertext()).strip()[:200],
-                    }
-            elif rtype == "scheme" and rid:
-                matches = paper_root.xpath(f"//*[@id='{rid}']")
-                if matches:
-                    cleaned[key] = {
-                        "type": "scheme",
-                        "id": rid,
-                        "text": "".join(matches[0].itertext()).strip()[:200],
-                    }
-            elif rtype and rid:
-                # Generic fallback for any other xref type
-                matches = paper_root.xpath(f"//*[@id='{rid}']")
-                if matches:
-                    cleaned[key] = {
-                        "type": rtype,
-                        "id": rid,
-                        "text": "".join(matches[0].itertext()).strip()[:200],
-                    }
+            resolved = _resolve_xref(paper_root, root)
+            if resolved is not None:
+                cleaned[key] = resolved
         elif root.tag == "table-wrap":
             cleaned[key] = TextTable(root)
         elif root.tag == "fig":
@@ -737,10 +646,126 @@ def process_reference_map(
     return BasicBiMap(cleaned)
 
 
+def _resolve_xref(paper_root: ET.Element, xref: ET.Element) -> Any | None:
+    """Resolve a single ``xref`` element into its referenced object."""
+    rtype = xref.get("ref-type")
+    rid = xref.get("rid")
+    if rtype == "bibr":
+        return _resolve_citation_xref(paper_root, rid)
+    if rtype == "table":
+        return _resolve_table_xref(paper_root, rid)
+    if rtype == "fig" and rid:
+        return _first_mapped(paper_root, f"//fig[@id='{rid}']", TextFigure)
+    if rtype == "fn" and rid:
+        return _first_text(paper_root, f"//fn[@id='{rid}']")
+    if rtype == "supplementary-material" and rid:
+        return _typed_text_payload(
+            paper_root,
+            f"//supplementary-material[@id='{rid}']",
+            "supplementary-material",
+            rid,
+        )
+    if rtype == "disp-formula" and rid:
+        return _typed_text_payload(
+            paper_root, f"//disp-formula[@id='{rid}']", "formula", rid
+        )
+    if rtype == "app" and rid:
+        return _typed_text_payload(
+            paper_root, f"//app[@id='{rid}']", "appendix", rid, max_chars=200
+        )
+    if rtype == "sec" and rid:
+        return _section_payload(paper_root, rid)
+    if rtype == "boxed-text" and rid:
+        return _typed_text_payload(
+            paper_root, f"//boxed-text[@id='{rid}']", "boxed-text", rid, max_chars=200
+        )
+    if rtype == "scheme" and rid:
+        return _typed_text_payload(
+            paper_root, f"//*[@id='{rid}']", "scheme", rid, max_chars=200
+        )
+    if rtype and rid:
+        return _typed_text_payload(
+            paper_root, f"//*[@id='{rid}']", rtype, rid, max_chars=200
+        )
+    return None
+
+
+def _resolve_citation_xref(
+    paper_root: ET.Element, rid: str | None
+) -> dict[str, Any] | str | None:
+    """Resolve a bibliographic xref or warn when it cannot be resolved."""
+    if not rid:
+        warnings.warn(
+            "Citation without reference id",
+            UnmatchedCitationWarning,
+            stacklevel=2,
+        )
+        return None
+    matches = paper_root.xpath(f"//ref[@id='{rid}']")
+    if not matches:
+        warnings.warn("Citation id not found", UnmatchedCitationWarning, stacklevel=2)
+        return None
+    return _parse_citation(matches[0])
+
+
+def _resolve_table_xref(paper_root: ET.Element, rid: str | None) -> TextTable | None:
+    """Resolve a table xref or warn when the xref has no target id."""
+    if not rid:
+        warnings.warn("Table ref without id", UnmatchedTableWarning, stacklevel=2)
+        return None
+    return _first_mapped(paper_root, f"//table-wrap[@id='{rid}']", TextTable)
+
+
+def _first_mapped(
+    paper_root: ET.Element, xpath: str, factory: Callable[[Any], Any]
+) -> Any | None:
+    """Map the first XPath match through ``factory`` if present."""
+    matches = paper_root.xpath(xpath)
+    return factory(matches[0]) if matches else None
+
+
+def _first_text(paper_root: ET.Element, xpath: str) -> str | None:
+    """Return the stripped text for the first XPath match."""
+    matches = paper_root.xpath(xpath)
+    if not matches:
+        return None
+    return "".join(matches[0].itertext()).strip()
+
+
+def _typed_text_payload(
+    paper_root: ET.Element,
+    xpath: str,
+    payload_type: str,
+    rid: str,
+    *,
+    max_chars: int | None = None,
+) -> dict[str, str] | None:
+    """Return a typed text payload for an ``xref`` target."""
+    text = _first_text(paper_root, xpath)
+    if text is None:
+        return None
+    if max_chars is not None:
+        text = text[:max_chars]
+    return {"type": payload_type, "id": rid, "text": text}
+
+
+def _section_payload(paper_root: ET.Element, rid: str) -> dict[str, str] | None:
+    """Return the section title payload for a section xref."""
+    matches = paper_root.xpath(f"//sec[@id='{rid}']")
+    if not matches:
+        return None
+    title = matches[0].find("title")
+    return {
+        "type": "section",
+        "id": rid,
+        "title": "".join(title.itertext()).strip() if title is not None else "",
+    }
+
+
 # Helper for build_complete_paper_dict ---------------------------------------
 
 
-def _get_ref_type(value):
+def _get_ref_type(value: Any) -> str:
     """Determine the type of reference based on object type and content.
 
     Classifies reference objects into categories (citation, table, figure)
@@ -773,7 +798,9 @@ def _get_ref_type(value):
     return "citation"
 
 
-def _split_citations_tables_figs(ref_map: BasicBiMap):
+def _split_citations_tables_figs(
+    ref_map: BasicBiMap,
+) -> tuple[list[Any], list[Any], list[Any]]:
     """Categorize references from reference map into citations, tables, and figures.
 
     Processes all items in the reference map and separates them into different
@@ -819,7 +846,7 @@ def paper_dict_from_pmc(
     verbose: bool = False,
     suppress_warnings: bool = False,
     suppress_errors: bool = False,
-) -> dict[str, str | int | dict | list]:
+) -> dict[str, Any]:
     """Download and parse a PMC article into a structured dictionary.
 
     One-shot convenience function that downloads PMC article XML from NCBI,
@@ -840,7 +867,7 @@ def paper_dict_from_pmc(
         suppress_errors: If True, return empty dict on errors instead of raising
 
     Returns:
-        dict[str, str | int | dict | list]: Comprehensive article dictionary with keys:
+        dict[str, Any]: Comprehensive article dictionary with keys:
             - PMCID: Article identifier
             - Title: Article title
             - Authors: Author information
@@ -900,7 +927,7 @@ def paper_dict_from_local_xml(
     suppress_errors: bool = False,
     strip_text_styling: bool = True,
     validate: bool = False,
-) -> dict[str, str | int | dict | list]:
+) -> dict[str, Any]:
     """Parse a local JATS XML file into a structured article dictionary.
 
     This is the local-file counterpart of :func:`paper_dict_from_pmc`.
@@ -921,7 +948,7 @@ def paper_dict_from_local_xml(
         validate: If True, perform DTD validation against PMC schema.
 
     Returns:
-        dict[str, str | int | dict | list]: Comprehensive article dictionary
+        dict[str, Any]: Comprehensive article dictionary
             with the same structure as :func:`paper_dict_from_pmc` output.
 
     Raises:
@@ -967,7 +994,7 @@ def generate_paper_dict(
     verbose: bool = False,
     suppress_warnings: bool = False,
     suppress_errors: bool = False,
-) -> dict[str, str | int | dict | list]:
+) -> dict[str, Any]:
     """Parse PMC article XML into structured dictionary with error handling.
 
     Wrapper around build_complete_paper_dict() that provides configurable
@@ -983,7 +1010,7 @@ def generate_paper_dict(
         suppress_errors: If True, return empty dict on errors instead of raising
 
     Returns:
-        dict[str, str | int | dict | list]: Complete article dictionary structure,
+        dict[str, Any]: Complete article dictionary structure,
                                            or empty dict if suppress_errors=True and parsing fails
 
     Examples:
@@ -1010,7 +1037,7 @@ def generate_paper_dict(
     return data
 
 
-def _raise(exc):
+def _raise(exc: Exception) -> NoReturn:
     """Helper function for EAFP (Easier to Ask for Forgiveness than Permission) pattern.
 
     Args:
@@ -1028,7 +1055,7 @@ def build_complete_paper_dict(
     verbose: bool = False,
     *,
     include_ref_map_with_tags: bool = False,
-) -> dict[str, str | int | dict | list]:
+) -> dict[str, Any]:
     """Low-level orchestrator that coordinates all parsing operations.
 
     Core function that coordinates all the specialized gather_* functions
@@ -1046,7 +1073,7 @@ def build_complete_paper_dict(
         verbose: If True, emit progress logging messages
 
     Returns:
-        dict[str, str | int | dict | list]: Complete article dictionary containing:
+        dict[str, Any]: Complete article dictionary containing:
             - Metadata: PMCID, title, authors, journal info, publication details
             - Content: Abstract sections, body sections, structured text
             - References: Citations, cross-reference mappings
@@ -1067,7 +1094,12 @@ def build_complete_paper_dict(
     """
     ref_map: BasicBiMap = BasicBiMap()
 
-    def _safe(fn, *args, default=None, **kwargs):
+    def _safe(
+        fn: Callable[..., Any],
+        *args: Any,
+        default: Any = None,
+        **kwargs: Any,
+    ) -> Any:
         """Call *fn* and return *default* if it raises."""
         try:
             return fn(*args, **kwargs)
@@ -1080,7 +1112,7 @@ def build_complete_paper_dict(
             )
             return default
 
-    d: dict[str, str | int | dict | list] = {
+    d: dict[str, Any] = {
         "PMCID": pmcid,
         "Title": _safe(gather_title, root),
         "Authors": _safe(gather_authors, root),

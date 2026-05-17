@@ -37,7 +37,7 @@ processing path now runs through `pmcgrab.application`.
 | `pmcgrab.model`                                | `Paper`, `TextSection`, `TextParagraph`, `TextTable`, and serialization helpers. |
 | `pmcgrab.fetch`                                | Network XML retrieval and local XML parsing.                                     |
 | `pmcgrab.idconvert`                            | PMC/PMID/DOI normalization and NCBI ID conversion.                               |
-| `pmcgrab.common.*`                             | Serialization, HTML cleanup, and XML text helpers.                               |
+| `pmcgrab.common.*`                             | Output schema ownership, serialization, HTML cleanup, and XML text helpers.      |
 | `pmcgrab.infrastructure.settings`              | Environment-driven settings, email rotation, timeout and rate configuration.     |
 | `pmcgrab.bioc`, `oa_service`, `oai`, `litctxp` | Lightweight NCBI service clients.                                                |
 
@@ -100,14 +100,14 @@ data = process_single_pmc("7181753")
 local = process_single_local_xml("article.xml")
 ```
 
-The normalized processing dictionary uses snake_case field names:
+The normalized processing dictionary uses the canonical v2 output schema:
 
-- `abstract` is the structured abstract dictionary.
-- `abstract_text` is the plain-text abstract.
-- `journal_title` is the journal name.
-- `article_id` contains DOI, PMID, PMCID, and publisher IDs when available.
-- `citations` contains parsed references.
-- `published_date` contains date values keyed by publication type.
+- `identifiers` contains PMC, PubMed, DOI, publisher, and other IDs.
+- `title` contains main, subtitle, and translated title values.
+- `publication` groups journal, publisher, classification, dates, issue, and conference metadata.
+- `content` contains the canonical abstract records and ordered section tree.
+- `assets` contains parsed references, tables, figures, equations, and supplementary material.
+- `provenance` contains parser version, source, timestamp, and XML source path.
 
 Deprecated or legacy modules such as `pmcgrab.processing` remain importable for
 compatibility, but new code should use `pmcgrab.application.processing` or the
@@ -142,8 +142,6 @@ The current implementation works, but the final clean-code plan identifies
 several deeper improvements:
 
 - Make `pmcgrab.parser` a thinner facade over explicit parser services.
-- Centralize output schema ownership for `Paper.to_dict()` and processing
-  helpers.
 - Stabilize table and figure serialization contracts.
 - Expand CLI subprocess tests around file output and ID conversion modes.
 - Move more compatibility behavior behind explicit adapters.

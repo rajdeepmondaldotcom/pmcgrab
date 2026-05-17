@@ -14,3 +14,24 @@ def test_next_email_cycle(monkeypatch):
     assert first == "a@example.com"
     assert second == "b@example.com"
     assert third == "a@example.com"  # cycle should repeat
+
+
+def test_ssl_verification_defaults_to_enabled(monkeypatch):
+    monkeypatch.delenv("PMCGRAB_SSL_VERIFY", raising=False)
+    settings = importlib.reload(
+        importlib.import_module("pmcgrab.infrastructure.settings")
+    )
+
+    assert settings.PMCGRAB_SSL_VERIFY is True
+
+
+def test_ssl_verification_can_be_explicitly_disabled(monkeypatch):
+    monkeypatch.setenv("PMCGRAB_SSL_VERIFY", "false")
+    settings = importlib.reload(
+        importlib.import_module("pmcgrab.infrastructure.settings")
+    )
+
+    assert settings.PMCGRAB_SSL_VERIFY is False
+
+    monkeypatch.delenv("PMCGRAB_SSL_VERIFY", raising=False)
+    importlib.reload(importlib.import_module("pmcgrab.infrastructure.settings"))

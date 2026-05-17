@@ -86,7 +86,6 @@ Acceptance:
 These remain important, but they should be implemented after this cleanup branch lands:
 
 - Parser field registry for `build_complete_paper_dict`.
-- Unified serialization Module shared by `Paper.to_dict` and application processing.
 - Explicit serialized schemas for tables and figures.
 - Dedicated network/local XML source Adapters.
 - Gradual mypy enforcement expansion after the current error set is measured.

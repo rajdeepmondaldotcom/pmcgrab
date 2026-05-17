@@ -112,11 +112,12 @@ data = process_single_pmc(pmcid)
 
 if data:
     print("Success! Here's what we got:")
-    print(f"Title: {data['title']}")
-    print(f"Journal: {data['journal_title']}")
-    print(f"Number of authors: {len(data['authors'])}")
-    print(f"Paper has these sections: {list(data['body'].keys())}")
-    print(f"Abstract preview: {data['abstract_text'][:200]}...")
+    print(f"Title: {data['title']['main']}")
+    print(f"Journal: {data['publication']['journal']['title']}")
+    print(f"Number of authors: {len(data['contributors']['authors'])}")
+    print(f"Paper has these sections: {[section['title'] for section in data['content']['sections']]}")
+    abstract_blocks = data["content"]["abstract"][0]["blocks"]
+    print(f"Abstract preview: {abstract_blocks[0]['text'][:200]}...")
 else:
     print("Failed to fetch the paper")
 ```
@@ -150,13 +151,14 @@ print("\nLet's explore the structure:")
 print(f"Top-level keys: {list(data.keys())}")
 
 # Authors structure
-print(f"\nFirst author: {data['authors'][0]}")
+print(f"\nFirst author: {data['contributors']['authors'][0]}")
 
 # Body sections (perfect for RAG!)
 print(f"\nAvailable sections:")
-for section, content in data['body'].items():
-    print(f"  - {section}: {len(content)} characters")
-    print(f"    Preview: {content[:100]}...\n")
+for section in data['content']['sections']:
+    first_block = section["blocks"][0] if section["blocks"] else {"text": ""}
+    print(f"  - {section['title']}: {len(first_block['text'])} characters")
+    print(f"    Preview: {first_block['text'][:100]}...\n")
 ```
 
 Run it:
@@ -207,8 +209,8 @@ for pmcid, description in INTERESTING_PAPERS.items():
             with open(output_file, "w", encoding="utf-8") as f:
                 json.dump(data, f, indent=2, ensure_ascii=False)
 
-            print(f"   Success! Title: {data['title'][:60]}...")
-            print(f"   {len(data['authors'])} authors, {len(data['body'])} sections")
+            print(f"   Success! Title: {data['title']['main'][:60]}...")
+            print(f"   {len(data['contributors']['authors'])} authors, {len(data['content']['sections'])} sections")
             print(f"   Saved to: {output_file}")
             successful += 1
         else:
@@ -241,15 +243,16 @@ The JSON files you now have are **perfect for AI workflows**:
 ```python
 # Example: Extract content for vector database
 sections_for_rag = []
-for section, content in data['body'].items():
+for section in data['content']['sections']:
+    first_block = section["blocks"][0] if section["blocks"] else {"text": ""}
     sections_for_rag.append({
-        "source": f"PMC{data['pmc_id']}",
-        "section": section,
-        "content": content,
+        "source": f"PMC{data['identifiers']['pmc_id']}",
+        "section": section["title"],
+        "content": first_block["text"],
         "metadata": {
-            "title": data['title'],
-            "journal": data['journal_title'],
-            "authors": [f"{a['First_Name']} {a['Last_Name']}" for a in data['authors']]
+            "title": data['title']['main'],
+            "journal": data['publication']['journal']['title'],
+            "authors": [f"{a['First_Name']} {a['Last_Name']}" for a in data['contributors']['authors']]
         }
     })
 ```
@@ -260,9 +263,10 @@ for section, content in data['body'].items():
 # Create training examples
 training_examples = []
 for pmcid, paper_data in all_papers.items():
+    abstract_blocks = paper_data["content"]["abstract"][0]["blocks"]
     training_examples.append({
-        "input": f"Summarize this {paper_data['journal_title']} paper about {paper_data['title']}",
-        "output": paper_data['abstract_text']
+        "input": f"Summarize this {paper_data['publication']['journal']['title']} paper about {paper_data['title']['main']}",
+        "output": abstract_blocks[0]["text"] if abstract_blocks else ""
     })
 ```
 
@@ -278,13 +282,22 @@ for file in Path("processed_papers").glob("*.json"):
         paper = json.load(f)
 
     paper_stats.append({
-        "pmcid": paper['pmc_id'],
-        "title": paper['title'],
-        "journal": paper['journal_title'],
-        "num_authors": len(paper['authors']),
-        "num_sections": len(paper['body']),
-        "abstract_length": len(paper['abstract_text']),
-        "total_content": sum(len(content) for content in paper['body'].values())
+        "pmcid": paper['identifiers']['pmc_id'],
+        "title": paper['title']['main'],
+        "journal": paper['publication']['journal']['title'],
+        "num_authors": len(paper['contributors']['authors']),
+        "num_sections": len(paper['content']['sections']),
+        "abstract_length": sum(
+            len(block["text"])
+            for section in paper["content"]["abstract"]
+            for block in section["blocks"]
+        ),
+        "total_content": sum(
+            len(block["text"])
+            for section in paper["content"]["sections"]
+            for block in section["blocks"]
+            if block["type"] == "paragraph"
+        )
     })
 
 df = pd.DataFrame(paper_stats)

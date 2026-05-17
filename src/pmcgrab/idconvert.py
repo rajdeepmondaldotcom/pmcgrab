@@ -42,7 +42,7 @@ from typing import Any
 
 from pmcgrab.http_utils import cached_get
 
-_BASE_URL = "https://pmc.ncbi.nlm.nih.gov/tools/idconv/v1.0/"  # new API path
+_BASE_URL = "https://pmc.ncbi.nlm.nih.gov/tools/idconv/api/v1/articles/"
 _logger = logging.getLogger(__name__)
 
 # Patterns for identifying ID types
@@ -253,12 +253,98 @@ def convert(ids: list[str]) -> dict[str, Any]:
         Requests are cached using pmcgrab.http_utils.cached_get, so repeated
         calls with the same identifier list will return cached results.
     """
-    params = {"ids": ",".join(ids), "format": "json"}
+    if not ids:
+        return {"status": "ok", "records": []}
+
+    requested_ids = [identifier.strip() for identifier in ids if identifier.strip()]
+    records_by_requested: dict[str, list[dict[str, Any]]] = {}
+
+    typed_groups: dict[str, list[str]] = {"pmcid": [], "pmid": [], "doi": []}
+    unknown_ids: list[str] = []
+    numeric_ids: list[str] = []
+    for identifier in requested_ids:
+        if _DOI_RE.match(identifier):
+            typed_groups["doi"].append(identifier)
+        elif _PMC_PREFIX_RE.match(identifier):
+            typed_groups["pmcid"].append(identifier)
+        elif identifier.isdigit():
+            numeric_ids.append(identifier)
+        else:
+            unknown_ids.append(identifier)
+
+    for id_type, group in typed_groups.items():
+        if not group:
+            continue
+        for record in _convert_homogeneous(group, id_type).get("records", []):
+            key = _requested_key(record, fallback=group[0] if len(group) == 1 else "")
+            records_by_requested.setdefault(key, []).append(record)
+
+    # Numeric identifiers are ambiguous: users may mean bare PMCIDs or PMIDs.
+    # Preserve bare-PMCID compatibility by trying PMCID first, then PMID.
+    for identifier in numeric_ids:
+        data = _convert_homogeneous([identifier], "pmcid")
+        record = _first_record(data)
+        if _record_has_pmcid(record):
+            if record is not None:
+                records_by_requested.setdefault(identifier, []).append(record)
+            continue
+        data = _convert_homogeneous([identifier], "pmid")
+        fallback_record = _first_record(data)
+        if fallback_record is not None:
+            records_by_requested.setdefault(identifier, []).append(fallback_record)
+        elif record is not None:
+            records_by_requested.setdefault(identifier, []).append(record)
+
+    for identifier in unknown_ids:
+        for record in _convert_homogeneous([identifier], "auto").get("records", []):
+            key = _requested_key(record, fallback=identifier)
+            records_by_requested.setdefault(key, []).append(record)
+
+    ordered_records: list[dict[str, Any]] = []
+    for identifier in requested_ids:
+        records = records_by_requested.get(identifier, [])
+        if records:
+            ordered_records.extend(records)
+
+    return {
+        "status": "ok",
+        "request": {"ids": requested_ids},
+        "records": ordered_records,
+    }
+
+
+def _convert_homogeneous(ids: list[str], id_type: str) -> dict[str, Any]:
+    """Call the NCBI converter for identifiers of one explicit type."""
+    params = {
+        "ids": ",".join(ids),
+        "format": "json",
+        "tool": "pmcgrab",
+        "idtype": id_type,
+    }
     from pmcgrab import __version__
 
     resp = cached_get(
-        _BASE_URL + "json/",
+        _BASE_URL,
         params=params,
         headers={"User-Agent": f"pmcgrab/{__version__}"},
     )
-    return json.loads(resp.text)
+    data = json.loads(resp.text)
+    return data if isinstance(data, dict) else {"records": data}
+
+
+def _first_record(data: dict[str, Any]) -> dict[str, Any] | None:
+    records = data.get("records", [])
+    if records and isinstance(records[0], dict):
+        return records[0]
+    return None
+
+
+def _requested_key(record: dict[str, Any], *, fallback: str) -> str:
+    return str(record.get("requested-id") or fallback)
+
+
+def _record_has_pmcid(record: dict[str, Any] | None) -> bool:
+    if record is None:
+        return False
+    pmcid = str(record.get("pmcid", ""))
+    return bool(pmcid and record.get("status") != "error")

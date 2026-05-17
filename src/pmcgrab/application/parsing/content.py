@@ -264,9 +264,9 @@ def gather_version_history(root: ET.Element) -> list[dict[str, str]] | None:
     """
     versions: list[dict[str, str]] = []
     for ver in root.xpath("//article-meta/article-version"):
-        ver_num = ver.get("version") or ver.findtext("version")
+        ver_num = ver.get("version") or ver.findtext("version") or ""
         date_elem = ver.find("date")
-        date_str = None
+        date_str = ""
         if date_elem is not None:
             year = date_elem.findtext("year")
             month = date_elem.findtext("month") or "1"
@@ -384,22 +384,24 @@ def gather_supplementary_material(root: ET.Element) -> list[dict[str, str]] | No
     """
     items: list[dict[str, str]] = []
     for supp in root.xpath("//supplementary-material|//media"):
-        label = supp.findtext("label") or supp.get("id")
+        label = supp.findtext("label") or supp.get("id") or ""
         caption_elem = supp.find("caption")
-        caption = None
+        caption = ""
         if caption_elem is not None:
             caption = " ".join(caption_elem.itertext()).strip()
         # Handle both explicit xlink namespace and plain attribute usage
         href = (
             supp.get("xlink:href")
             or supp.get("{http://www.w3.org/1999/xlink}href")
-            or None
+            or ""
         )
         if not href:
             ext = supp.find("ext-link")
             if ext is not None:
-                href = ext.get("xlink:href") or ext.get(
-                    "{http://www.w3.org/1999/xlink}href"
+                href = (
+                    ext.get("xlink:href")
+                    or ext.get("{http://www.w3.org/1999/xlink}href")
+                    or ""
                 )
         items.append(
             {
