@@ -36,6 +36,7 @@ class TestCLIComplete:
         )
 
         assert result.returncode == 0
+        assert result.stdout.startswith("usage: pmcgrab ")
         assert "--pmcids" in result.stdout
 
     def test_python_module_version_smoke(self):
@@ -48,7 +49,7 @@ class TestCLIComplete:
         )
 
         assert result.returncode == 0
-        assert pmcgrab.__version__ in result.stdout
+        assert result.stdout.strip() == f"pmcgrab {pmcgrab.__version__}"
 
     def test_main_with_valid_args(self):
         """Test main function with valid arguments."""

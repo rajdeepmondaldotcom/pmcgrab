@@ -72,7 +72,8 @@ def _parse_args() -> argparse.Namespace:
         argparse.Namespace: Parsed arguments.
     """
     p = argparse.ArgumentParser(
-        description="Batch download & parse PMC articles (from network or local XML)"
+        prog="pmcgrab",
+        description="Batch download & parse PMC articles (from network or local XML)",
     )
 
     # --- Input sources (mutually exclusive) ---
