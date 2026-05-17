@@ -1,4 +1,4 @@
-/* Enhanced global styling for PMCGrab docs */
+/* Global styling for PMCGrab docs */
 
 /* Improved code block styling */
 .highlight {
@@ -43,7 +43,7 @@
 
 /* Enhanced footer styling */
 .md-footer {
-  background: linear-gradient(135deg, #3f51b5 0%, #5c6bc0 100%);
+  background: #132f4c;
 }
 
 /* Improved typography */
@@ -88,9 +88,9 @@
   color: var(--md-accent-fg-color);
 }
 
-/* Enhanced version banner */
+/* Version banner */
 .md-banner {
-  background: linear-gradient(90deg, var(--md-primary-fg-color) 0%, var(--md-accent-fg-color) 100%);
+  background: #132f4c;
 }
 
 /* Improved print styles */
@@ -110,11 +110,6 @@
 /* Dark mode enhancements */
 [data-md-color-scheme="slate"] {
   --md-code-bg-color: #2d3748;
-}
-
-[data-md-color-scheme="slate"] .mdx-hero {
-  background: linear-gradient(135deg, #4c51bf 0%, #667eea 50%, #764ba2 100%);
-  box-shadow: 0 8px 32px rgba(76, 81, 191, 0.4);
 }
 
 [data-md-color-scheme="slate"] .grid.cards > .card {

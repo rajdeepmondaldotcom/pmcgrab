@@ -5,6 +5,22 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+## [1.0.9] - 2026-05-18
+
+### Added
+- Added deterministic local XML end-to-end coverage for the CLI output path.
+- Added an opt-in live NCBI end-to-end smoke test for release validation.
+- Added a reusable wheel install smoke script for release workflows.
+
+### Changed
+- Repositioned README, docs homepage, package metadata, and GitHub About around
+  the biomedical RAG use case.
+- Refined the docs hero and public copy to emphasize structured PMC context,
+  local JATS XML processing, and verifiable release checks.
+- Reused the shared wheel smoke script in tag and main release workflows.
+
 ## [1.0.8] - 2026-05-17
 
 ### Fixed
@@ -53,17 +69,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `_flatten_block_elements_in_paragraph` helper in `model.py` for safe in-paragraph block rendering.
 - `MalformedRefTagWarning` in `constants.py`.
 - 17 regression tests in `tests/test_regression_bugs.py` covering all fixed cases.
-
-## [Unreleased]
-
-### Added
-- Comprehensive CI/CD workflows
-- Automated dependency updates
-- Security scanning and vulnerability management
-- Documentation generation and deployment
-- Issue and PR templates
-- Contributing guidelines
-- Security policy
 
 ## [0.2.3] - 2025-01-31
 

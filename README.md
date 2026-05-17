@@ -1,280 +1,160 @@
-# PMCGrab -- From PubMed Central ID to AI-Ready JSON in Seconds
+# PMCGrab
 
-[![PyPI](https://img.shields.io/pypi/v/pmcgrab.svg)](https://pypi.org/project/pmcgrab/) [![Python](https://img.shields.io/pypi/pyversions/pmcgrab.svg)](https://pypi.org/project/pmcgrab/) [![Docs](https://img.shields.io/badge/docs-mkdocs-blue.svg)](https://rajdeepmondaldotcom.github.io/pmcgrab/) [![CI](https://github.com/rajdeepmondaldotcom/pmcgrab/workflows/CI/badge.svg)](https://github.com/rajdeepmondaldotcom/pmcgrab/actions) [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://github.com/rajdeepmondaldotcom/pmcgrab/blob/main/LICENSE)
+[![PyPI](https://img.shields.io/pypi/v/pmcgrab.svg)](https://pypi.org/project/pmcgrab/)
+[![Python](https://img.shields.io/pypi/pyversions/pmcgrab.svg)](https://pypi.org/project/pmcgrab/)
+[![Docs](https://img.shields.io/badge/docs-mkdocs-blue.svg)](https://rajdeepmondaldotcom.github.io/pmcgrab/)
+[![CI](https://github.com/rajdeepmondaldotcom/pmcgrab/workflows/CI/badge.svg)](https://github.com/rajdeepmondaldotcom/pmcgrab/actions)
+[![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://github.com/rajdeepmondaldotcom/pmcgrab/blob/main/LICENSE)
 
-Every AI workflow that touches biomedical literature hits the same wall:
+Structured PMC context for biomedical RAG.
 
-1. **Download** PMC XML hoping it's "structured."
-2. **Fight** nested tags, footnotes, figure refs, and half-broken links.
-3. **Hope** your regex didn't blow away the Methods section you actually need.
+PMCGrab turns PubMed Central and JATS XML into clean, section-aware JSON. It is
+for developers and researchers building biomedical RAG, search, literature
+review, corpus, and knowledge-graph pipelines.
 
-That wall steals hours from **RAG pipelines, knowledge-graph builds, LLM fine-tuning -- any downstream AI task**.
+Raw PMC XML is not a context layer. It is source material. Useful source
+material, but still full of nested tags, figure links, reference maps, section
+trees, footnotes, licensing metadata, and edge cases that make a one-off parser
+age badly.
 
-**PMCGrab knocks it down.** Feed it a list of PMC IDs -- or point it at a directory of bulk-downloaded XML -- and get back clean, section-aware JSON you can drop straight into a vector DB or LLM prompt. No network required for local files. No timeouts. No XML wrestling.
-
----
-
-## The Hidden Cost of "I'll Just Parse It Myself"
-
-| Task                        | Manual / ad-hoc         | **PMCGrab**                                 |
-| --------------------------- | ----------------------- | ------------------------------------------- |
-| Install dependencies        | Package hunting         | One package install                         |
-| Convert one article to JSON | 15-30 min               | One API call or CLI command                 |
-| Capture article sections    | Hope & regex            | Parsed section tree with headings preserved |
-| Parallel processing         | Bash loops & temp files | `--workers N` flag                          |
-| Edge-case maintenance       | Yours forever           | Automated tests and regression cases        |
-
-At \$50/hour, hand-parsing 100 papers burns **\$1,000+**.
-PMCGrab does the same job for \$0 -- within minutes -- so you can focus on _using_ the information instead of extracting it.
-
----
-
-## Quick Install
-
-**Recommended** (via [uv](https://docs.astral.sh/uv/)):
+PMCGrab gives you a cleaner boundary:
 
 ```bash
 uv add pmcgrab
 ```
 
-Or with pip:
+```python
+from pmcgrab import process_single_pmc
+
+article = process_single_pmc("7181753")
+
+print(article["title"]["main"])
+print([section["title"] for section in article["content"]["sections"]])
+```
+
+Decision: give PMCGrab a PMC ID or a local JATS XML file. Get back structured
+article data you can inspect, store, chunk, embed, or pass to the next system.
+
+## Why This Matters
+
+Biomedical RAG fails quietly when the context is messy.
+
+If the retrieval layer cannot tell Methods from Discussion, the model gets the
+wrong evidence with confidence. If a parser drops captions, identifiers, or
+permissions, the downstream system inherits that loss and calls it data.
+
+The bottleneck is not another prompt. It is clean context.
+
+PMCGrab is a small piece of infrastructure for that job. It does not try to be a
+literature review product. It does not parse every document on the internet. It
+does one thing: turn PMC article sources into usable Python objects and JSON.
+
+## What You Get
+
+- **Section-aware article JSON** with abstracts, body sections, nested blocks,
+  identifiers, provenance, and metadata.
+- **Two ingestion paths**: fetch by PMC ID from NCBI, or parse bulk-downloaded
+  JATS XML from disk.
+- **A practical Python API** for notebooks, scripts, ingestion workers, and
+  corpus build jobs.
+- **A CLI path** for turning lists of article IDs or local XML files into JSON
+  files.
+- **Release checks that match real use**: deterministic local XML E2E, opt-in
+  live NCBI E2E, wheel smoke install, CLI tests, parser regressions, and JSON
+  serialization checks.
+
+## Install
+
+Recommended:
+
+```bash
+uv add pmcgrab
+```
+
+With pip:
 
 ```bash
 pip install pmcgrab
 ```
 
-Python >= 3.10 required. Tested on 3.10, 3.11, 3.12, and 3.13.
+Python 3.10 or newer is required. The package is tested on Python 3.10, 3.11,
+3.12, and 3.13.
 
-**Optional extras:**
+Optional extras:
 
 ```bash
-pip install pmcgrab[dev]       # Linting, type-checking, pre-commit
-pip install pmcgrab[test]      # pytest + coverage
-pip install pmcgrab[docs]      # MkDocs + Material theme
-pip install pmcgrab[notebook]  # Jupyter support
+pip install "pmcgrab[test]"      # pytest and coverage tools
+pip install "pmcgrab[docs]"      # MkDocs documentation tooling
+pip install "pmcgrab[notebook]"  # Jupyter support
+pip install "pmcgrab[dev]"       # development tooling
 ```
 
----
+## The 30-Second Path
 
-## 30-Second Quick Start
+### Fetch One PMC Article
 
 ```python
-from pmcgrab import Paper
+from pmcgrab import process_single_pmc
 
-paper = Paper.from_pmc("7181753")
+article = process_single_pmc("7181753")
 
-print(paper.title)
-# => "Single-cell transcriptomes of the human skin reveal age-related loss of ..."
-
-print(paper.abstract_as_str()[:200])
-# => "Fibroblasts are an essential cell population for human skin architecture ..."
-
-# Every section, clean and ready
-for section, text in paper.body_as_dict().items():
-    print(f"{section}: {len(text.split())} words")
-
-# Save to JSON
-paper.to_json()
+if article:
+    print(article["identifiers"]["pmcid"])
+    print(article["title"]["main"])
+    print(article["content"]["sections"][0]["title"])
 ```
 
-That's it. One import, one line to fetch, structured data everywhere.
+Use this when you want pipeline-ready dictionaries.
 
----
-
-## Ways to Use PMCGrab
-
-### 1. Python API -- the `Paper` class (recommended)
-
-The `Paper` class is the primary interface. It wraps every piece of parsed data with convenient accessor methods.
-
-**From the network:**
+### Explore One Article As An Object
 
 ```python
 from pmcgrab import Paper
 
 paper = Paper.from_pmc("7181753", suppress_warnings=True)
+
+print(paper.title)
+print(paper.abstract_as_str()[:500])
+print(paper.get_toc())
+
+json_payload = paper.to_json()
 ```
 
-**From a local XML file (no network needed):**
+Use `Paper` when you are exploring an article in a notebook or script.
 
-```python
-paper = Paper.from_local_xml("path/to/PMC7181753.xml")
-```
-
-**Output methods -- choose the shape that fits your pipeline:**
-
-```python
-# Abstract
-paper.abstract_as_str()          # Plain-text string
-paper.abstract_as_dict()         # {"Background": "...", "Results": "..."}
-
-# Body
-paper.body_as_dict()             # Flat: {"Introduction": "...", "Methods": "..."}
-paper.body_as_nested_dict()      # Hierarchical: preserves subsections
-paper.body_as_paragraphs()       # List of dicts -- ideal for RAG chunking
-                                 #   [{"section": "Methods", "text": "...", "paragraph_index": 0}, ...]
-
-# Full text
-paper.full_text()                # Abstract + body as one continuous string
-
-# Table of contents
-paper.get_toc()                  # ["Introduction", "Methods", "Results", ...]
-
-# Serialization
-paper.to_dict()                  # Full JSON-serializable dictionary
-paper.to_json()                  # JSON string (pretty-printed)
-```
-
-**Metadata you can access directly:**
-
-```python
-paper.title                      # Article title
-paper.authors                    # pandas DataFrame (names, emails, affiliations)
-paper.journal_title              # "Genome Biology"
-paper.article_id                 # {"pmcid": "PMC7181753", "doi": "10.1038/...", ...}
-paper.keywords                   # ["fibroblasts", "aging", ...]
-paper.published_date             # {"epub": "2020-04-24", ...}
-paper.citations                  # Structured reference list
-paper.tables                     # List of pandas DataFrames
-paper.figures                    # Figure metadata + captions
-paper.permissions                # Copyright, license info
-paper.funding                    # Funding sources
-paper.equations                  # MathML + TeX equations
-# ... and 20+ more attributes (see "Extracted Metadata" below)
-```
-
----
-
-### 2. Dict-Based API (for data pipelines)
-
-If you prefer raw dictionaries over the `Paper` object:
-
-```python
-from pmcgrab import process_single_pmc, process_single_local_xml
-
-# From network
-data = process_single_pmc("7181753")
-
-# From local XML
-data = process_single_local_xml("path/to/article.xml")
-
-print(data["title"]["main"])
-print(data["identifiers"]["doi"])
-print(data["content"]["abstract"])   # Ordered abstract sections
-print([section["title"] for section in data["content"]["sections"]])
-```
-
----
-
-### 3. Bulk / Local XML Processing
-
-> This feature was inspired by a great suggestion from [@vanAmsterdam](https://github.com/vanAmsterdam), who pointed out that working with [bulk-exported PMC data](https://pmc.ncbi.nlm.nih.gov/tools/ftp/#bulk) could be orders of magnitude faster than fetching articles one-by-one over the network.
-
-**We built it.** Local XML processing skips the network entirely -- no HTTP requests, no timeouts, no rate limits. It is the fastest way to parse PMC articles at scale.
-
-**Python API:**
+### Parse Local PMC XML
 
 ```python
 from pmcgrab import Paper, process_single_local_xml, process_local_xml_dir
 
-# Single file
 paper = Paper.from_local_xml("./pmc_bulk/PMC7181753.xml")
-
-# Single file (dict output)
-data = process_single_local_xml("./pmc_bulk/PMC7181753.xml")
-
-# Entire directory -- concurrent with 16 workers by default
-results = process_local_xml_dir("./pmc_bulk/", workers=16)
-for filename, data in results.items():
-    if data:
-        print(f"{filename}: {data['title']['main'][:60]}")
+article = process_single_local_xml("./pmc_bulk/PMC7181753.xml")
+batch = process_local_xml_dir("./pmc_bulk", workers=16)
 ```
 
-**CLI:**
+Local XML mode is the right path when you already have PMC bulk data on disk. It
+does not call NCBI. It just parses the files.
+
+### Use The CLI
 
 ```bash
-# Process a directory of bulk-downloaded XML
-pmcgrab --from-dir ./pmc_bulk_xml/ --output-dir ./results
+# Fetch by PMC ID
+pmcgrab --pmcids 7181753 3539614 --output-dir ./articles
 
-# Process specific files
-pmcgrab --from-file article1.xml article2.xml --output-dir ./results
+# Parse a local XML directory
+pmcgrab --from-dir ./pmc_bulk_xml --output-dir ./articles --workers 16
+
+# Parse specific local XML files
+pmcgrab --from-file PMC7181753.xml PMC3539614.xml --output-dir ./articles
+
+# Write JSONL instead of one JSON file per article
+pmcgrab --pmcids 7181753 3539614 --format jsonl --output-dir ./articles
 ```
 
-**How to get bulk XML:** Download from the [PMC FTP service](https://ftp.ncbi.nlm.nih.gov/pub/pmc/) or the [PMC Open Access subset](https://pmc.ncbi.nlm.nih.gov/tools/openftlist/). Each `.xml` file is a standard JATS XML article that PMCGrab can parse directly.
+## Output Shape
 
----
-
-### 4. Command Line
-
-PMCGrab's CLI supports **six input modes**, all mutually exclusive:
-
-```bash
-# PMC IDs (accepts PMC7181753, pmc7181753, or just 7181753)
-pmcgrab --pmcids 7181753 3539614 --output-dir ./results
-
-# PubMed IDs (auto-converted to PMC IDs via NCBI API)
-pmcgrab --pmids 33087749 34567890 --output-dir ./results
-
-# DOIs (auto-converted to PMC IDs via NCBI API)
-pmcgrab --dois 10.1038/s41586-020-2832-5 --output-dir ./results
-
-# IDs from a text file (one per line -- PMCIDs, PMIDs, or DOIs)
-pmcgrab --from-id-file ids.txt --output-dir ./results
-
-# Local XML directory (bulk mode -- no network)
-pmcgrab --from-dir ./xml_bulk/ --output-dir ./results
-
-# Specific local XML files (no network)
-pmcgrab --from-file article1.xml article2.xml --output-dir ./results
-```
-
-**Additional flags:**
-
-| Flag                         | Description                                            | Default        |
-| ---------------------------- | ------------------------------------------------------ | -------------- |
-| `--output-dir` / `--out`     | Output directory for JSON files                        | `./pmc_output` |
-| `--batch-size` / `--workers` | Number of concurrent worker threads                    | `10`           |
-| `--format`                   | `json` (one file per article) or `jsonl` (single file) | `json`         |
-| `--verbose` / `-v`           | Enable debug logging                                   | off            |
-| `--quiet` / `-q`             | Suppress progress bars                                 | off            |
-
----
-
-### 5. Async Support
-
-For asyncio-based applications:
-
-```python
-import asyncio
-from pmcgrab.application.processing import async_process_pmc_ids
-
-results = asyncio.run(async_process_pmc_ids(
-    ["7181753", "3539614", "3084273"],
-    max_concurrency=10,
-))
-
-for pid, data in results.items():
-    print(pid, "OK" if data else "FAIL")
-```
-
----
-
-### 6. Batch Processing
-
-Process thousands of articles with built-in concurrency, retries, and rate-limit compliance:
-
-```python
-from pmcgrab import process_pmc_ids_in_batches
-
-pmc_ids = ["7181753", "3539614", "5454911", "3084273"]
-process_pmc_ids_in_batches(pmc_ids, "./output", batch_size=8)
-```
-
----
-
-## Output Example
-
-Every parsed article produces a comprehensive JSON structure:
+PMCGrab returns a JSON-serializable article dictionary with stable top-level
+groups:
 
 ```json
 {
@@ -284,280 +164,268 @@ Every parsed article produces a comprehensive JSON structure:
     "pmc_id": "7181753",
     "pmcid": "PMC7181753",
     "pmid": "32327715",
-    "doi": "10.1038/s42003-020-0922-4",
-    "publisher_id": "",
-    "other": {}
+    "doi": "10.1038/s42003-020-0922-4"
   },
   "title": {
-    "main": "Single-cell transcriptomes of the human skin reveal ...",
-    "subtitle": "",
-    "translated": []
-  },
-  "contributors": {
-    "authors": [
-      {
-        "First_Name": "...",
-        "Last_Name": "...",
-        "Email": "...",
-        "Affiliations": "..."
-      }
-    ],
-    "non_author_contributors": [],
-    "author_notes": {}
+    "main": "Single-cell transcriptomes of the human skin reveal age-related loss of fibroblast priming"
   },
   "publication": {
     "journal": {
-      "title": "Communications Biology",
-      "alternate_titles": [],
-      "ids": {},
-      "issn": {}
-    },
-    "publisher": {
-      "name": "",
-      "alternate_names": [],
-      "location": "",
-      "alternate_locations": []
-    },
-    "classification": {
-      "article_types": ["research-article"],
-      "article_categories": []
-    },
-    "dates": {
-      "published": { "epub": "2020-04-24" },
-      "history": {},
-      "version_history": []
-    },
-    "issue": {
-      "volume": "",
-      "issue": "",
-      "first_page": "",
-      "last_page": "",
-      "elocation_id": ""
-    },
-    "conference": {}
+      "title": "Communications Biology"
+    }
   },
   "content": {
-    "abstract_type": "",
     "abstract": [
       {
-        "id": "",
         "title": "Abstract",
-        "level": 0,
         "blocks": [
-          { "type": "paragraph", "id": "", "text": "Fibroblasts are ..." }
-        ],
-        "children": []
+          {
+            "type": "paragraph",
+            "text": "..."
+          }
+        ]
       }
     ],
-    "translated_abstracts": [],
     "sections": [
       {
-        "id": "s1",
         "title": "Introduction",
         "level": 1,
         "blocks": [
-          { "type": "paragraph", "id": "p1", "text": "The skin is ..." }
+          {
+            "type": "paragraph",
+            "text": "..."
+          }
         ],
         "children": []
       }
-    ],
-    "appendices": [],
-    "glossary": [],
-    "footnotes": "",
-    "acknowledgements": [],
-    "notes": []
+    ]
   },
   "assets": {
-    "citations": [
-      { "title": "...", "authors": "...", "doi": "...", "pmid": "..." }
-    ],
-    "tables": [
-      { "id": "t1", "label": "Table 1", "caption": "...", "rows": [] }
-    ],
-    "figures": [
-      {
-        "id": "f1",
-        "label": "Fig. 1",
-        "caption": "...",
-        "link": "",
-        "alternate_links": []
-      }
-    ],
-    "equations": { "mathml": [], "tex": [] },
-    "supplementary_material": []
+    "citations": [],
+    "tables": [],
+    "figures": [],
+    "equations": {
+      "mathml": [],
+      "tex": []
+    }
   },
   "compliance": {
     "permissions": {},
-    "copyright": "",
-    "license": "",
-    "ethics": {},
     "funding": []
   },
   "metadata": {
-    "keywords": ["fibroblasts", "skin aging", "single-cell RNA-seq"],
-    "counts": {},
-    "self_uri": [],
-    "related_articles": [],
-    "custom_meta": {}
+    "keywords": []
   },
   "provenance": {
-    "pmcgrab_version": "1.0.8",
-    "parse_timestamp": "2024-01-01T00:00:00+00:00",
-    "source": "ncbi_entrez",
-    "xml_source_path": ""
+    "pmcgrab_version": "1.0.9",
+    "source": "ncbi_entrez"
   }
 }
 ```
 
----
+Text lives under `content`. Metadata lives under named groups. The JSON writer
+uses `allow_nan=False`, so invalid JSON values do not quietly leak into output
+files.
 
-## Extracted Metadata -- Everything in One Object
+## When To Use It
 
-The `Paper` class extracts and normalizes **40+ fields** from each PMC article:
+Use PMCGrab if you are building:
 
-**Content:**
-title, subtitle, translated titles, abstract sections, ordered body section tree, footnotes, acknowledgements, notes, appendices, glossary
+- a biomedical RAG pipeline
+- a literature search or review tool
+- a knowledge graph from PMC articles
+- a text-mining corpus
+- a repeatable dataset from PMC bulk XML
+- a CLI workflow that turns article IDs into JSON files
 
-**Authors & Contributors:**
-authors (as pandas DataFrame with names, emails, affiliations), non-author contributors, author notes
+Do not use PMCGrab if you need:
 
-**Journal & Publication:**
-journal ID, journal title, ISSN, publisher name & location, volume, issue, first/last page, elocation ID, article types, article categories
+- arbitrary PDF parsing
+- paywalled full text that is not available through PMC
+- general web scraping
+- clinical guidance or medical decisions
 
-**Identifiers:**
-PMC ID, PMCID, PMID, DOI, publisher ID, and other article identifiers
+The scope is intentionally narrow: PMC and JATS article sources in, structured
+Python objects and JSON out.
 
-**Dates:**
-publication dates (epub, ppub, collection), manuscript history dates (received, accepted, revised)
+## Python API
 
-**Scholarly Content:**
-citations (structured with authors, title, DOI, PMID), tables (parsed to pandas DataFrames), figures (label, caption, graphic links, alt text), equations (MathML + TeX), supplementary materials
-
-**Legal & Funding:**
-permissions, copyright statement, license type, funding sources, ethics disclosures
-
-**Additional:**
-keywords, custom metadata, counts, self URIs, related articles, conference info, translated titles & abstracts, version history
-
----
-
-## NCBI Service Clients
-
-PMCGrab bundles lightweight clients for five NCBI APIs, all importable from the top level:
+### `Paper`
 
 ```python
-from pmcgrab import bioc_fetch, id_convert, citation_export, oa_fetch
-from pmcgrab import oai_get_record, oai_list_identifiers, oai_list_records, oai_list_sets
-from pmcgrab import normalize_id, normalize_ids, normalize_pmid, normalize_pmids
+from pmcgrab import Paper
+
+paper = Paper.from_pmc("7181753")
+
+paper.title
+paper.authors
+paper.article_id
+paper.journal_title
+paper.keywords
+paper.citations
+paper.tables
+paper.figures
+
+paper.abstract_as_str()
+paper.abstract_as_dict()
+paper.body_as_dict()
+paper.body_as_nested_dict()
+paper.body_as_paragraphs()
+paper.full_text()
+paper.get_toc()
+paper.to_dict()
+paper.to_json()
 ```
 
-| Client                   | What it does                                                         |
-| ------------------------ | -------------------------------------------------------------------- |
-| `bioc_fetch()`           | Fetch BioC JSON for Open Access articles                             |
-| `id_convert()`           | Convert between PMC IDs, PMIDs, and DOIs                             |
-| `normalize_id()`         | Normalize any ID format to a numeric PMC ID                          |
-| `citation_export()`      | Export citations in MEDLINE, BibTeX, RIS, NBIB, or PubMed format     |
-| `oa_fetch()`             | Check Open Access status and get download links                      |
-| `oai_get_record()`       | Retrieve a single OAI-PMH metadata record                            |
-| `oai_list_records()`     | Harvest metadata at scale with automatic resumption-token pagination |
-| `oai_list_identifiers()` | List OAI-PMH identifiers for a date range or set                     |
-| `oai_list_sets()`        | List available OAI-PMH sets                                          |
+### Processing Helpers
 
----
+```python
+from pmcgrab import (
+    process_local_xml_dir,
+    process_single_local_xml,
+    process_single_pmc,
+)
 
-## Context Engineering: Why This Matters for LLMs
+one_from_network = process_single_pmc("7181753")
+one_from_disk = process_single_local_xml("./pmc_bulk/PMC7181753.xml")
+many_from_disk = process_local_xml_dir("./pmc_bulk", workers=16)
+```
 
-Large-language-model performance lives or dies on **context quality** -- the snippets you retrieve and feed back into the model:
+### CLI Input Modes
 
-- **RAG pipelines** need precise, de-duplicated passages to ground answers.
-- **Knowledge-graph population** demands reliable section boundaries (e.g., Methods vs. Results) to classify triples accurately.
-- **Fine-tuning & few-shot prompting** work best with noise-free, domain-specific examples.
+| Mode             | Use it when                                                                       |
+| ---------------- | --------------------------------------------------------------------------------- |
+| `--pmcids`       | You already have PMC IDs. `7181753`, `PMC7181753`, and `pmc7181753` are accepted. |
+| `--pmids`        | You have PubMed IDs and want PMCGrab to resolve them to PMC IDs first.            |
+| `--dois`         | You have DOIs and want PMCGrab to resolve them to PMC IDs first.                  |
+| `--from-id-file` | You have a text file with one identifier per line.                                |
+| `--from-dir`     | You have a directory of local `.xml` files.                                       |
+| `--from-file`    | You want to parse specific local JATS XML files.                                  |
 
-PMCGrab _is_ a context-engineering tool: it converts messy XML into **clean, section-aware, UTF-8 JSON** that slots directly into embeddings, vector stores, or prompt templates. No preprocessing gymnastics, no guessing where the Methods section starts, no hallucinations from half-garbled text.
+### NCBI Service Helpers
 
-Better input --> better retrieval --> better answers.
+```python
+from pmcgrab import (
+    bioc_fetch,
+    citation_export,
+    id_convert,
+    normalize_id,
+    normalize_pmid,
+    oa_fetch,
+    oai_get_record,
+    oai_list_identifiers,
+    oai_list_records,
+    oai_list_sets,
+)
+```
 
----
-
-## Why PMCGrab Beats Home-Grown Scripts
-
-1. **Section-Aware Parsing**
-   Detects IMRaD plus custom subsections like _Statistical Analysis_ -- crucial for accurate retrieval scoring.
-
-2. **Resilient XML Cleaning**
-   Removes cross-refs and figure stubs without dropping scientific content, preserving token-level fidelity for embeddings.
-
-3. **True Concurrency**
-   `--workers` fans out across CPU cores; automatic email rotation and a token-bucket rate limiter respect NCBI limits so large harvests don't throttle.
-
-4. **Modern Python Stack**
-   Typed public interfaces, linted (`ruff`), CI-checked on Ubuntu, macOS, and Windows across Python 3.10-3.13.
-
-5. **Bulk XML Support**
-   Point at a directory of pre-downloaded JATS XML files and parse them locally -- orders of magnitude faster, no network required. Ideal for the [PMC FTP bulk export](https://ftp.ncbi.nlm.nih.gov/pub/pmc/).
-
----
+These are thin clients around NCBI and PMC services. They are useful when your
+pipeline needs identifier conversion, citation export, BioC JSON, Open Access
+metadata, or OAI-PMH harvesting.
 
 ## Configuration
 
-PMCGrab follows the [12-factor app](https://12factor.net/) methodology. All settings are configurable via environment variables:
+PMCGrab reads configuration from environment variables:
 
-| Variable             | Description                                             | Default            |
-| -------------------- | ------------------------------------------------------- | ------------------ |
-| `PMCGRAB_EMAILS`     | Comma-separated contact emails for NCBI Entrez requests | Maintainer contact |
-| `NCBI_API_KEY`       | NCBI API key -- enables 10 req/s instead of 3 req/s     | None               |
-| `PMCGRAB_TIMEOUT`    | Timeout in seconds for network operations               | `60`               |
-| `PMCGRAB_RETRIES`    | Number of retry attempts for Entrez API calls           | `3`                |
-| `PMCGRAB_SSL_VERIFY` | Verify TLS certificates for HTTP requests               | `true`             |
+| Variable             | Purpose                                           | Default            |
+| -------------------- | ------------------------------------------------- | ------------------ |
+| `PMCGRAB_EMAILS`     | Comma-separated contact emails for NCBI requests. | Maintainer contact |
+| `NCBI_API_KEY`       | Optional NCBI API key.                            | None               |
+| `PMCGRAB_TIMEOUT`    | Network timeout in seconds.                       | `60`               |
+| `PMCGRAB_RETRIES`    | Retry count for Entrez calls.                     | `3`                |
+| `PMCGRAB_SSL_VERIFY` | Whether to verify TLS certificates.               | `true`             |
 
-**Rate limiting** is enforced automatically across all threads via a token-bucket limiter:
-
-- **Without** an API key: 3 requests/second
-- **With** an API key: 10 requests/second
-
-For production or high-volume use, set your own email and API key:
+For serious network use, set your own contact email. NCBI asks clients to
+identify themselves.
 
 ```bash
-export PMCGRAB_EMAILS="you@university.edu,colleague@lab.org"
+export PMCGRAB_EMAILS="you@university.edu"
 export NCBI_API_KEY="your_ncbi_api_key_here"
 ```
 
----
+Without an NCBI API key, PMCGrab follows the lower public request limit. With an
+API key, NCBI allows a higher request rate.
 
-## Proof at a Glance
+## Bulk PMC XML
 
-| Signal                 | Value                                      |
-| ---------------------- | ------------------------------------------ |
-| Test suite             | Unit, CLI, local XML, and regression tests |
-| JSON contract          | Strict JSON output, no `NaN` literals      |
-| Local XML mode         | Parses pre-downloaded JATS without network |
-| CI platforms           | Ubuntu, macOS, Windows                     |
-| Python versions tested | 3.10, 3.11, 3.12, 3.13                     |
+For large jobs, local XML mode is usually the better path.
 
----
+Download PMC Open Access XML from:
 
-## Acknowledgments
+- PMC FTP: https://ftp.ncbi.nlm.nih.gov/pub/pmc/
+- PMC Open Access subset: https://pmc.ncbi.nlm.nih.gov/tools/openftlist/
 
-Special thanks to [@vanAmsterdam](https://github.com/vanAmsterdam) for [suggesting](https://github.com/rajdeepmondaldotcom/pmcgrab/issues) that PMCGrab support bulk-exported PMC data from disk. That idea led directly to the `--from-dir`, `--from-file`, and `Paper.from_local_xml()` features -- making local XML processing orders of magnitude faster than the network path. Community feedback like this makes PMCGrab better for everyone.
+Then parse from disk:
 
----
+```bash
+pmcgrab --from-dir ./pmc_xml --output-dir ./pmc_json --workers 16
+```
+
+This avoids repeated network calls and gives you a repeatable corpus build.
+
+## Testing
+
+Run the deterministic suite:
+
+```bash
+uv run pytest -q --no-cov
+```
+
+Run lint and format checks:
+
+```bash
+uv run ruff check .
+uv run ruff format --check .
+```
+
+Build and smoke-test the wheel:
+
+```bash
+uv build
+bash scripts/smoke-wheel-install.sh
+```
+
+Run the live NCBI end-to-end smoke test only when you want release confidence
+against the real service:
+
+```bash
+PMCGRAB_RUN_LIVE_E2E=1 uv run pytest tests/test_e2e.py -q --no-cov
+```
+
+The live test is opt-in because public services can fail for reasons that have
+nothing to do with this package.
+
+## Proof
+
+Current release checks cover:
+
+- public API imports and version metadata
+- CLI help, version, input modes, and output writing
+- local XML parsing for files and directories
+- malformed XML and regression cases
+- canonical JSON output without `NaN` literals
+- wheel build and clean install smoke checks
+- opt-in live NCBI fetch and parse smoke checks
+
+That is the bar: the README examples should be true, the CLI should work from an
+installed wheel, and the network path should be tested deliberately before a
+release.
 
 ## Contributing
 
-We welcome contributions. See [DEVELOPMENT.md](DEVELOPMENT.md) for setup instructions, testing, and CI details.
+Contributions are welcome when they make the parser more correct, the output
+contract clearer, or the package easier to use.
 
----
+Start with [DEVELOPMENT.md](DEVELOPMENT.md). Keep changes narrow. Add the test
+that would have failed before your change.
 
 ## License
 
-Apache 2.0 -- see [LICENSE](LICENSE) for details.
+Apache 2.0. See [LICENSE](LICENSE).
 
----
+## The Ask
 
-## Install Now & Ship Real Results
+If PMCGrab saves you from writing another one-off XML parser, star the repo.
 
-```bash
-uv add pmcgrab
-```
-
-Stop paying the **XML tax**. Start engineering context -- and building AI products that matter.
+If it breaks on a real PMC article, open an issue with the PMCID or XML shape.
+That is the fastest way to make the parser better for the next person.

@@ -5,36 +5,36 @@ If you use PMCGrab in your research, please cite it using the following formats:
 ## APA Style
 
 ```
-Mondal, R. (2025). PMCGrab: AI-ready retrieval and parsing of PubMed Central articles
-for RAG applications (Version 1.0.8) [Computer software].
+Mondal, R. (2026). PMCGrab: Structured PMC context for biomedical RAG
+(Version 1.0.9) [Computer software].
 https://github.com/rajdeepmondaldotcom/pmcgrab
 ```
 
 ## MLA Style
 
 ```
-Mondal, Rajdeep. "PMCGrab: AI-ready retrieval and parsing of PubMed Central articles
-for RAG applications." GitHub, version 1.0.8, 2025,
+Mondal, Rajdeep. "PMCGrab: Structured PMC context for biomedical RAG."
+GitHub, version 1.0.9, 2026,
 https://github.com/rajdeepmondaldotcom/pmcgrab
 ```
 
 ## Chicago Style
 
 ```
-Mondal, Rajdeep. "PMCGrab: AI-ready retrieval and parsing of PubMed Central articles
-for RAG applications." Version 1.0.8. Computer software. GitHub, 2025.
+Mondal, Rajdeep. "PMCGrab: Structured PMC context for biomedical RAG."
+Version 1.0.9. Computer software. GitHub, 2026.
 https://github.com/rajdeepmondaldotcom/pmcgrab
 ```
 
 ## BibTeX
 
 ```bibtex
-@software{mondal_pmcgrab_2025,
+@software{mondal_pmcgrab_2026,
   author = {Mondal, Rajdeep},
-  title = {PMCGrab: AI-ready retrieval and parsing of PubMed Central articles for RAG applications},
+  title = {PMCGrab: Structured PMC context for biomedical RAG},
   url = {https://github.com/rajdeepmondaldotcom/pmcgrab},
-  version = {1.0.8},
-  year = {2025}
+  version = {1.0.9},
+  year = {2026}
 }
 ```
 
@@ -62,7 +62,7 @@ Citing software in academic work:
 
 When citing PMCGrab, please include:
 
-- **Version number** (e.g., 1.0.8)
+- **Version number** (e.g., 1.0.9)
 - **Date accessed** if using the latest development version
 - **Specific commit hash** if using a development version
 - **DOI** if available for the specific version

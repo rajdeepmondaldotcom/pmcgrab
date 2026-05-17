@@ -4,8 +4,8 @@ build-backend = "hatchling.build"
 
 [project]
 name = "pmcgrab"
-version = "1.0.8"
-description = "AI-ready retrieval and parsing of PubMed Central articles for RAG applications. Install with uv for best performance."
+version = "1.0.9"
+description = "Structured PMC context for biomedical RAG. Parse PubMed Central and JATS XML into clean, section-aware JSON."
 readme = "README.md"
 license = "Apache-2.0"
 authors = [
@@ -29,12 +29,17 @@ dependencies = [
 ]
 keywords = [
     "pubmed",
+    "pubmed-central",
     "pmc",
+    "jats",
+    "jats-xml",
     "text mining",
     "rag",
     "bioinformatics",
+    "biomedical-nlp",
     "scientific literature",
     "xml parsing",
+    "xml-parser",
     "research papers",
     "llm",
     "ai",
@@ -42,8 +47,7 @@ keywords = [
     "ncbi",
     "entrez",
     "uv",
-    "fast",
-    "modern"
+    "open-science",
 ]
 classifiers = [
     "Development Status :: 4 - Beta",
@@ -67,8 +71,8 @@ classifiers = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/rajdeepmondaldotcom/pmcgrab"
-Documentation = "https://github.com/rajdeepmondaldotcom/pmcgrab#readme"
+Homepage = "https://rajdeepmondaldotcom.github.io/pmcgrab/"
+Documentation = "https://rajdeepmondaldotcom.github.io/pmcgrab/"
 Repository = "https://github.com/rajdeepmondaldotcom/pmcgrab.git"
 Issues = "https://github.com/rajdeepmondaldotcom/pmcgrab/issues"
 Changelog = "https://github.com/rajdeepmondaldotcom/pmcgrab/releases"
@@ -141,6 +145,7 @@ packages = ["src/pmcgrab"]
 include = [
     "src/pmcgrab",
     "tests",
+    "scripts/smoke-wheel-install.sh",
     "README.md",
     "LICENSE",
 ]
@@ -236,6 +241,7 @@ python_classes = ["Test*"]
 python_functions = ["test_*"]
 markers = [
     "slow: marks tests as slow (deselect with '-m \"not slow\"')",
+    "e2e: marks end-to-end tests that exercise public workflows",
     "integration: marks tests as integration tests",
     "unit: marks tests as unit tests",
 ]

@@ -6,102 +6,74 @@ hide:
   - toc
 ---
 
-<!-- Navigation Cards -->
+## Test the core path
+
+```bash
+uv add pmcgrab
+```
+
+```python
+from pmcgrab import process_single_pmc
+
+article = process_single_pmc("7181753")
+
+print(article["title"]["main"])
+print([section["title"] for section in article["content"]["sections"]])
+```
+
+PMCGrab turns a PMC ID or local JATS XML file into structured article data you
+can store, chunk, embed, inspect, or pass to the next system.
+
+## Why it exists
+
+Biomedical RAG fails quietly when the context is messy.
+
+If retrieval cannot tell Methods from Discussion, the model gets the wrong
+evidence with confidence. If a parser drops captions, identifiers, or licensing
+metadata, the downstream system inherits that loss and calls it data.
+
+PMCGrab is a narrow tool for one boundary: PMC and JATS article sources in,
+section-aware Python objects and JSON out.
+
+## Choose your path
+
 <div class="grid cards" markdown>
 
-- [:material-rocket-launch: **Complete Beginner Guide**](getting-started/complete-beginner-guide.md)
-  Start from absolute zero. Install uv, PMCGrab, and process your first papers.
+- [:material-rocket-launch: **Start from zero**](getting-started/complete-beginner-guide.md)
+  Install PMCGrab, fetch your first article, and inspect the JSON shape.
 
-- [:material-notebook-outline: **Interactive Tutorial**](getting-started/jupyter-tutorial.md)
-  Hands-on Jupyter notebook with real data and AI/ML examples.
+- [:material-timer-sand-complete: **Move fast**](getting-started/quick-start.md)
+  Use the shortest path if you already know Python packaging and PMC IDs.
 
-- [:material-timer-sand-complete: **Quick Start**](getting-started/quick-start.md)
-  5-minute setup for experienced users.
+- [:material-console-line: **Use the CLI**](user-guide/cli.md)
+  Turn PMC IDs, PMIDs, DOIs, ID files, or local XML files into JSON output.
 
-- [:material-book-open-variant: **User Guide**](user-guide/basic-usage.md)
-  Comprehensive guides covering every feature.
+- [:material-database-arrow-down: **Process bulk XML**](user-guide/batch-processing.md)
+  Parse pre-downloaded PMC/JATS XML from disk without repeated network calls.
 
-- [:material-code-tags: **API Reference**](api/core.md)
-  Auto-generated docs for every function and class.
+- [:material-code-tags: **Read the API**](api/core.md)
+  Use `Paper`, `process_single_pmc`, and local XML helpers directly.
 
-- [:material-lightbulb-outline: **Examples**](examples/python-examples.md)
-  Real-world usage and advanced patterns.
+- [:material-test-tube: **Check the contract**](user-guide/output-format.md)
+  Understand the normalized JSON groups before wiring a pipeline around them.
 
 </div>
 
-## PMCGrab - From PubMed Central ID to AI-Ready JSON in Seconds
+## What you get
 
-Every AI workflow that touches biomedical literature hits the same wall:
+- Section-aware article JSON with abstracts, body sections, identifiers,
+  provenance, metadata, figures, tables, citations, equations, permissions, and
+  funding.
+- Two ingestion paths: fetch by PMC ID from NCBI, or parse local JATS XML from
+  a repeatable corpus build.
+- A Python API and CLI that share the same output contract.
+- Release checks built around real use: local XML E2E, opt-in live NCBI E2E,
+  wheel smoke install, CLI tests, parser regressions, and JSON serialization.
 
-1. **Download** PMC XML hoping it’s “structured.”
-2. **Fight** nested tags, footnotes, figure refs, and half-broken links.
-3. **Hope** your regex didn’t blow away the Methods section you actually need.
+## What it is not
 
-**PMCGrab ends this cycle.** Feed the tool a list of PMC IDs and get back clean, section-aware JSON ready for embeddings, vector stores, or prompt templates.
+PMCGrab is not a PDF parser, paywalled full-text scraper, clinical tool, or
+general web crawler.
 
----
-
-## Example Usage
-
-```python
-from pmcgrab.application.processing import process_single_pmc
-
-# Process a PMC article
-data = process_single_pmc("7114487")
-
-if data:
-    print(f"Title: {data['title']['main']}")
-    print(f"Authors: {len(data['contributors']['authors'])}")
-    print(f"Sections: {[section['title'] for section in data['content']['sections']]}")
-```
-
-## Example Output
-
-```json
-{
-  "schema_version": 2,
-  "identifiers": {
-    "pmc_id": "7114487",
-    "pmcid": "PMC7114487",
-    "doi": "10.1038/s41591-023-02345-6"
-  },
-  "title": {
-    "main": "Machine learning approaches in cancer research",
-    "subtitle": "",
-    "translated": []
-  },
-  "contributors": {
-    "authors": [
-      {
-        "First_Name": "John",
-        "Last_Name": "Doe",
-        "Affiliation": "Cancer Research Institute"
-      }
-    ]
-  },
-  "publication": {
-    "journal": {
-      "title": "Nature Medicine"
-    }
-  },
-  "content": {
-    "abstract": [
-      {
-        "title": "Abstract",
-        "blocks": [
-          {
-            "type": "paragraph",
-            "text": "Recent advances in machine learning have revolutionized..."
-          }
-        ]
-      }
-    ],
-    "sections": [...]
-  },
-  "assets": {
-    "figures": [...],
-    "tables": [...],
-    "citations": [...]
-  }
-}
-```
+It is infrastructure for biomedical literature context. Small scope, clear
+boundary, useful output.

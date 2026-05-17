@@ -1,16 +1,14 @@
-"""PMCGrab: AI-ready retrieval and parsing of PubMed Central articles.
+"""PMCGrab: structured PMC context for biomedical RAG.
 
-PMCGrab is a specialized Python toolkit for retrieving, validating and
-restructuring PubMed Central (PMC) articles into clean, section-aware JSON
-that large-language-model (LLM) pipelines can ingest directly for
-Retrieval-Augmented Generation (RAG), question-answering, summarization
-and other downstream tasks.
+PMCGrab retrieves PubMed Central (PMC) articles and parses local JATS XML into
+clean, section-aware Python objects and JSON for biomedical RAG, search,
+literature review, corpus, and knowledge-graph pipelines.
 
 Key Features:
-    * **Effortless Retrieval**: Fetch full-text articles with a single PMCID using NCBI Entrez
-    * **AI-Optimized JSON**: Output is pre-segmented into Introduction, Methods, Results, Discussion, etc.
-    * **Highly Concurrent**: Multithreaded batch downloader with configurable worker count, retries and timeouts
-    * **HTML & Reference Cleaning**: Utilities to strip or normalize embedded HTML, citations and footnotes
+    * **PMC Retrieval**: Fetch full-text articles with a single PMCID using NCBI Entrez
+    * **Local JATS XML**: Parse pre-downloaded PMC XML without network calls
+    * **Section-Aware JSON**: Preserve abstracts, body sections, metadata, and provenance
+    * **Batch Processing**: Process article IDs or local XML files with configurable workers
 
 Examples:
     Basic usage for retrieving a single paper:
@@ -53,7 +51,7 @@ External Service Functions:
     oai_list_sets: List OAI-PMH sets
 """
 
-__version__ = "1.0.8"
+__version__ = "1.0.9"
 
 from pmcgrab.application.processing import (
     process_local_xml_dir,

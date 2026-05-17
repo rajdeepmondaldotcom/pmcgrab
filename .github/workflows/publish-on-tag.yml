@@ -37,14 +37,7 @@ jobs:
         run: uv build
 
       - name: Smoke test built wheel
-        run: |
-          python -m venv .venv-smoke
-          . .venv-smoke/bin/activate
-          python -m pip install --upgrade pip
-          python -m pip install dist/*.whl
-          python -c "import pmcgrab; print(pmcgrab.__version__)"
-          python -m pmcgrab --help
-          python -m pmcgrab --version
+        run: bash scripts/smoke-wheel-install.sh
 
       - name: Publish to PyPI
         env:

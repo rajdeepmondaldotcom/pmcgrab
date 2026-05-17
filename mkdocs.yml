@@ -1,5 +1,5 @@
 site_name: PMCGrab
-site_description: AI-ready retrieval and parsing of PubMed Central articles for RAG applications
+site_description: Structured PMC context for biomedical RAG. Parse PubMed Central and JATS XML into clean, section-aware JSON.
 site_url: https://rajdeepmondaldotcom.github.io/pmcgrab/
 repo_url: https://github.com/rajdeepmondaldotcom/pmcgrab
 repo_name: rajdeepmondaldotcom/pmcgrab
