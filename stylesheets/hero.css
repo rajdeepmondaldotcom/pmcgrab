@@ -1,149 +1,189 @@
-/* Hero section styling matching Material demo */
+/* PMCGrab home hero. Quiet infrastructure styling, not a marketing splash. */
 .mdx-hero {
-  display: flex;
-  flex-wrap: wrap;
+  display: grid;
+  grid-template-columns: minmax(0, 1.12fr) minmax(280px, 0.88fr);
   align-items: center;
   gap: 3rem;
-  margin: 4rem 0;
-  padding: 4rem 3rem;
-  border-radius: 20px;
-  background: linear-gradient(135deg, #1a237e 0%, #283593 50%, #3949ab 100%);
-  color: white;
-  box-shadow: 0 8px 32px rgba(26, 35, 126, 0.4);
-  position: relative;
-  overflow: hidden;
-}
-
-.mdx-hero::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.05'%3E%3Ccircle cx='30' cy='30' r='4'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
-  pointer-events: none;
+  margin: 3rem 0 2rem;
+  padding: 3rem;
+  border: 1px solid rgba(19, 47, 76, 0.14);
+  border-radius: 12px;
+  background: #f8fbfc;
+  color: #132f4c;
+  box-shadow: 0 16px 40px rgba(19, 47, 76, 0.08);
 }
 
 .mdx-hero__content {
-  flex: 1 1 350px;
-  min-width: 300px;
-  z-index: 1;
-  position: relative;
+  min-width: 0;
 }
 
 .mdx-hero__image {
-  flex: 1 1 350px;
-  min-width: 300px;
+  min-width: 0;
   text-align: center;
-  z-index: 1;
-  position: relative;
 }
 
 .mdx-hero__image img {
-  max-width: 100%;
+  max-width: min(100%, 420px);
   height: auto;
-  filter: drop-shadow(0 4px 12px rgba(0, 0, 0, 0.2));
+  filter: drop-shadow(0 12px 24px rgba(19, 47, 76, 0.12));
+}
+
+.mdx-hero__eyebrow {
+  margin: 0 0 0.8rem;
+  color: #177e89;
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0;
+  text-transform: uppercase;
 }
 
 .mdx-hero__title {
-  font-size: 3.5rem;
-  font-weight: 800;
-  margin: 0 0 1.5rem;
-  color: white;
-  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  line-height: 1.1;
+  max-width: 12ch;
+  margin: 0 0 1rem;
+  color: #132f4c;
+  font-size: 3rem;
+  font-weight: 760;
+  letter-spacing: 0;
+  line-height: 1.02;
 }
 
 .mdx-hero__subtitle {
-  font-size: 1.3rem;
-  margin: 0 0 2.5rem;
-  opacity: 0.95;
-  color: white;
-  line-height: 1.5;
+  max-width: 42rem;
+  margin: 0 0 1.4rem;
+  color: #3d5365;
+  font-size: 1.1rem;
   font-weight: 400;
+  line-height: 1.6;
+}
+
+.mdx-hero__proof {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.55rem;
+  margin: 0 0 1.7rem;
+}
+
+.mdx-hero__proof span {
+  display: inline-flex;
+  align-items: center;
+  min-height: 2rem;
+  padding: 0.35rem 0.65rem;
+  border: 1px solid rgba(23, 126, 137, 0.24);
+  border-radius: 6px;
+  background: rgba(23, 126, 137, 0.08);
+  color: #174f57;
+  font-size: 0.78rem;
+  font-weight: 650;
 }
 
 .mdx-hero__buttons {
   display: flex;
-  gap: 1rem;
   flex-wrap: wrap;
+  gap: 0.75rem;
+  margin: 0;
 }
 
 .mdx-hero__buttons .md-button {
-  font-size: 1rem;
-  padding: 0.75rem 2rem;
-  border-radius: 8px;
-  font-weight: 600;
+  border-radius: 6px;
+  font-weight: 700;
+  letter-spacing: 0;
   text-transform: none;
-  transition: all 0.2s ease;
-  border: 2px solid transparent;
 }
 
 .mdx-hero__buttons .md-button--primary {
-  background-color: white;
-  color: #1a237e;
-  border-color: white;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  background-color: #177e89;
+  border-color: #177e89;
+  color: #ffffff;
 }
 
 .mdx-hero__buttons .md-button--primary:hover {
-  background-color: #f8f9fa;
-  transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
+  background-color: #126873;
+  border-color: #126873;
 }
 
 .mdx-hero__buttons .md-button:not(.md-button--primary) {
-  background-color: transparent;
-  color: white;
-  border-color: rgba(255, 255, 255, 0.5);
+  border-color: rgba(19, 47, 76, 0.24);
+  color: #132f4c;
 }
 
 .mdx-hero__buttons .md-button:not(.md-button--primary):hover {
-  background-color: rgba(255, 255, 255, 0.1);
-  border-color: white;
-  transform: translateY(-2px);
+  border-color: #177e89;
+  color: #126873;
 }
 
-/* Enhanced card grid styling */
 .grid.cards {
-  margin-top: 3rem;
+  margin-top: 2rem;
 }
 
 .grid.cards > .card {
-  transition: all 0.3s ease;
-  border: 1px solid rgba(0, 0, 0, 0.08);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  border: 1px solid rgba(19, 47, 76, 0.1);
+  border-radius: 8px;
+  box-shadow: 0 8px 22px rgba(19, 47, 76, 0.06);
+  transition:
+    border-color 0.18s ease,
+    box-shadow 0.18s ease,
+    transform 0.18s ease;
 }
 
 .grid.cards > .card:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
-  border-color: rgba(26, 35, 126, 0.3);
+  border-color: rgba(23, 126, 137, 0.36);
+  box-shadow: 0 14px 30px rgba(19, 47, 76, 0.1);
+  transform: translateY(-2px);
 }
 
-/* Responsive adjustments */
-@media screen and (max-width: 768px) {
+@media screen and (max-width: 900px) {
   .mdx-hero {
-    margin: 2rem 0;
-    padding: 3rem 2rem;
-    gap: 2rem;
+    grid-template-columns: 1fr;
+    padding: 2.25rem;
   }
 
   .mdx-hero__title {
-    font-size: 2.5rem;
+    max-width: 13ch;
+    font-size: 2.35rem;
+  }
+}
+
+@media screen and (max-width: 520px) {
+  .mdx-hero {
+    margin: 1.5rem 0;
+    padding: 1.5rem;
   }
 
-  .mdx-hero__subtitle {
-    font-size: 1.1rem;
+  .mdx-hero__title {
+    font-size: 2rem;
   }
 
   .mdx-hero__buttons {
     flex-direction: column;
-    align-items: stretch;
   }
 
   .mdx-hero__buttons .md-button {
     text-align: center;
   }
+}
+
+[data-md-color-scheme="slate"] .mdx-hero {
+  border-color: rgba(165, 214, 217, 0.16);
+  background: #111827;
+  color: #e7eef5;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.25);
+}
+
+[data-md-color-scheme="slate"] .mdx-hero__title {
+  color: #f5fbff;
+}
+
+[data-md-color-scheme="slate"] .mdx-hero__subtitle {
+  color: #bfd1dd;
+}
+
+[data-md-color-scheme="slate"] .mdx-hero__proof span {
+  border-color: rgba(125, 211, 217, 0.24);
+  background: rgba(125, 211, 217, 0.1);
+  color: #c6f2f4;
+}
+
+[data-md-color-scheme="slate"] .mdx-hero__buttons .md-button:not(.md-button--primary) {
+  border-color: rgba(231, 238, 245, 0.26);
+  color: #e7eef5;
 }
