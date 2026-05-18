@@ -65,10 +65,10 @@ class TestPaper:
         assert paper_with_data.has_data  # Has data now
 
     def test_empty_paper_to_dict(self):
-        """Test empty Paper serialization uses the v2 envelope."""
+        """Test empty Paper serialization uses the V4 envelope by default."""
         data = Paper({}).to_dict()
 
-        assert data["schema_version"] == 2
+        assert data["schema_version"] == 4
         assert data["has_data"] is False
         assert data["content"]["sections"] == []
         assert data["assets"]["tables"] == []

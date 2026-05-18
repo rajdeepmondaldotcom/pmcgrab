@@ -23,13 +23,13 @@ def process_with_filtering(pmcids, output_dir="filtered_output"):
         if not data:
             continue
 
-        abstract_blocks = data["content"]["abstract"][0]["blocks"]
+        abstract_blocks = data["content"]["abstracts"][0]["blocks"]
         abstract_text = abstract_blocks[0]["text"] if abstract_blocks else ""
         if len(abstract_text) < 500:
             print(f"Skipping PMC{pmcid}: abstract too short")
             continue
 
-        output_file = output_path / f"PMC{data['identifiers']['pmc_id']}.json"
+        output_file = output_path / f"PMC{data['article']['identifiers']['pmc_id']}.json"
         output_file.write_text(
             json.dumps(data, indent=2, ensure_ascii=False),
             encoding="utf-8",
@@ -61,15 +61,15 @@ def create_papers_dataframe(pmcids):
 
         rows.append(
             {
-                "pmcid": data["identifiers"]["pmc_id"],
-                "title": data["title"]["main"],
-                "journal": data["publication"]["journal"]["title"],
-                "published_date": data["publication"]["dates"]["published"],
-                "doi": data["identifiers"]["doi"],
-                "author_count": len(data["contributors"]["authors"]),
+                "pmcid": data["article"]["identifiers"]["pmc_id"],
+                "title": data["article"]["title"]["main"],
+                "journal": data["article"]["publication"]["journal"]["title"],
+                "published_date": data["article"]["publication"]["dates"]["published"],
+                "doi": data["article"]["identifiers"]["doi"],
+                "author_count": len(data["article"]["contributors"]["authors"]),
                 "abstract_length": sum(
                     len(block["text"])
-                    for section in data["content"]["abstract"]
+                    for section in data["content"]["abstracts"]
                     for block in section["blocks"]
                     if block["type"] == "paragraph"
                 ),

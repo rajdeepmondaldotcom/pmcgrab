@@ -41,7 +41,7 @@ email = next_email()
 data = process_single_pmc("7114487")
 
 if data:
-    print(f"Title: {data['title']['main']}")
-    print(f"Authors: {len(data['contributors']['authors'])}")
+    print(f"Title: {data['article']['title']['main']}")
+    print(f"Authors: {len(data['article']['contributors']['authors'])}")
     print(f"Sections: {[section['title'] for section in data['content']['sections']]}")
 ```

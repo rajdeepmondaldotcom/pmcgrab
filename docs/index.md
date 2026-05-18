@@ -6,7 +6,7 @@ hide:
   - toc
 ---
 
-## Test the core path
+## A PMC ID in. Clean article JSON out.
 
 ```bash
 uv add pmcgrab
@@ -17,23 +17,24 @@ from pmcgrab import process_single_pmc
 
 article = process_single_pmc("7181753")
 
-print(article["title"]["main"])
+print(article["article"]["title"]["main"])
 print([section["title"] for section in article["content"]["sections"]])
 ```
 
-PMCGrab turns a PMC ID or local JATS XML file into structured article data you
-can store, chunk, embed, inspect, or pass to the next system.
+PMCGrab turns a PMC ID or local JATS XML file into loss-aware article data you
+can store, chunk, embed, inspect, audit, or pass to the next system.
 
 ## Why it exists
 
-Biomedical RAG fails quietly when the context is messy.
+Biomedical AI fails quietly when the context layer is messy.
 
 If retrieval cannot tell Methods from Discussion, the model gets the wrong
-evidence with confidence. If a parser drops captions, identifiers, or licensing
-metadata, the downstream system inherits that loss and calls it data.
+evidence with confidence. If a parser drops captions, identifiers, equations,
+supplements, or licensing metadata, the downstream system inherits that loss and
+still calls it data.
 
 PMCGrab is a narrow tool for one boundary: PMC and JATS article sources in,
-section-aware Python objects and JSON out.
+clean Python objects and JSON out.
 
 ## Choose your path
 
@@ -61,9 +62,13 @@ section-aware Python objects and JSON out.
 
 ## What you get
 
-- Section-aware article JSON with abstracts, body sections, identifiers,
-  provenance, metadata, figures, tables, citations, equations, permissions, and
-  funding.
+- Schema V4 JSON with article metadata, contributors, content, assets,
+  relations, quality, and provenance.
+- Loss-aware body and abstract parsing for paragraphs, nested sections, lists,
+  definition lists, boxed text, formulas, figures, tables, supplements, and
+  unknown JATS blocks.
+- No raw XML payloads in output JSON; traceability lives in structured `source`
+  metadata.
 - Two ingestion paths: fetch by PMC ID from NCBI, or parse local JATS XML from
   a repeatable corpus build.
 - A Python API and CLI that share the same output contract.

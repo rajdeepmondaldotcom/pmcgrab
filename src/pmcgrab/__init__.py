@@ -1,13 +1,14 @@
-"""PMCGrab: structured PMC context for biomedical RAG.
+"""PMCGrab: clean, loss-aware article JSON from PMC and JATS XML.
 
 PMCGrab retrieves PubMed Central (PMC) articles and parses local JATS XML into
 clean, section-aware Python objects and JSON for biomedical RAG, search,
-literature review, corpus, and knowledge-graph pipelines.
+literature review, corpus, text-mining, and knowledge-graph pipelines.
 
 Key Features:
     * **PMC Retrieval**: Fetch full-text articles with a single PMCID using NCBI Entrez
     * **Local JATS XML**: Parse pre-downloaded PMC XML without network calls
-    * **Section-Aware JSON**: Preserve abstracts, body sections, metadata, and provenance
+    * **Loss-Aware JSON**: Preserve content blocks, assets, relations, quality, and provenance
+    * **No Raw XML Output**: Keep clean JSON with source metadata for traceability
     * **Batch Processing**: Process article IDs or local XML files with configurable workers
 
 Examples:
@@ -51,10 +52,12 @@ External Service Functions:
     oai_list_sets: List OAI-PMH sets
 """
 
-__version__ = "1.0.9"
+__version__ = "1.0.10"
 
 from pmcgrab.application.processing import (
+    async_process_pmc_ids,
     process_local_xml_dir,
+    process_pmc_ids,
     process_single_local_xml,
     process_single_pmc,
 )
@@ -87,6 +90,7 @@ from pmcgrab.processing import (
 
 __all__ = [
     "Paper",
+    "async_process_pmc_ids",
     "bioc_fetch",
     "build_complete_paper_dict",
     "citation_export",
@@ -108,6 +112,7 @@ __all__ = [
     "process_in_batches",
     "process_in_batches_with_retry",
     "process_local_xml_dir",
+    "process_pmc_ids",
     "process_pmc_ids_in_batches",
     "process_single_local_xml",
     "process_single_pmc",

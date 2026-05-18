@@ -92,11 +92,11 @@ def test_cli_local_xml_e2e_writes_json_and_summary(tmp_path: Path) -> None:
 
     assert "NaN" not in raw_output
     assert summary == {"PMC7181753": True}
-    assert data["schema_version"] == 2
+    assert data["schema_version"] == 4
     assert data["has_data"] is True
-    assert data["identifiers"]["pmcid"] == "PMC7181753"
-    assert data["identifiers"]["doi"] == "10.1234/pmcgrab.e2e"
-    assert data["title"]["main"] == "PMCGrab Local E2E Article"
+    assert data["article"]["identifiers"]["pmcid"] == "PMC7181753"
+    assert data["article"]["identifiers"]["doi"] == "10.1234/pmcgrab.e2e"
+    assert data["article"]["title"]["main"] == "PMCGrab Local E2E Article"
     assert data["provenance"]["source"] == "local_xml"
     assert data["provenance"]["pmcgrab_version"] == pmcgrab.__version__
     assert [section["title"] for section in data["content"]["sections"]] == [
@@ -117,10 +117,10 @@ def test_live_ncbi_process_single_pmc_e2e() -> None:
     data = process_single_pmc("7181753", timeout=90)
 
     assert data is not None
-    assert data["schema_version"] == 2
+    assert data["schema_version"] == 4
     assert data["has_data"] is True
-    assert data["identifiers"]["pmcid"] == "PMC7181753"
-    assert data["title"]["main"].startswith("Single-cell transcriptomes")
+    assert data["article"]["identifiers"]["pmcid"] == "PMC7181753"
+    assert data["article"]["title"]["main"].startswith("Single-cell transcriptomes")
     assert data["provenance"]["source"] == "ncbi_entrez"
     assert data["provenance"]["pmcgrab_version"] == pmcgrab.__version__
     assert len(data["content"]["sections"]) >= 1

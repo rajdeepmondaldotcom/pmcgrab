@@ -6,18 +6,19 @@
 [![CI](https://github.com/rajdeepmondaldotcom/pmcgrab/workflows/CI/badge.svg)](https://github.com/rajdeepmondaldotcom/pmcgrab/actions)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://github.com/rajdeepmondaldotcom/pmcgrab/blob/main/LICENSE)
 
-Structured PMC context for biomedical RAG.
+**A PMC ID in. Clean, loss-aware article JSON out.**
 
-PMCGrab turns PubMed Central and JATS XML into clean, section-aware JSON. It is
-for developers and researchers building biomedical RAG, search, literature
-review, corpus, and knowledge-graph pipelines.
+PMCGrab turns PubMed Central articles and JATS XML into structured JSON for
+biomedical AI systems. It is built for developers and researchers who need
+reliable article context for RAG, search, literature review, corpus builds, text
+mining, and knowledge graphs.
 
-Raw PMC XML is not a context layer. It is source material. Useful source
-material, but still full of nested tags, figure links, reference maps, section
-trees, footnotes, licensing metadata, and edge cases that make a one-off parser
-age badly.
+Raw PMC XML is not a product interface. It is source material: nested sections,
+reference maps, captions, formulas, tables, figure links, author metadata,
+licenses, supplements, footnotes, and publisher-specific edge cases. One-off XML
+parsers usually work until they quietly drop the field you needed.
 
-PMCGrab gives you a cleaner boundary:
+PMCGrab gives you a clean boundary:
 
 ```bash
 uv add pmcgrab
@@ -28,22 +29,23 @@ from pmcgrab import process_single_pmc
 
 article = process_single_pmc("7181753")
 
-print(article["title"]["main"])
+print(article["article"]["title"]["main"])
 print([section["title"] for section in article["content"]["sections"]])
 ```
 
-Decision: give PMCGrab a PMC ID or a local JATS XML file. Get back structured
-article data you can inspect, store, chunk, embed, or pass to the next system.
+Give PMCGrab a PMC ID or a local JATS XML file. Get back article data you can
+inspect, store, chunk, embed, audit, or pass to the next system.
 
-## Why This Matters
+## Why It Exists
 
-Biomedical RAG fails quietly when the context is messy.
+Biomedical AI fails quietly when the context layer is messy.
 
-If the retrieval layer cannot tell Methods from Discussion, the model gets the
-wrong evidence with confidence. If a parser drops captions, identifiers, or
-permissions, the downstream system inherits that loss and calls it data.
+If retrieval cannot tell Methods from Discussion, the model gets the wrong
+evidence with confidence. If a parser drops captions, identifiers, equations,
+supplements, or permissions, every downstream system inherits that loss and
+still calls it data.
 
-The bottleneck is not another prompt. It is clean context.
+The bottleneck is not another prompt. It is clean, complete context.
 
 PMCGrab is a small piece of infrastructure for that job. It does not try to be a
 literature review product. It does not parse every document on the internet. It
@@ -51,17 +53,41 @@ does one thing: turn PMC article sources into usable Python objects and JSON.
 
 ## What You Get
 
-- **Section-aware article JSON** with abstracts, body sections, nested blocks,
-  identifiers, provenance, and metadata.
+- **Schema V4 JSON by default** with article metadata, contributors, content,
+  assets, relations, quality, and provenance.
+- **Loss-aware content parsing** for paragraphs, nested sections, lists,
+  definition lists, boxed text, formulas, tables, figures, supplements, and
+  unknown JATS blocks.
+- **No raw XML in output JSON**. Source traceability is preserved through clean
+  `source` metadata: JATS tag, attributes, path, and ordinal.
 - **Two ingestion paths**: fetch by PMC ID from NCBI, or parse bulk-downloaded
   JATS XML from disk.
 - **A practical Python API** for notebooks, scripts, ingestion workers, and
   corpus build jobs.
 - **A CLI path** for turning lists of article IDs or local XML files into JSON
   files.
-- **Release checks that match real use**: deterministic local XML E2E, opt-in
-  live NCBI E2E, wheel smoke install, CLI tests, parser regressions, and JSON
-  serialization checks.
+- **Release checks that match real use**: deterministic local XML tests, parser
+  regressions, CLI tests, JSON serialization checks, docs build, package build,
+  wheel smoke install, and opt-in live NCBI E2E.
+
+## Current Verification
+
+Last local verification: **2026-05-18**.
+
+| Check                                                                | Result                                     |
+| -------------------------------------------------------------------- | ------------------------------------------ |
+| `uv run ruff check .`                                                | passed                                     |
+| `uv run mypy src/pmcgrab`                                            | passed, no type issues                     |
+| `uv run pytest -q --no-cov`                                          | `200 passed, 1 skipped`                    |
+| `PMCGRAB_RUN_LIVE_E2E=1 uv run pytest tests/test_e2e.py -q --no-cov` | `2 passed`                                 |
+| `uv build`                                                           | built sdist and wheel for `pmcgrab-1.0.10` |
+| `uv run twine check dist/*`                                          | passed                                     |
+| `uv run mkdocs build`                                                | docs built successfully                    |
+| `bash scripts/smoke-wheel-install.sh`                                | built wheel imports successfully           |
+
+The skipped test is the opt-in live NCBI E2E check. Run it explicitly with
+`PMCGRAB_RUN_LIVE_E2E=1` when you want release confidence against the real
+service.
 
 ## Install
 
@@ -99,8 +125,8 @@ from pmcgrab import process_single_pmc
 article = process_single_pmc("7181753")
 
 if article:
-    print(article["identifiers"]["pmcid"])
-    print(article["title"]["main"])
+    print(article["article"]["identifiers"]["pmcid"])
+    print(article["article"]["title"]["main"])
     print(article["content"]["sections"][0]["title"])
 ```
 
@@ -158,26 +184,36 @@ groups:
 
 ```json
 {
-  "schema_version": 2,
+  "schema_version": 4,
   "has_data": true,
-  "identifiers": {
-    "pmc_id": "7181753",
-    "pmcid": "PMC7181753",
-    "pmid": "32327715",
-    "doi": "10.1038/s42003-020-0922-4"
-  },
-  "title": {
-    "main": "Single-cell transcriptomes of the human skin reveal age-related loss of fibroblast priming"
-  },
-  "publication": {
-    "journal": {
-      "title": "Communications Biology"
+  "article": {
+    "identifiers": {
+      "pmc_id": "7181753",
+      "pmcid": "PMC7181753",
+      "pmid": "32327715",
+      "doi": "10.1038/s42003-020-0922-4"
+    },
+    "title": {
+      "main": "Single-cell transcriptomes of the human skin reveal age-related loss of fibroblast priming"
+    },
+    "publication": {
+      "journal": {
+        "title": "Communications Biology"
+      }
+    },
+    "metadata": {
+      "keyword_groups": []
     }
   },
+  "contributors": {
+    "people": [],
+    "affiliations": []
+  },
   "content": {
-    "abstract": [
+    "abstracts": [
       {
         "title": "Abstract",
+        "kind": "primary",
         "blocks": [
           {
             "type": "paragraph",
@@ -201,31 +237,101 @@ groups:
     ]
   },
   "assets": {
-    "citations": [],
+    "references": [],
     "tables": [],
     "figures": [],
     "equations": {
+      "records": [],
       "mathml": [],
       "tex": []
     }
   },
-  "compliance": {
-    "permissions": {},
-    "funding": []
-  },
-  "metadata": {
-    "keywords": []
+  "relations": [],
+  "quality": {
+    "status": "complete",
+    "diagnostics": [],
+    "coverage": {
+      "unrepresented_text_count": 0,
+      "generic_fallback_count": 0
+    }
   },
   "provenance": {
-    "pmcgrab_version": "1.0.9",
+    "pmcgrab_version": "1.0.10",
     "source": "ncbi_entrez"
   }
 }
 ```
 
-Text lives under `content`. Metadata lives under named groups. The JSON writer
-uses `allow_nan=False`, so invalid JSON values do not quietly leak into output
-files.
+Text lives under `content`, article metadata lives under `article`, contributors
+live under `contributors`, cross-reference and affiliation links live under
+`relations`, and parse diagnostics live under `quality`. Pass
+`schema_version=2` or `schema_version=3` to `process_single_pmc()`,
+`process_single_local_xml()`, or `Paper.to_dict()` when you need an older
+shape. V4 preserves source traceability through structured `source` metadata,
+not raw XML payloads. Body content uses typed records for paragraphs, lists,
+definition lists, boxed text, formulas, figures, tables, and supplements;
+unsupported JATS blocks become `unknown_block` records instead of disappearing.
+The JSON writer uses `allow_nan=False`, so invalid JSON values do not quietly
+leak into output files.
+
+## What Makes The JSON Useful
+
+The default V4 output is designed to be consumed directly by downstream systems,
+not reverse-engineered after parsing.
+
+- **Readable text** stays easy to chunk and embed.
+- **Structure** stays available for routing, filtering, and citation-aware
+  workflows.
+- **Assets** are promoted into dedicated records: references, tables, figures,
+  equations, and supplementary material.
+- **Relations** capture xrefs and contributor-affiliation links with target IDs
+  and resolution status.
+- **Quality** reports parser diagnostics, count mismatches, unresolved
+  relations, fallback records, and coverage metadata.
+- **Source traceability** is retained through `source.jats_tag`, `source.attrs`,
+  `source.path`, and `source.ordinal`.
+
+Example content blocks:
+
+```json
+{
+  "title": "Results",
+  "level": 1,
+  "blocks": [
+    {
+      "type": "paragraph",
+      "text": "The cohort showed improved response.",
+      "inline": []
+    },
+    {
+      "type": "list",
+      "list_type": "order",
+      "items": [
+        {
+          "type": "list_item",
+          "text": "Primary endpoint was met."
+        }
+      ]
+    },
+    {
+      "type": "formula",
+      "label": "Eq. 1",
+      "tex": "E=mc^2",
+      "mathml": {
+        "tag": "math",
+        "attrs": {},
+        "children": []
+      }
+    },
+    {
+      "type": "unknown_block",
+      "jats_tag": "publisher-specific-block",
+      "text": "Preserved fallback text.",
+      "parse_status": "generic_fallback"
+    }
+  ]
+}
+```
 
 ## When To Use It
 
@@ -363,7 +469,7 @@ pmcgrab --from-dir ./pmc_xml --output-dir ./pmc_json --workers 16
 
 This avoids repeated network calls and gives you a repeatable corpus build.
 
-## Testing
+## Verification Commands
 
 Run the deterministic suite:
 
@@ -371,11 +477,17 @@ Run the deterministic suite:
 uv run pytest -q --no-cov
 ```
 
-Run lint and format checks:
+Run lint and type checks:
 
 ```bash
 uv run ruff check .
-uv run ruff format --check .
+uv run mypy src/pmcgrab
+```
+
+Build the docs:
+
+```bash
+uv run mkdocs build
 ```
 
 Build and smoke-test the wheel:

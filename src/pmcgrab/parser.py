@@ -57,14 +57,17 @@ They exercise both the high-level API and various edge-cases such as
 DTD validation, HTML cleaning, and external service wrappers.
 """
 
+import re
 import warnings
 from collections.abc import Callable
 from typing import Any, NoReturn
 
 import lxml.etree as ET
 
+from pmcgrab.application.parse_result import JatsParseResult
 from pmcgrab.application.parsing import content as _content
 from pmcgrab.application.parsing import contributors as _contributors
+from pmcgrab.application.parsing import jats_records as _jats_records
 from pmcgrab.application.parsing import metadata as _metadata
 from pmcgrab.application.parsing import sections as _sections
 from pmcgrab.constants import (
@@ -75,7 +78,7 @@ from pmcgrab.constants import (
 )
 from pmcgrab.domain.value_objects import BasicBiMap
 from pmcgrab.fetch import get_xml, parse_local_xml
-from pmcgrab.model import TextFigure, TextTable
+from pmcgrab.model import TextFigure, TextParagraph, TextSection, TextTable
 
 # ---------------------------------------------------------------------------
 # Public helper re-exports (thin aliases)
@@ -832,6 +835,618 @@ def _split_citations_tables_figs(
     return citations, tables, figures
 
 
+_MHTML_REF_RE = re.compile(r"\[MHTML::DATAREF::(?P<key>\d+)\]")
+_XML_NS = "http://www.w3.org/XML/1998/namespace"
+_XLINK_NS = "http://www.w3.org/1999/xlink"
+
+
+def _local_name(value: Any) -> str:
+    """Return a readable XML local name for tags and attributes."""
+    text = str(value)
+    if text.startswith("{") and "}" in text:
+        uri, local = text[1:].split("}", 1)
+        if uri == _XML_NS:
+            return f"xml:{local}"
+        if uri == _XLINK_NS:
+            return f"xlink:{local}"
+        return local
+    return text
+
+
+def _xml_attrs(element: ET.Element) -> dict[str, str]:
+    """Return JSON-friendly XML attributes with readable namespace prefixes."""
+    return {_local_name(key): str(value) for key, value in element.attrib.items()}
+
+
+def _source_record(
+    element: ET.Element, *, ordinal: int | None = None
+) -> dict[str, Any]:
+    """Return source metadata that lets users trace JSON back to JATS XML."""
+    try:
+        path = element.getroottree().getpath(element)
+    except Exception:
+        path = ""
+    source: dict[str, Any] = {
+        "jats_tag": _local_name(element.tag),
+        "attrs": _xml_attrs(element),
+        "path": path,
+    }
+    if ordinal is not None:
+        source["ordinal"] = ordinal
+    return source
+
+
+def _element_text(element: ET.Element | None) -> str:
+    """Return collapsed text for an XML element."""
+    if element is None:
+        return ""
+    return " ".join(" ".join(element.itertext()).split())
+
+
+def _direct_text(element: ET.Element, tag: str) -> str:
+    """Return collapsed direct-child text for *tag*."""
+    child = element.find(tag)
+    return _element_text(child)
+
+
+def _all_reference_records(root: ET.Element) -> list[dict[str, Any]]:
+    """Return every bibliography entry under back matter, cited or not."""
+    records: list[dict[str, Any]] = []
+    for index, ref in enumerate(root.xpath("//back//ref"), start=1):
+        citation = _parse_citation(ref)
+        records.append(
+            {
+                "id": ref.get("id") or f"ref_{index}",
+                "label": _extract_xpath_text(ref, "label") or "",
+                "citation": citation,
+                "citation_raw": _element_text(ref),
+                "source": _source_record(ref, ordinal=index),
+            }
+        )
+    return records
+
+
+def _all_abstract_records(root: ET.Element) -> list[dict[str, Any]]:
+    """Return all abstract variants present in article metadata."""
+    records: list[dict[str, Any]] = []
+    for index, abstract in enumerate(root.xpath("//article-meta/abstract"), start=1):
+        abstract_type = abstract.get("abstract-type") or "primary"
+        records.append(
+            {
+                "id": abstract.get("id") or f"abstract_{index}",
+                "title": _abstract_title(abstract, default="Abstract"),
+                "kind": abstract_type,
+                "language": _xml_lang(abstract),
+                "is_primary": abstract.get("abstract-type") is None,
+                "level": 0,
+                "blocks": _abstract_blocks(abstract),
+                "children": [],
+                "source": _source_record(abstract, ordinal=index),
+            }
+        )
+    for index, abstract in enumerate(root.xpath("//trans-abstract"), start=1):
+        records.append(
+            {
+                "id": abstract.get("id") or f"translated_abstract_{index}",
+                "title": _abstract_title(abstract, default="Translated Abstract"),
+                "kind": "translated",
+                "language": _xml_lang(abstract),
+                "is_primary": False,
+                "level": 0,
+                "blocks": _abstract_blocks(abstract),
+                "children": [],
+                "source": _source_record(abstract, ordinal=index),
+            }
+        )
+    return records
+
+
+def _abstract_title(abstract: ET.Element, *, default: str) -> str:
+    title = abstract.find("title")
+    if title is None:
+        return default
+    return "".join(title.itertext()).strip() or default
+
+
+def _xml_lang(element: ET.Element) -> str:
+    return str(element.get("{http://www.w3.org/XML/1998/namespace}lang") or "")
+
+
+def _abstract_blocks(abstract: ET.Element) -> list[dict[str, Any]]:
+    blocks: list[dict[str, Any]] = []
+    for index, child in enumerate(abstract, start=1):
+        if child.tag == "title":
+            continue
+        text = " ".join(" ".join(child.itertext()).split())
+        if text:
+            blocks.append(
+                {
+                    "type": "paragraph",
+                    "id": child.get("id") or f"abstract_block_{index}",
+                    "text": text,
+                    "source": _source_record(child, ordinal=index),
+                }
+            )
+    fallback = " ".join(" ".join(abstract.itertext()).split())
+    if not blocks and fallback:
+        blocks.append(
+            {
+                "type": "paragraph",
+                "id": "",
+                "text": fallback,
+                "source": _source_record(abstract),
+            }
+        )
+    return blocks
+
+
+def _article_id_records(root: ET.Element) -> list[dict[str, Any]]:
+    """Return all article IDs with type and source metadata."""
+    records = []
+    for index, element in enumerate(root.xpath("//article-meta/article-id"), start=1):
+        records.append(
+            {
+                "id": f"article_id_{index}",
+                "type": element.get("pub-id-type") or "",
+                "value": _element_text(element),
+                "source": _source_record(element, ordinal=index),
+            }
+        )
+    return records
+
+
+def _title_records(root: ET.Element) -> list[dict[str, Any]]:
+    """Return main, subtitle, and translated article title records."""
+    records: list[dict[str, Any]] = []
+    title_group = root.xpath("//article-meta/title-group")
+    if not title_group:
+        return records
+    ordinal = 0
+    for element in title_group[0].xpath("article-title|subtitle"):
+        ordinal += 1
+        records.append(
+            {
+                "id": element.get("id") or f"title_{ordinal}",
+                "type": _local_name(element.tag).replace("-", "_"),
+                "language": _xml_lang(element),
+                "text": _element_text(element),
+                "source": _source_record(element, ordinal=ordinal),
+            }
+        )
+    for group in title_group[0].xpath("trans-title-group"):
+        lang = _xml_lang(group)
+        for element in group.xpath("trans-title|trans-subtitle"):
+            ordinal += 1
+            records.append(
+                {
+                    "id": element.get("id") or f"title_{ordinal}",
+                    "type": _local_name(element.tag).replace("-", "_"),
+                    "language": lang or _xml_lang(element),
+                    "text": _element_text(element),
+                    "source": _source_record(element, ordinal=ordinal),
+                }
+            )
+    return records
+
+
+def _keyword_group_records(root: ET.Element) -> list[dict[str, Any]]:
+    """Return all keyword groups instead of flattening them into one list."""
+    groups = []
+    for index, group in enumerate(root.xpath("//article-meta/kwd-group"), start=1):
+        keywords = []
+        for keyword_index, kwd in enumerate(group.xpath("kwd"), start=1):
+            keywords.append(
+                {
+                    "id": kwd.get("id") or f"keyword_{index}_{keyword_index}",
+                    "text": _element_text(kwd),
+                    "source": _source_record(kwd, ordinal=keyword_index),
+                }
+            )
+        groups.append(
+            {
+                "id": group.get("id") or f"keyword_group_{index}",
+                "type": group.get("kwd-group-type") or "",
+                "language": _xml_lang(group),
+                "keywords": keywords,
+                "source": _source_record(group, ordinal=index),
+            }
+        )
+    return groups
+
+
+def _subject_group_records(root: ET.Element) -> list[dict[str, Any]]:
+    """Return article-category subject groups with hierarchy preserved."""
+    records = []
+    for index, group in enumerate(
+        root.xpath("//article-meta/article-categories//subj-group"), start=1
+    ):
+        records.append(
+            {
+                "id": group.get("id") or f"subject_group_{index}",
+                "type": group.get("subj-group-type") or "",
+                "subjects": [
+                    _element_text(subject) for subject in group.xpath("./subject")
+                ],
+                "compound_subjects": [
+                    _element_text(subject)
+                    for subject in group.xpath("./compound-subject")
+                ],
+                "source": _source_record(group, ordinal=index),
+            }
+        )
+    return records
+
+
+def _affiliation_records(root: ET.Element) -> list[dict[str, Any]]:
+    """Return canonical affiliation records from article metadata."""
+    records = []
+    seen_paths: set[str] = set()
+    for index, aff in enumerate(root.xpath("//article-meta//aff"), start=1):
+        source = _source_record(aff, ordinal=index)
+        path = str(source.get("path", ""))
+        if path in seen_paths:
+            continue
+        seen_paths.add(path)
+        institutions = []
+        for inst_index, inst in enumerate(aff.xpath(".//institution"), start=1):
+            institutions.append(
+                {
+                    "type": inst.get("content-type") or "",
+                    "name": _element_text(inst),
+                    "source": _source_record(inst, ordinal=inst_index),
+                }
+            )
+        institution_ids = []
+        for id_index, inst_id in enumerate(aff.xpath(".//institution-id"), start=1):
+            institution_ids.append(
+                {
+                    "type": inst_id.get("institution-id-type") or "",
+                    "value": _element_text(inst_id),
+                    "source": _source_record(inst_id, ordinal=id_index),
+                }
+            )
+        records.append(
+            {
+                "id": aff.get("id") or f"aff_{index}",
+                "label": _direct_text(aff, "label"),
+                "text": _element_text(aff),
+                "institutions": institutions,
+                "institution_ids": institution_ids,
+                "address": {
+                    "addr_line": _direct_text(aff, "addr-line"),
+                    "city": _direct_text(aff, "city"),
+                    "state": _direct_text(aff, "state"),
+                    "country": _direct_text(aff, "country"),
+                    "postal_code": _direct_text(aff, "postal-code"),
+                },
+                "source": source,
+            }
+        )
+    return records
+
+
+def _contributor_records(root: ET.Element) -> list[dict[str, Any]]:
+    """Return all contributor records with IDs, names, emails, and aff links."""
+    records = []
+    for index, contrib in enumerate(root.xpath("//article-meta//contrib"), start=1):
+        given = _direct_text(contrib, ".//given-names")
+        surname = _direct_text(contrib, ".//surname")
+        collab = _direct_text(contrib, ".//collab")
+        display_name = collab or " ".join(part for part in (given, surname) if part)
+        contrib_ids = []
+        for id_index, contrib_id in enumerate(contrib.xpath(".//contrib-id"), start=1):
+            contrib_ids.append(
+                {
+                    "type": contrib_id.get("contrib-id-type") or "",
+                    "value": _element_text(contrib_id),
+                    "source": _source_record(contrib_id, ordinal=id_index),
+                }
+            )
+        aff_ids: list[str] = []
+        for xref in contrib.xpath(".//xref[@ref-type='aff']"):
+            aff_ids.extend([rid for rid in (xref.get("rid") or "").split() if rid])
+        records.append(
+            {
+                "id": contrib.get("id") or f"contrib_{index}",
+                "type": contrib.get("contrib-type") or "",
+                "display_name": display_name,
+                "name": {
+                    "given": given,
+                    "surname": surname,
+                    "prefix": _direct_text(contrib, ".//prefix"),
+                    "suffix": _direct_text(contrib, ".//suffix"),
+                },
+                "collaboration": collab,
+                "emails": [_element_text(email) for email in contrib.xpath(".//email")],
+                "ids": contrib_ids,
+                "roles": [_element_text(role) for role in contrib.xpath(".//role")],
+                "degrees": [
+                    _element_text(degree) for degree in contrib.xpath(".//degrees")
+                ],
+                "affiliation_ids": aff_ids,
+                "corresponding": (
+                    contrib.get("corresp") == "yes"
+                    or bool(contrib.xpath(".//xref[@ref-type='corresp']"))
+                ),
+                "equal_contrib": contrib.get("equal-contrib") == "yes",
+                "source": _source_record(contrib, ordinal=index),
+            }
+        )
+    return records
+
+
+def _contributor_affiliation_links(
+    contributors: list[dict[str, Any]],
+    affiliations: list[dict[str, Any]],
+) -> list[dict[str, Any]]:
+    """Return contributor-affiliation relation records."""
+    known_affiliations = {item.get("id") for item in affiliations}
+    links: list[dict[str, Any]] = []
+    for contributor in contributors:
+        for aff_id in contributor.get("affiliation_ids", []):
+            links.append(
+                {
+                    "id": f"contrib_aff_{len(links) + 1}",
+                    "type": "contributor_affiliation",
+                    "source_id": contributor.get("id", ""),
+                    "source_type": "contributor",
+                    "target_id": aff_id,
+                    "target_type": "affiliation",
+                    "resolved": aff_id in known_affiliations,
+                }
+            )
+    return links
+
+
+def _license_records(root: ET.Element) -> list[dict[str, Any]]:
+    """Return every license record with href and full text."""
+    records = []
+    for index, license_el in enumerate(
+        root.xpath("//article-meta/permissions/license"), start=1
+    ):
+        href = license_el.get(f"{{{_XLINK_NS}}}href") or license_el.get("xlink:href")
+        records.append(
+            {
+                "id": license_el.get("id") or f"license_{index}",
+                "type": license_el.get("license-type") or "",
+                "href": href or "",
+                "text": _element_text(license_el),
+                "source": _source_record(license_el, ordinal=index),
+            }
+        )
+    return records
+
+
+def _date_records(root: ET.Element) -> dict[str, Any]:
+    """Extract date values without inventing missing precision."""
+    published: dict[str, dict[str, str]] = {}
+    for date_el in root.xpath("//article-meta/pub-date"):
+        date_type = date_el.get("pub-type") or date_el.get("date-type") or "unknown"
+        published[date_type] = _date_record(date_el)
+
+    history: dict[str, dict[str, str]] = {}
+    for date_el in root.xpath("//article-meta/history/date"):
+        date_type = date_el.get("date-type") or "unknown"
+        history[date_type] = _date_record(date_el)
+
+    version_history = []
+    for version_el in root.xpath("//article-meta/article-version"):
+        date_el = version_el.find("date")
+        version_history.append(
+            {
+                "version": version_el.get("version")
+                or version_el.findtext("version")
+                or "",
+                "date": _date_record(date_el) if date_el is not None else {},
+            }
+        )
+
+    return {
+        "published": published,
+        "history": history,
+        "version_history": version_history,
+    }
+
+
+def _date_record(date_el: ET.Element) -> dict[str, str]:
+    """Build a precision-aware date record from a JATS date element."""
+    year = _first_text(date_el, "year")
+    month = _first_text(date_el, "month")
+    day = _first_text(date_el, "day")
+    raw = " ".join(date_el.itertext()).strip()
+
+    parts = {"year": year or "", "month": month or "", "day": day or ""}
+    if year and month and day:
+        value = _format_date_value(year, month, day)
+        precision = "day"
+    elif year and month:
+        value = _format_date_value(year, month, None)
+        precision = "month"
+    elif year:
+        value = year
+        precision = "year"
+    else:
+        value = ""
+        precision = "unknown"
+    return {
+        "raw": raw,
+        "date": value,
+        "precision": precision,
+        **parts,
+    }
+
+
+def _format_date_value(year: str, month: str | None, day: str | None) -> str:
+    """Format available date parts, preserving only provided precision."""
+    try:
+        year_int = int(year)
+        if month is None:
+            return f"{year_int:04d}"
+        month_int = int(month)
+        if day is None:
+            return f"{year_int:04d}-{month_int:02d}"
+        return f"{year_int:04d}-{month_int:02d}-{int(day):02d}"
+    except (TypeError, ValueError):
+        pieces = [year, month or "", day or ""]
+        return "-".join(piece for piece in pieces if piece)
+
+
+def _reference_links(
+    root: ET.Element,
+    abstract: Any,
+    body: Any,
+    ref_map: BasicBiMap,
+    references: list[dict[str, Any]],
+) -> list[dict[str, Any]]:
+    """Extract inline reference positions from marked paragraph text."""
+    links: list[dict[str, Any]] = []
+    known_ref_ids = {record["id"] for record in references if record.get("id")}
+    for context, elements in (("abstract", abstract), ("body", body)):
+        for paragraph, section in _iter_paragraphs(elements):
+            marked = getattr(paragraph, "text_with_refs", "")
+            if not marked:
+                continue
+            for match in _MHTML_REF_RE.finditer(marked):
+                key = int(match.group("key"))
+                raw_ref = ref_map.get(key)
+                link = _link_record(
+                    root,
+                    raw_ref,
+                    key=key,
+                    ordinal=len(links) + 1,
+                    context=context,
+                    paragraph=paragraph,
+                    section=section,
+                    marked_text=marked,
+                    marker=match,
+                    known_ref_ids=known_ref_ids,
+                )
+                if link is not None:
+                    links.append(link)
+    return links
+
+
+def _iter_paragraphs(
+    elements: Any, section: TextSection | None = None
+) -> list[tuple[TextParagraph, TextSection | None]]:
+    """Return paragraphs from a TextSection/TextParagraph tree."""
+    found: list[tuple[TextParagraph, TextSection | None]] = []
+    for element in elements or []:
+        if isinstance(element, TextParagraph):
+            found.append((element, section))
+        elif isinstance(element, TextSection):
+            found.extend(_iter_paragraphs(element.children, element))
+    return found
+
+
+def _link_record(
+    root: ET.Element,
+    raw_ref: Any,
+    *,
+    key: int,
+    ordinal: int,
+    context: str,
+    paragraph: TextParagraph,
+    section: TextSection | None,
+    marked_text: str,
+    marker: re.Match[str],
+    known_ref_ids: set[str],
+) -> dict[str, Any] | None:
+    """Build one structured link record from a ref-map marker."""
+    if not isinstance(raw_ref, str):
+        return None
+    try:
+        ref_el = ET.fromstring(raw_ref)
+    except ET.XMLSyntaxError:
+        return None
+    ref_type = ref_el.get("ref-type") or ref_el.tag
+    target_ids = [rid for rid in (ref_el.get("rid") or "").split() if rid]
+    link_type = _v3_link_type(ref_type)
+    before_marker = _MHTML_REF_RE.sub("", marked_text[: marker.start()])
+    inline_text = "".join(ref_el.itertext()).strip()
+    char_start = len(before_marker)
+    char_end = char_start + len(inline_text)
+    resolved = _targets_resolved(root, link_type, target_ids, known_ref_ids)
+    section_root = getattr(section, "root", None)
+    return {
+        "id": f"link_{ordinal}",
+        "type": link_type,
+        "jats_ref_type": ref_type,
+        "text": inline_text,
+        "target_ids": target_ids,
+        "resolved": resolved,
+        "char_start": char_start,
+        "char_end": char_end,
+        "source": {
+            "context": context,
+            "section_id": section_root.get("id") if section_root is not None else "",
+            "section_title": getattr(section, "title", "") or "",
+            "paragraph_id": getattr(paragraph, "id", "") or "",
+        },
+        "ref_map_key": key,
+    }
+
+
+def _v3_link_type(ref_type: str) -> str:
+    return {
+        "bibr": "citation",
+        "fig": "figure",
+        "table": "table",
+        "disp-formula": "equation",
+        "fn": "footnote",
+        "sec": "section",
+        "supplementary-material": "supplementary_material",
+    }.get(ref_type, ref_type or "reference")
+
+
+def _targets_resolved(
+    root: ET.Element, link_type: str, target_ids: list[str], known_ref_ids: set[str]
+) -> bool:
+    if not target_ids:
+        return False
+    if link_type == "citation":
+        return all(target_id in known_ref_ids for target_id in target_ids)
+    return all(bool(root.xpath(f"//*[@id='{target_id}']")) for target_id in target_ids)
+
+
+def _missing_diagnostics(d: dict[str, Any]) -> list[dict[str, str]]:
+    """Return diagnostics for high-value missing article fields."""
+    checks = {
+        "missing_title": ("Title", d.get("Title")),
+        "missing_body": ("Body", d.get("Body")),
+        "missing_abstract": ("Abstract", d.get("Abstract")),
+        "missing_authors": ("Authors", d.get("Authors")),
+        "missing_pmcid": ("PMCID", d.get("PMCID")),
+    }
+    diagnostics = []
+    for code, (field, value) in checks.items():
+        if _is_diagnostic_missing(value):
+            diagnostics.append(
+                {
+                    "severity": "warning",
+                    "code": code,
+                    "message": f"{field} was not found in the parsed article.",
+                }
+            )
+    return diagnostics
+
+
+def _is_diagnostic_missing(value: Any) -> bool:
+    """Return True for empty values without triggering pandas truthiness."""
+    if value is None:
+        return True
+    if isinstance(value, str):
+        return value == ""
+    if isinstance(value, int | float):
+        return value == 0
+    if isinstance(value, list | tuple | set | dict):
+        return len(value) == 0
+    empty = getattr(value, "empty", None)
+    if isinstance(empty, bool):
+        return empty
+    return False
+
+
 # ---------------------------------------------------------------------------
 # Public orchestrators
 # ---------------------------------------------------------------------------
@@ -1093,6 +1708,7 @@ def build_complete_paper_dict(
         >>> print(f"Citations: {len(article_dict['Citations'])}")
     """
     ref_map: BasicBiMap = BasicBiMap()
+    diagnostics: list[dict[str, Any]] = []
 
     def _safe(
         fn: Callable[..., Any],
@@ -1109,6 +1725,16 @@ def build_complete_paper_dict(
                 getattr(fn, "__name__", "?"),
                 pmcid,
                 exc,
+            )
+            diagnostics.append(
+                {
+                    "severity": "warning",
+                    "code": "extractor_failed",
+                    "message": (
+                        f"{getattr(fn, '__name__', '?')} failed for PMCID {pmcid}: "
+                        f"{exc}"
+                    ),
+                }
             )
             return default
 
@@ -1169,15 +1795,74 @@ def build_complete_paper_dict(
     else:
         d["Ref Map With Tags"] = BasicBiMap()
 
+    diagnostics.extend(_missing_diagnostics(d))
+
     d["Ref Map"] = process_reference_map(root, ref_map)
 
     citations, tables, figures = _split_citations_tables_figs(d["Ref Map"])
+    v4_records = _jats_records.extract_v4_records(root)
+    all_abstracts = v4_records["abstracts"] or _all_abstract_records(root)
+    all_references = _all_reference_records(root)
+    links = v4_records["links"] or _reference_links(
+        root,
+        d.get("Abstract"),
+        d.get("Body"),
+        ref_map,
+        all_references,
+    )
+    diagnostics.extend(v4_records["diagnostics"])
+    unresolved = [link for link in links if not link["resolved"]]
+    for link in unresolved:
+        diagnostics.append(
+            {
+                "severity": "warning",
+                "code": "unresolved_reference",
+                "message": (
+                    f"Unresolved {link['type']} reference from "
+                    f"{link['source']['context']} to {link['target_ids']}."
+                ),
+            }
+        )
+
+    contributors = _contributor_records(root)
+    affiliations = _affiliation_records(root)
+    contributor_affiliation_links = _contributor_affiliation_links(
+        contributors, affiliations
+    )
+
+    parse_result = JatsParseResult(
+        abstracts=all_abstracts,
+        references=all_references,
+        links=links,
+        date_records=_date_records(root),
+        diagnostics=diagnostics,
+        article_ids=_article_id_records(root),
+        title_records=_title_records(root),
+        keyword_groups=_keyword_group_records(root),
+        subject_groups=_subject_group_records(root),
+        contributors=contributors,
+        affiliations=affiliations,
+        contributor_affiliation_links=contributor_affiliation_links,
+        license_records=_license_records(root),
+        content_sections=v4_records["content_sections"],
+        table_records=v4_records["table_records"],
+        figure_records=v4_records["figure_records"],
+        equation_records=v4_records["equation_records"],
+        supplementary_records=v4_records["supplementary_records"],
+        coverage=v4_records["coverage"],
+    )
     d.update(
         {
             "Citations": citations,
             "Tables": tables,
             "Figures": figures,
             "Equations": gather_equations(root),
+            "Abstract Records": all_abstracts,
+            "All References": all_references,
+            "Reference Links": links,
+            "Date Records": parse_result.date_records,
+            "Diagnostics": diagnostics,
+            "Parse Result": parse_result,
         }
     )
 

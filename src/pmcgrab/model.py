@@ -195,6 +195,12 @@ class Paper:
         self.version_history = d.get("Version History")
         self.ref_map = d.get("Ref Map")
         self._ref_map_with_tags = d.get("Ref Map With Tags")
+        self.parse_result = d.get("Parse Result")
+        self.all_abstracts = d.get("Abstract Records")
+        self.all_references = d.get("All References")
+        self.reference_links = d.get("Reference Links")
+        self.date_records = d.get("Date Records")
+        self.diagnostics = d.get("Diagnostics")
         self.data_dict = define_data_dict()
         self.vector_collection = None
 
@@ -299,8 +305,12 @@ class Paper:
     # Serialization methods
     # -----------------------------------------------------------------
 
-    def to_dict(self) -> dict:
+    def to_dict(self, *, schema_version: int = 4) -> dict:
         """Return the Paper as a fully normalized, JSON-serializable dictionary.
+
+        Args:
+            schema_version: Output schema version. V4 is the default; V2 and V3
+                remain available for compatibility.
 
         Returns:
             dict: Dictionary with all paper fields normalized for JSON.
@@ -308,20 +318,30 @@ class Paper:
         """
         from pmcgrab.common.paper_output import paper_to_output_dict
 
-        return paper_to_output_dict(self) or {"has_data": False}
+        return paper_to_output_dict(self, schema_version=schema_version) or {
+            "has_data": False
+        }
 
-    def to_json(self, *, indent: int = 2, ensure_ascii: bool = False) -> str:
+    def to_json(
+        self,
+        *,
+        indent: int = 2,
+        ensure_ascii: bool = False,
+        schema_version: int = 4,
+    ) -> str:
         """Return the Paper as a JSON string.
 
         Args:
             indent: Number of spaces for JSON indentation (default: 2)
             ensure_ascii: If True, escape non-ASCII characters (default: False)
+            schema_version: Output schema version. V4 is the default; V2 and V3
+                remain available for compatibility.
 
         Returns:
             str: JSON representation of the paper
         """
         return json.dumps(
-            self.to_dict(),
+            self.to_dict(schema_version=schema_version),
             indent=indent,
             ensure_ascii=ensure_ascii,
             allow_nan=False,

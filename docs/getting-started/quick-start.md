@@ -24,9 +24,9 @@ from pmcgrab.application.processing import process_single_pmc
 data = process_single_pmc("7114487")
 
 if data:
-    print(f"Title: {data['title']['main']}")
-    print(f"Journal: {data['publication']['journal']['title']}")
-    print(f"Authors: {len(data['contributors']['authors'])}")
+    print(f"Title: {data['article']['title']['main']}")
+    print(f"Journal: {data['article']['publication']['journal']['title']}")
+    print(f"Authors: {len(data['article']['contributors']['authors'])}")
     print(f"Sections: {[section['title'] for section in data['content']['sections']]}")
 ```
 
@@ -55,13 +55,13 @@ for pmcid in PMC_IDS:
         continue
 
     # Pretty-print a few key fields
-    title = data["title"]["main"]
-    abstract_blocks = data["content"]["abstract"][0]["blocks"]
+    title = data["article"]["title"]["main"]
+    abstract_blocks = data["content"]["abstracts"][0]["blocks"]
     abstract_preview = abstract_blocks[0]["text"] if abstract_blocks else ""
     print(
         f"  Title   : {title[:80]}{'…' if len(title) > 80 else ''}\n"
         f"  Abstract: {abstract_preview[:120]}{'…' if len(abstract_preview) > 120 else ''}\n"
-        f"  Authors : {len(data['contributors']['authors'])}"
+        f"  Authors : {len(data['article']['contributors']['authors'])}"
     )
 
     # Persist full JSON
@@ -83,16 +83,16 @@ Each processed article returns a structured dictionary with:
 
 ```python
 # Access the data
-print(data['identifiers']['pmc_id'])           # PMC ID
-print(data['title']['main'])                   # Article title
-print(data['publication']['journal']['title']) # Journal information
+print(data['article']['identifiers']['pmc_id'])           # PMC ID
+print(data['article']['title']['main'])                   # Article title
+print(data['article']['publication']['journal']['title']) # Journal information
 
 # Authors information
-for author in data['contributors']['authors'][:3]:  # First 3 authors
+for author in data['article']['contributors']['authors'][:3]:  # First 3 authors
     print(f"{author['First_Name']} {author['Last_Name']}")
 
 # Abstract content
-abstract_blocks = data["content"]["abstract"][0]["blocks"]
+abstract_blocks = data["content"]["abstracts"][0]["blocks"]
 print(f"Abstract: {abstract_blocks[0]['text'][:200]}...")
 
 # Main content sections
@@ -118,24 +118,26 @@ Each JSON file contains structured data:
 
 ```json
 {
-  "schema_version": 2,
-  "identifiers": {
-    "pmc_id": "7114487",
-    "pmcid": "PMC7114487"
-  },
-  "title": {
-    "main": "Article title",
-    "subtitle": "",
-    "translated": []
-  },
-  "contributors": {
-    "authors": [...]
-  },
-  "publication": {
-    "journal": { "title": "Journal Name" }
+  "schema_version": 4,
+  "article": {
+    "identifiers": {
+      "pmc_id": "7114487",
+      "pmcid": "PMC7114487"
+    },
+    "title": {
+      "main": "Article title",
+      "subtitle": "",
+      "translated": []
+    },
+    "contributors": {
+      "authors": [...]
+    },
+    "publication": {
+      "journal": { "title": "Journal Name" }
+    }
   },
   "content": {
-    "abstract": [
+    "abstracts": [
       {
         "title": "Abstract",
         "blocks": [
@@ -146,6 +148,7 @@ Each JSON file contains structured data:
     "sections": [...]
   },
   "assets": {
+    "references": [...],
     "figures": [...],
     "tables": [...]
   }
@@ -184,7 +187,7 @@ data = process_single_pmc(pmcid)
 if data is None:
     print(f"Failed to process PMC{pmcid}")
 else:
-    print(f"Successfully processed: {data['title']['main']}")
+    print(f"Successfully processed: {data['article']['title']['main']}")
 ```
 
 ## What's Next?

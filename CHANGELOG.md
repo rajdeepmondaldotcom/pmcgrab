@@ -7,6 +7,38 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.0.10] - 2026-05-18
+
+### Added
+- Added schema V4 as the default output contract for `Paper.to_dict()`,
+  `Paper.to_json()`, processing helpers, and CLI output.
+- Added a loss-aware JATS record extractor for V4 body and abstract content.
+- Added typed JSON blocks for paragraphs, sections, lists, definition lists,
+  boxed text, quotes, statements, formulas, tables, figures, supplementary
+  material, and unknown JATS blocks.
+- Added structured V4 records for contributors, affiliations, article IDs,
+  title records, keyword groups, subject groups, licenses, equations, tables,
+  figures, supplementary material, relations, and coverage metadata.
+- Added generic fallback records for unsupported meaningful JATS elements so
+  their text, attributes, children, and source metadata are still represented.
+- Added regression coverage proving sentinel text survives parsing without raw
+  XML leaking into V4 JSON.
+
+### Changed
+- Reworked V4 JSON around `article`, `contributors`, `content`, `assets`,
+  `relations`, `quality`, and `provenance`.
+- Improved source traceability with clean `source.jats_tag`, `source.attrs`,
+  `source.path`, and `source.ordinal` metadata instead of raw XML payloads.
+- Represented MathML as JSON trees rather than XML markup strings.
+- Renamed V4 date source text to `source_text`.
+- Updated README, docs, package metadata, citation docs, and GitHub About for
+  the loss-aware JSON positioning.
+
+### Removed
+- Removed raw XML payloads from public V4 JSON output.
+- Removed raw-ish V4 fields such as `raw_text` and `citation_raw` from emitted
+  V4 records.
+
 ## [1.0.9] - 2026-05-18
 
 ### Added

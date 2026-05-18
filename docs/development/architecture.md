@@ -100,13 +100,16 @@ data = process_single_pmc("7181753")
 local = process_single_local_xml("article.xml")
 ```
 
-The normalized processing dictionary uses the canonical v2 output schema:
+The normalized processing dictionary uses the canonical V4 output schema by
+default. V2 and V3 remain available by passing `schema_version=2` or
+`schema_version=3`.
 
-- `identifiers` contains PMC, PubMed, DOI, publisher, and other IDs.
-- `title` contains main, subtitle, and translated title values.
-- `publication` groups journal, publisher, classification, dates, issue, and conference metadata.
-- `content` contains the canonical abstract records and ordered section tree.
-- `assets` contains parsed references, tables, figures, equations, and supplementary material.
+- `article` contains identifiers, title, publication, compliance, and metadata.
+- `contributors` contains people, affiliations, and author notes.
+- `content` contains abstract records and the ordered section tree.
+- `assets` contains full references, tables, figures, equations, and supplementary material.
+- `relations` contains inline reference spans, contributor-affiliation links, and resolved target IDs.
+- `quality` contains parser status, diagnostics, and output counts.
 - `provenance` contains parser version, source, timestamp, and XML source path.
 
 Deprecated or legacy modules such as `pmcgrab.processing` remain importable for

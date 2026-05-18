@@ -2121,7 +2121,7 @@ wheels = [
 
 [[package]]
 name = "pmcgrab"
-version = "1.0.9"
+version = "1.0.10"
 source = { editable = "." }
 dependencies = [
     { name = "beautifulsoup4" },

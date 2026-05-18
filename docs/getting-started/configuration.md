@@ -38,7 +38,7 @@ email = next_email()  # Automatic email rotation
 data = process_single_pmc("7114487")
 
 if data:
-    print(f"Successfully processed: {data['title']['main']}")
+    print(f"Successfully processed: {data['article']['title']['main']}")
 else:
     print("Processing failed")
 ```
@@ -70,13 +70,13 @@ for pmcid in PMC_IDS:
         continue
 
     # Pretty-print a few key fields
-    title = data["title"]["main"]
-    abstract_blocks = data["content"]["abstract"][0]["blocks"]
+    title = data["article"]["title"]["main"]
+    abstract_blocks = data["content"]["abstracts"][0]["blocks"]
     abstract_preview = abstract_blocks[0]["text"] if abstract_blocks else ""
     print(
         f"  Title   : {title[:80]}{'…' if len(title) > 80 else ''}\n"
         f"  Abstract: {abstract_preview[:120]}{'…' if len(abstract_preview) > 120 else ''}\n"
-        f"  Authors : {len(data['contributors']['authors'])}"
+        f"  Authors : {len(data['article']['contributors']['authors'])}"
     )
 
     # Persist full JSON
@@ -106,7 +106,7 @@ def robust_processing(pmcids):
             data = process_single_pmc(pmcid)
             if data is not None:
                 successful.append((pmcid, data))
-                print(f"Success PMC{pmcid}: {data['title']['main'][:50]}...")
+                print(f"Success PMC{pmcid}: {data['article']['title']['main'][:50]}...")
             else:
                 failed.append(pmcid)
                 print(f"Error PMC{pmcid}: No data returned")
@@ -191,7 +191,7 @@ def process_with_progress(pmcids, output_dir="results"):
                 json.dump(data, f, indent=2, ensure_ascii=False)
 
             successful += 1
-            tqdm.write(f"Success {data['title']['main'][:40]}...")
+            tqdm.write(f"Success {data['article']['title']['main'][:40]}...")
         else:
             tqdm.write(f"Error PMC{pmcid}: Failed")
 
@@ -310,7 +310,7 @@ def production_processing(pmcids, base_output_dir="production"):
                 json.dump(data, f, indent=2, ensure_ascii=False)
 
             stats['successful'] += 1
-            logger.info(f"Success: {data['title']['main'][:50]}...")
+            logger.info(f"Success: {data['article']['title']['main'][:50]}...")
         else:
             stats['failed'] += 1
             stats['failed_ids'].append(pmcid)

@@ -112,11 +112,11 @@ data = process_single_pmc(pmcid)
 
 if data:
     print("Success! Here's what we got:")
-    print(f"Title: {data['title']['main']}")
-    print(f"Journal: {data['publication']['journal']['title']}")
-    print(f"Number of authors: {len(data['contributors']['authors'])}")
+    print(f"Title: {data['article']['title']['main']}")
+    print(f"Journal: {data['article']['publication']['journal']['title']}")
+    print(f"Number of authors: {len(data['article']['contributors']['authors'])}")
     print(f"Paper has these sections: {[section['title'] for section in data['content']['sections']]}")
-    abstract_blocks = data["content"]["abstract"][0]["blocks"]
+    abstract_blocks = data["content"]["abstracts"][0]["blocks"]
     print(f"Abstract preview: {abstract_blocks[0]['text'][:200]}...")
 else:
     print("Failed to fetch the paper")
@@ -151,7 +151,7 @@ print("\nLet's explore the structure:")
 print(f"Top-level keys: {list(data.keys())}")
 
 # Authors structure
-print(f"\nFirst author: {data['contributors']['authors'][0]}")
+print(f"\nFirst author: {data['article']['contributors']['authors'][0]}")
 
 # Body sections (perfect for RAG!)
 print(f"\nAvailable sections:")
@@ -209,8 +209,8 @@ for pmcid, description in INTERESTING_PAPERS.items():
             with open(output_file, "w", encoding="utf-8") as f:
                 json.dump(data, f, indent=2, ensure_ascii=False)
 
-            print(f"   Success! Title: {data['title']['main'][:60]}...")
-            print(f"   {len(data['contributors']['authors'])} authors, {len(data['content']['sections'])} sections")
+            print(f"   Success! Title: {data['article']['title']['main'][:60]}...")
+            print(f"   {len(data['article']['contributors']['authors'])} authors, {len(data['content']['sections'])} sections")
             print(f"   Saved to: {output_file}")
             successful += 1
         else:
@@ -246,13 +246,13 @@ sections_for_rag = []
 for section in data['content']['sections']:
     first_block = section["blocks"][0] if section["blocks"] else {"text": ""}
     sections_for_rag.append({
-        "source": f"PMC{data['identifiers']['pmc_id']}",
+        "source": f"PMC{data['article']['identifiers']['pmc_id']}",
         "section": section["title"],
         "content": first_block["text"],
         "metadata": {
-            "title": data['title']['main'],
-            "journal": data['publication']['journal']['title'],
-            "authors": [f"{a['First_Name']} {a['Last_Name']}" for a in data['contributors']['authors']]
+            "title": data['article']['title']['main'],
+            "journal": data['article']['publication']['journal']['title'],
+            "authors": [f"{a['First_Name']} {a['Last_Name']}" for a in data['article']['contributors']['authors']]
         }
     })
 ```
@@ -263,9 +263,9 @@ for section in data['content']['sections']:
 # Create training examples
 training_examples = []
 for pmcid, paper_data in all_papers.items():
-    abstract_blocks = paper_data["content"]["abstract"][0]["blocks"]
+    abstract_blocks = paper_data["content"]["abstracts"][0]["blocks"]
     training_examples.append({
-        "input": f"Summarize this {paper_data['publication']['journal']['title']} paper about {paper_data['title']['main']}",
+        "input": f"Summarize this {paper_data['article']['publication']['journal']['title']} paper about {paper_data['article']['title']['main']}",
         "output": abstract_blocks[0]["text"] if abstract_blocks else ""
     })
 ```
@@ -283,7 +283,7 @@ for file in Path("processed_papers").glob("*.json"):
 
     paper_stats.append({
         "pmcid": paper['identifiers']['pmc_id'],
-        "title": paper['title']['main'],
+        "title": paper['article']['title']['main'],
         "journal": paper['publication']['journal']['title'],
         "num_authors": len(paper['contributors']['authors']),
         "num_sections": len(paper['content']['sections']),

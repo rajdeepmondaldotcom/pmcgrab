@@ -44,7 +44,7 @@ import sys
 from collections.abc import Callable
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path
-from typing import TextIO
+from typing import Any, TextIO
 
 from tqdm import tqdm
 
@@ -146,6 +146,14 @@ def _parse_args() -> argparse.Namespace:
         default="json",
         help="Output format: json (one file per article) or jsonl (all in one file)",
     )
+    p.add_argument(
+        "--schema-version",
+        dest="schema_version",
+        choices=[2, 3, 4],
+        type=int,
+        default=4,
+        help="Output schema version: 4 (default), 3, or 2 for compatibility",
+    )
 
     # --- Verbosity ---
     p.add_argument(
@@ -169,6 +177,14 @@ def _parse_args() -> argparse.Namespace:
     )
 
     return p.parse_args()
+
+
+def _schema_kwargs(args: argparse.Namespace) -> dict[str, Any]:
+    """Return processing kwargs for non-default schema options."""
+    kwargs: dict[str, Any] = {}
+    if args.schema_version != 4:
+        kwargs["schema_version"] = args.schema_version
+    return kwargs
 
 
 def _resolve_ids_from_file(filepath: str) -> list[str]:
@@ -224,7 +240,8 @@ def _process_local_directory(
         unit="file",
         disable=args.quiet,
     ) as bar:
-        parsed = process_local_xml_dir(dir_path, workers=args.batch_size)
+        kwargs = _schema_kwargs(args)
+        parsed = process_local_xml_dir(dir_path, workers=args.batch_size, **kwargs)
         for name, data in parsed.items():
             success = data is not None
             if success and data is not None:
@@ -247,7 +264,8 @@ def _process_local_files(
     ) as bar:
         for xml_path in args.from_files:
             fp = Path(xml_path)
-            data = process_single_local_xml(fp)
+            kwargs = _schema_kwargs(args)
+            data = process_single_local_xml(fp, **kwargs)
             name = fp.stem
             success = data is not None
             if success and data is not None:
@@ -299,8 +317,10 @@ def _process_network_ids(
         disable=args.quiet,
     ) as bar:
         with ThreadPoolExecutor(max_workers=args.batch_size) as executor:
+            kwargs = _schema_kwargs(args)
             future_to_pid = {
-                executor.submit(process_single_pmc, pid): pid for pid in pmc_ids
+                executor.submit(process_single_pmc, pid, **kwargs): pid
+                for pid in pmc_ids
             }
             for future in as_completed(future_to_pid):
                 pid = future_to_pid[future]

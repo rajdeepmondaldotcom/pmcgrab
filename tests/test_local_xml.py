@@ -273,15 +273,23 @@ class TestProcessSingleLocalXml:
         fp = _write_xml(tmp_path, "PMC7181753.xml", SAMPLE_JATS_XML)
         result = process_single_local_xml(fp)
         assert result is not None
-        assert result["schema_version"] == 2
-        assert result["title"]["main"] == "Local XML Test Article"
-        assert result["identifiers"]["pmc_id"] == "7181753"
+        assert result["schema_version"] == 4
+        assert result["article"]["title"]["main"] == "Local XML Test Article"
+        assert result["article"]["identifiers"]["pmc_id"] == "7181753"
         assert len(result["content"]["sections"]) >= 4
         assert "body" not in result
         assert "body_nested" not in result
         assert "paragraphs" not in result
         assert "abstract_text" not in result
         assert "full_text" not in result
+
+    def test_v2_compatibility_schema(self, tmp_path):
+        fp = _write_xml(tmp_path, "PMC7181753.xml", SAMPLE_JATS_XML)
+        result = process_single_local_xml(fp, schema_version=2)
+        assert result is not None
+        assert result["schema_version"] == 2
+        assert result["title"]["main"] == "Local XML Test Article"
+        assert result["identifiers"]["pmc_id"] == "7181753"
 
     def test_returns_none_for_empty_xml(self, tmp_path):
         fp = _write_xml(tmp_path, "empty.xml", "<article></article>")
@@ -370,8 +378,8 @@ class TestCLILocalFlags:
         json_file = out_dir / "PMC7181753.json"
         assert json_file.exists()
         data = json.loads(json_file.read_text(encoding="utf-8"))
-        assert data["schema_version"] == 2
-        assert data["title"]["main"] == "Local XML Test Article"
+        assert data["schema_version"] == 4
+        assert data["article"]["title"]["main"] == "Local XML Test Article"
 
     def test_cli_from_dir(self, tmp_path):
         xml_dir = tmp_path / "xml_input"

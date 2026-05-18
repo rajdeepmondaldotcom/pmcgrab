@@ -25,6 +25,7 @@ _logger = logging.getLogger(__name__)
 from pmcgrab.application.paper_builder import build_paper_from_pmc
 from pmcgrab.common.paper_output import ArticleOutput, paper_to_output_dict
 from pmcgrab.constants import TimeoutException
+from pmcgrab.idconvert import normalize_id
 from pmcgrab.infrastructure.settings import next_email
 from pmcgrab.model import Paper
 from pmcgrab.parser import paper_dict_from_local_xml
@@ -44,6 +45,7 @@ def _extract_paper_dict(
     metadata_only: bool = False,
     _source: str = "ncbi_entrez",
     _xml_path: str | None = None,
+    schema_version: int = 4,
 ) -> ArticleOutput | None:
     """Extract a normalized dictionary from a Paper object.
 
@@ -57,6 +59,7 @@ def _extract_paper_dict(
         source=_source,
         xml_path=_xml_path,
         require_body=not metadata_only,
+        schema_version=schema_version,
     )
 
 
@@ -107,11 +110,12 @@ def _run_with_timeout(
 
 
 def process_single_pmc(
-    pmc_id: str,
+    pmc_id: str | int,
     *,
     download: bool = False,
     timeout: int = _TIMEOUT_SECONDS,
     metadata_only: bool = False,
+    schema_version: int = 4,
 ) -> ArticleOutput | None:
     """Download and parse a single PMC article into normalized dictionary format.
 
@@ -121,29 +125,34 @@ def process_single_pmc(
     thread-safe timeout protection and robust error handling.
 
     Args:
-        pmc_id: String representation of the PMC ID (e.g., "7181753")
+        pmc_id: PMC ID as int or string, with or without the ``PMC`` prefix.
         download: If True, cache raw XML locally in data/ directory for reuse.
         timeout: Maximum seconds to wait for network/parsing (default: 60).
+        metadata_only: If True, allow metadata-only output without body sections.
+        schema_version: Output schema version. V4 is the default; V2 and V3
+            remain available for compatibility.
 
     Returns:
-        Normalized v2 article dictionary with grouped keys:
-            - identifiers: PMC, PubMed, DOI, publisher, and other IDs
-            - title: Main, subtitle, and translated title values
-            - contributors: Author and contributor records
-            - publication: Journal, publisher, date, issue, and type metadata
+        Normalized article dictionary. V4 grouped keys include:
+            - article: identifiers, title, contributors, publication, metadata
             - content: Canonical abstract records and section tree
-            - assets: Citations, tables, figures, equations, and supplements
+            - assets: references, tables, figures, equations, and supplements
+            - relations: inline xrefs, contributor-affiliation links, and targets
+            - quality: status, diagnostics, and parse summary
         Returns None if processing fails or article has no usable content.
 
     Examples:
         >>> article_data = process_single_pmc("7181753")
         >>> if article_data:
-        ...     print(f"Title: {article_data['title']['main']}")
+        ...     print(f"Title: {article_data['article']['title']['main']}")
         ...     sections = article_data["content"]["sections"]
         ...     print(f"Sections: {[section['title'] for section in sections]}")
     """
     try:
-        pmc_id_num = int(pmc_id)
+        normalized_pmc_id = (
+            str(pmc_id) if isinstance(pmc_id, int) else normalize_id(str(pmc_id))
+        )
+        pmc_id_num = int(normalized_pmc_id)
         if pmc_id_num <= 0:
             _logger.warning("Invalid PMC ID (must be positive): %s", pmc_id)
             return None
@@ -172,6 +181,7 @@ def process_single_pmc(
             pmc_id_num,
             metadata_only=metadata_only,
             _source="ncbi_entrez",
+            schema_version=schema_version,
         )
 
     except Exception:
@@ -186,6 +196,8 @@ def process_single_pmc(
 
 def process_single_local_xml(
     xml_path: str | Path,
+    *,
+    schema_version: int = 4,
 ) -> ArticleOutput | None:
     """Parse a single local JATS XML file into normalized dictionary format.
 
@@ -195,6 +207,8 @@ def process_single_local_xml(
 
     Args:
         xml_path: Path to a JATS XML file on disk.
+        schema_version: Output schema version. V4 is the default; V2 and V3
+            remain available for compatibility.
 
     Returns:
         Normalized article dictionary, or None if the file cannot be parsed or
@@ -203,7 +217,7 @@ def process_single_local_xml(
     Examples:
         >>> data = process_single_local_xml("path/to/PMC7181753.xml")
         >>> if data:
-        ...     print(f"Title: {data['title']['main']}")
+        ...     print(f"Title: {data['article']['title']['main']}")
         ...     print(f"Sections: {len(data['content']['sections'])}")
     """
     try:
@@ -226,6 +240,7 @@ def process_single_local_xml(
             pmcid,
             _source="local_xml",
             _xml_path=str(xml_path),
+            schema_version=schema_version,
         )
     except Exception:
         _logger.exception("Error processing local XML: %s", xml_path)
@@ -242,6 +257,7 @@ def process_local_xml_dir(
     *,
     pattern: str = "*.xml",
     workers: int | None = None,
+    schema_version: int = 4,
 ) -> dict[str, ArticleOutput | None]:
     """Batch-process a directory of local JATS XML files concurrently.
 
@@ -253,6 +269,8 @@ def process_local_xml_dir(
         directory: Path to a directory containing JATS XML files.
         pattern: Glob pattern for selecting files (default: ``"*.xml"``).
         workers: Number of concurrent worker threads (default: 16).
+        schema_version: Output schema version. V4 is the default; V2 and V3
+            remain available for compatibility.
 
     Returns:
         dict[str, dict | None]: Mapping from filename (stem, e.g. "PMC7181753")
@@ -271,7 +289,12 @@ def process_local_xml_dir(
     results: dict[str, ArticleOutput | None] = {}
     with ThreadPoolExecutor(max_workers=workers) as executor:
         future_to_name = {
-            executor.submit(process_single_local_xml, fp): fp.stem for fp in xml_files
+            executor.submit(
+                process_single_local_xml,
+                fp,
+                schema_version=schema_version,
+            ): fp.stem
+            for fp in xml_files
         }
         for future in as_completed(future_to_name):
             name = future_to_name[future]

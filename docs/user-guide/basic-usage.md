@@ -13,8 +13,8 @@ from pmcgrab.application.processing import process_single_pmc
 data = process_single_pmc("7114487")
 
 if data:
-    print(f"Title: {data['title']['main']}")
-    print(f"Authors: {len(data['contributors']['authors'])}")
+    print(f"Title: {data['article']['title']['main']}")
+    print(f"Authors: {len(data['article']['contributors']['authors'])}")
     print(f"Sections: {[section['title'] for section in data['content']['sections']]}")
 ```
 
@@ -43,13 +43,13 @@ for pmcid in PMC_IDS:
         continue
 
     # Pretty-print a few key fields
-    title = data["title"]["main"]
-    abstract_blocks = data["content"]["abstract"][0]["blocks"]
+    title = data["article"]["title"]["main"]
+    abstract_blocks = data["content"]["abstracts"][0]["blocks"]
     abstract_preview = abstract_blocks[0]["text"] if abstract_blocks else ""
     print(
         f"  Title   : {title[:80]}{'…' if len(title) > 80 else ''}\n"
         f"  Abstract: {abstract_preview[:120]}{'…' if len(abstract_preview) > 120 else ''}\n"
-        f"  Authors : {len(data['contributors']['authors'])}"
+        f"  Authors : {len(data['article']['contributors']['authors'])}"
     )
 
     # Persist full JSON
@@ -98,19 +98,19 @@ Each article returns a comprehensive dictionary:
 data = process_single_pmc("7114487")
 
 # Core metadata
-print(f"PMC ID: {data['identifiers']['pmc_id']}")
-print(f"Title: {data['title']['main']}")
-print(f"Journal: {data['publication']['journal']['title']}")
-print(f"DOI: {data['identifiers']['doi'] or 'N/A'}")
+print(f"PMC ID: {data['article']['identifiers']['pmc_id']}")
+print(f"Title: {data['article']['title']['main']}")
+print(f"Journal: {data['article']['publication']['journal']['title']}")
+print(f"DOI: {data['article']['identifiers']['doi'] or 'N/A'}")
 
 # Authors
-print(f"Authors ({len(data['contributors']['authors'])}):")
-for author in data['contributors']['authors'][:3]:
+print(f"Authors ({len(data['article']['contributors']['authors'])}):")
+for author in data['article']['contributors']['authors'][:3]:
     print(f"  - {author['First_Name']} {author['Last_Name']}")
 
 # Content sections
 print(f"Sections: {[section['title'] for section in data['content']['sections']]}")
-abstract_blocks = data["content"]["abstract"][0]["blocks"]
+abstract_blocks = data["content"]["abstracts"][0]["blocks"]
 print(f"Abstract length: {len(abstract_blocks[0]['text'])} characters")
 
 # Additional data
@@ -214,32 +214,34 @@ PMCGrab creates structured JSON files:
 
 ```json
 {
-  "schema_version": 2,
-  "identifiers": {
-    "pmc_id": "7114487",
-    "pmcid": "PMC7114487",
-    "doi": "10.1038/s41591-023-02345-6"
-  },
-  "title": {
-    "main": "Machine learning approaches in cancer research",
-    "subtitle": "",
-    "translated": []
-  },
-  "contributors": {
-    "authors": [
-      {
-        "First_Name": "John",
-        "Last_Name": "Doe",
-        "Affiliation": "Cancer Research Institute"
-      }
-    ]
-  },
-  "publication": {
-    "journal": { "title": "Nature Medicine" },
-    "dates": { "published": { "epub": "2023-05-15" } }
+  "schema_version": 4,
+  "article": {
+    "identifiers": {
+      "pmc_id": "7114487",
+      "pmcid": "PMC7114487",
+      "doi": "10.1038/s41591-023-02345-6"
+    },
+    "title": {
+      "main": "Machine learning approaches in cancer research",
+      "subtitle": "",
+      "translated": []
+    },
+    "contributors": {
+      "authors": [
+        {
+          "First_Name": "John",
+          "Last_Name": "Doe",
+          "Affiliation": "Cancer Research Institute"
+        }
+      ]
+    },
+    "publication": {
+      "journal": { "title": "Nature Medicine" },
+      "dates": { "published": { "epub": { "date": "2023-05-15", "precision": "day" } } }
+    }
   },
   "content": {
-    "abstract": [
+    "abstracts": [
       {
         "title": "Abstract",
         "blocks": [
@@ -252,7 +254,7 @@ PMCGrab creates structured JSON files:
   "assets": {
     "figures": [...],
     "tables": [...],
-    "citations": [...]
+    "references": [...]
   }
 }
 ```
