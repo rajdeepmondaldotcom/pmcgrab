@@ -10,7 +10,6 @@ from pathlib import Path
 
 import pytest
 
-import pmcgrab
 from pmcgrab.application.article_assembly import (
     AssetFetchPolicy,
     process_single_pmc_with_assets,
@@ -97,14 +96,12 @@ def test_cli_local_xml_e2e_writes_json_and_summary(tmp_path: Path) -> None:
 
     assert "NaN" not in raw_output
     assert summary == {"PMC7181753": True}
-    assert data["schema_version"] == 4
+    assert data["schema"] == "pmcgrab.paper.v1"
     assert data["has_data"] is True
-    assert data["article"]["identifiers"]["pmcid"] == "PMC7181753"
-    assert data["article"]["identifiers"]["doi"] == "10.1234/pmcgrab.e2e"
-    assert data["article"]["title"]["main"] == "PMCGrab Local E2E Article"
-    assert data["provenance"]["source"] == "local_xml"
-    assert data["provenance"]["pmcgrab_version"] == pmcgrab.__version__
-    assert [section["title"] for section in data["content"]["sections"]] == [
+    assert data["identifiers"]["pmcid"] == "PMC7181753"
+    assert data["identifiers"]["doi"] == "10.1234/pmcgrab.e2e"
+    assert data["paper"]["title"] == "PMCGrab Local E2E Article"
+    assert [section["title"] for section in data["paper"]["body"]] == [
         "Introduction",
         "Methods",
         "Results",
@@ -122,13 +119,11 @@ def test_live_ncbi_process_single_pmc_e2e() -> None:
     data = process_single_pmc("7181753", timeout=90)
 
     assert data is not None
-    assert data["schema_version"] == 4
+    assert data["schema"] == "pmcgrab.paper.v1"
     assert data["has_data"] is True
-    assert data["article"]["identifiers"]["pmcid"] == "PMC7181753"
-    assert data["article"]["title"]["main"].startswith("Single-cell transcriptomes")
-    assert data["provenance"]["source"] == "ncbi_entrez"
-    assert data["provenance"]["pmcgrab_version"] == pmcgrab.__version__
-    assert len(data["content"]["sections"]) >= 1
+    assert data["identifiers"]["pmcid"] == "PMC7181753"
+    assert data["paper"]["title"].startswith("Single-cell transcriptomes")
+    assert len(data["paper"]["body"]) >= 1
 
 
 @pytest.mark.e2e
@@ -163,10 +158,9 @@ def test_live_ncbi_process_with_assets_e2e(tmp_path: Path) -> None:
     images = list((folder / "images").iterdir())
     assert images, "OA package should yield at least one figure binary"
 
-    for figure in article["assets"]["figures"]:
-        if figure["link"]:
-            assert figure["local_path"], f"missing local_path for figure {figure['id']}"
-            assert (folder / figure["local_path"]).is_file()
-
-    diag_codes = {d.get("code") for d in article["quality"]["diagnostics"]}
-    assert "asset_fetch_summary" in diag_codes
+    for figure in article["assets"]["images"]:
+        for file_record in figure["files"]:
+            if file_record.get("href") and file_record["status"] == "downloaded":
+                local_path = file_record["local_path"]
+                assert local_path, f"missing local_path for figure {figure['id']}"
+                assert (folder / local_path).is_file()

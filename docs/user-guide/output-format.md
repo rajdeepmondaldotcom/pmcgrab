@@ -1,126 +1,97 @@
 # Output Format
 
-PMCGrab emits JSON-serializable article dictionaries for RAG, analytics, and
-downstream LLM workflows. The default output is schema V4. V2 and V3 remain
-available for compatibility by passing `schema_version=2` or `schema_version=3`.
+PMCGrab emits clean paper JSON by default. The default schema is optimized for
+signal-to-noise: the paper itself, plus figures/images and tables, without
+parser trace metadata, diagnostics, bibliography records, contributor metadata,
+or provenance.
 
-## V4 Top-Level Shape
+Use `--full-json` in the CLI, or `output_style="full"` in Python, when you need
+the metadata-rich V4 contract. V2 and V3 remain available only through the full
+output path.
+
+## Default Paper Shape
 
 ```json
 {
-  "schema_version": 4,
+  "schema": "pmcgrab.paper.v1",
   "has_data": true,
-  "article": {
-    "identifiers": {
-      "pmc_id": "7181753",
-      "pmcid": "PMC7181753",
-      "pmid": "32327715",
-      "doi": "10.1038/s42003-020-0922-4",
-      "publisher_id": "",
-      "other": {},
-      "all": []
-    },
-    "title": {
-      "main": "Single-cell transcriptomes of the human skin reveal ...",
-      "subtitle": "",
-      "translated": [],
-      "records": []
-    },
-    "publication": {
-      "journal": { "title": "Communications Biology" },
-      "dates": {
-        "published": {
-          "epub": {
-            "source_text": "2020 04 24",
-            "date": "2020-04-24",
-            "precision": "day",
-            "year": "2020",
-            "month": "04",
-            "day": "24"
-          }
-        },
-        "history": {},
-        "version_history": []
+  "identifiers": {
+    "pmcid": "PMC7181753",
+    "pmid": "32327715",
+    "doi": "10.1038/s42003-020-0922-4"
+  },
+  "paper": {
+    "title": "Single-cell transcriptomes of the human skin reveal ...",
+    "abstract": [
+      {
+        "title": "Abstract",
+        "kind": "primary",
+        "content": [{ "type": "paragraph", "text": "..." }],
+        "sections": []
       }
-    },
-    "metadata": {
-      "keywords": [],
-      "keyword_groups": [],
-      "counts": {}
-    }
-  },
-  "contributors": {
-    "people": [],
-    "affiliations": [],
-    "author_notes": {}
-  },
-  "content": {
-    "abstracts": [],
-    "primary_abstract": {},
-    "sections": []
+    ],
+    "body": [
+      {
+        "id": "s1",
+        "title": "Introduction",
+        "content": [{ "type": "paragraph", "text": "..." }],
+        "sections": []
+      }
+    ]
   },
   "assets": {
-    "references": [],
-    "tables": [],
-    "figures": [],
-    "equations": { "records": [], "mathml": [], "tex": [] },
-    "supplementary_material": []
-  },
-  "relations": [],
-  "quality": {
-    "status": "complete",
-    "diagnostics": [],
-    "summary": {
-      "abstract_count": 1,
-      "section_count": 7,
-      "block_count": 82,
-      "reference_count": 42,
-      "relation_count": 120,
-      "generic_fallback_count": 0
-    },
-    "coverage": {
-      "unrepresented_text_count": 0,
-      "generic_fallback_count": 0,
-      "duplicate_xml_id_count": 0
-    }
-  },
-  "provenance": {
-    "pmcgrab_version": "1.0.10",
-    "parse_timestamp": "2024-01-01T00:00:00+00:00",
-    "source": "ncbi_entrez",
-    "xml_source_path": ""
+    "images": [],
+    "tables": []
   }
 }
 ```
 
 ## Core Groups
 
-| Group          | Notes                                                                  |
-| -------------- | ---------------------------------------------------------------------- |
-| `article`      | Identifiers, title, publication, compliance, and metadata.             |
-| `contributors` | Contributors, affiliations, and author notes.                          |
-| `content`      | Abstract records and ordered body section tree.                        |
-| `assets`       | Full bibliography, tables, figures, equations, and supplementary data. |
-| `relations`    | Inline xrefs, contributor-affiliation links, targets, and resolution.  |
-| `quality`      | Parse status, diagnostics, and output counts.                          |
-| `provenance`   | Parser version, parse timestamp, source, and local XML path.           |
+| Group         | Notes                                                     |
+| ------------- | --------------------------------------------------------- |
+| `identifiers` | Minimal paper identifiers: PMCID, PMID, and DOI.          |
+| `paper`       | Title, structured abstract, and nested body section tree. |
+| `assets`      | Clean image/figure records and clean table records.       |
 
-Missing optional values are normalized to `""`, `{}`, or `[]` depending on
-field shape. Date records preserve precision instead of inventing missing
-month/day values.
+Body and abstract content is emitted as readable typed blocks. Supported block
+types include `paragraph`, `list`, `definition_list`, `formula`, `quote`,
+`boxed_text`, `code`, `preformat`, `figure_ref`, `table_ref`,
+`supplementary_ref`, and `unknown_block`.
 
-V4 records include source metadata where PMCGrab has access to the source XML:
-`source.jats_tag`, XML `attrs`, an XPath-like `path`, and an ordinal. The
-output intentionally does not include raw XML payloads.
+## Images And Tables
 
-Body and abstract content is emitted as typed blocks instead of a single
-flattened text stream. Known JATS blocks such as `paragraph`, `list`,
-`def_list`, `boxed_text`, `formula`, `figure_ref`, `table_ref`, and
-`supplementary_ref` keep their own structure. Unsupported but meaningful JATS
-elements are emitted as `unknown_block` records with `jats_tag`, `attrs`,
-`text`, nested `children`, `source`, and `parse_status: "generic_fallback"` so
-their text is still represented in JSON. Formula MathML is represented as a
-JSON tree (`tag`, `attrs`, `text`, `children`) rather than raw XML markup.
+When image fetching is enabled with `--with-images` or
+`process_single_pmc_with_assets()`, clean image records include local file paths:
+
+```json
+{
+  "id": "f1",
+  "label": "Figure 1",
+  "caption": "...",
+  "files": [
+    {
+      "href": "fig1.jpg",
+      "local_path": "images/fig1.jpg",
+      "status": "downloaded",
+      "mime_type": "image/jpeg"
+    }
+  ]
+}
+```
+
+Tables keep one canonical row representation:
+
+```json
+{
+  "id": "t1",
+  "label": "Table 1",
+  "caption": "...",
+  "columns": ["A", "B"],
+  "rows": [{ "A": "1", "B": "2" }],
+  "footnotes": []
+}
+```
 
 ## Access Article Data
 
@@ -130,50 +101,45 @@ from pmcgrab import process_single_pmc
 data = process_single_pmc("7181753")
 
 if data:
-    print(data["article"]["title"]["main"])
-    print(data["article"]["publication"]["journal"]["title"])
-    print(data["article"]["identifiers"]["doi"])
-
-    first_abstract = data["content"]["primary_abstract"]
-    first_block = first_abstract["blocks"][0]
-    print(first_block["text"][:300])
-
-    print([section["title"] for section in data["content"]["sections"]])
+    print(data["paper"]["title"])
+    print(data["identifiers"]["doi"])
+    print(data["paper"]["abstract"][0]["content"][0]["text"][:300])
+    print([section["title"] for section in data["paper"]["body"]])
 ```
 
 ## Prepare Vector Chunks
 
 ```python
-def iter_paragraph_blocks(sections):
+def iter_text_blocks(sections):
     for section in sections:
-        for block in section["blocks"]:
+        for block in section["content"]:
             if block["type"] == "paragraph":
                 yield section, block
-        yield from iter_paragraph_blocks(section["children"])
+        yield from iter_text_blocks(section["sections"])
 
 
 def prepare_for_vector_db(data):
     chunks = []
     metadata_base = {
-        "pmc_id": data["article"]["identifiers"]["pmc_id"],
-        "journal": data["article"]["publication"]["journal"]["title"],
-        "doi": data["article"]["identifiers"]["doi"],
+        "pmcid": data["identifiers"]["pmcid"],
+        "doi": data["identifiers"]["doi"],
     }
 
-    for abstract_section in data["content"]["abstracts"]:
-        for block in abstract_section["blocks"]:
-            chunks.append(
-                {
-                    "content": block["text"],
-                    "metadata": {
-                        **metadata_base,
-                        "type": "abstract",
-                        "section": abstract_section["title"],
-                    },
-                }
-            )
+    for abstract_section in data["paper"]["abstract"]:
+        for block in abstract_section["content"]:
+            if block["type"] == "paragraph":
+                chunks.append(
+                    {
+                        "content": block["text"],
+                        "metadata": {
+                            **metadata_base,
+                            "type": "abstract",
+                            "section": abstract_section["title"],
+                        },
+                    }
+                )
 
-    for section, block in iter_paragraph_blocks(data["content"]["sections"]):
+    for section, block in iter_text_blocks(data["paper"]["body"]):
         chunks.append(
             {
                 "content": block["text"],
@@ -181,7 +147,6 @@ def prepare_for_vector_db(data):
                     **metadata_base,
                     "type": "paragraph",
                     "section": section["title"],
-                    "section_level": section["level"],
                 },
             }
         )
@@ -189,16 +154,21 @@ def prepare_for_vector_db(data):
     return chunks
 ```
 
-## Compatibility
+## Full JSON Compatibility
 
 ```python
 from pmcgrab import Paper, process_single_pmc
 
-v2_data = process_single_pmc("7181753", schema_version=2)
-v2_paper_dict = Paper.from_pmc("7181753").to_dict(schema_version=2)
-v3_data = process_single_pmc("7181753", schema_version=3)
+full_v4 = process_single_pmc("7181753", output_style="full")
+v2_data = process_single_pmc("7181753", output_style="full", schema_version=2)
+v2_paper_dict = Paper.from_pmc("7181753").to_dict(
+    output_style="full",
+    schema_version=2,
+)
+v3_data = process_single_pmc("7181753", output_style="full", schema_version=3)
 ```
 
-V2 keeps the previous top-level `identifiers`, `title`, `publication`,
-`contributors`, and `content.abstract` shape. V3 keeps the first grouped
-`article`/`content`/`assets` contract. New projects should use V4.
+Full V4 keeps article metadata, contributors, bibliography, relations, quality
+diagnostics, provenance, source paths, and parse coverage. New projects should
+start with the default `pmcgrab.paper.v1` view and opt in to full JSON only when
+that extra metadata is needed.

@@ -64,7 +64,8 @@ def _extract_paper_dict(
     metadata_only: bool = False,
     _source: str = "ncbi_entrez",
     _xml_path: str | None = None,
-    schema_version: int = 4,
+    schema_version: int | None = None,
+    output_style: str | None = None,
 ) -> ArticleOutput | None:
     """Extract a normalized dictionary from a Paper object.
 
@@ -79,7 +80,17 @@ def _extract_paper_dict(
         xml_path=_xml_path,
         require_body=not metadata_only,
         schema_version=schema_version,
+        output_style=output_style,
     )
+
+
+def _validate_output_options(
+    output_style: str | None, schema_version: int | None
+) -> None:
+    if output_style not in (None, "paper", "full"):
+        raise ValueError("output_style must be 'paper' or 'full'")
+    if output_style == "paper" and schema_version not in (None, 4):
+        raise ValueError("schema_version is only supported with output_style='full'")
 
 
 # ---------------------------------------------------------------------------
@@ -134,7 +145,8 @@ def process_single_pmc(
     download: bool = False,
     timeout: int = _TIMEOUT_SECONDS,
     metadata_only: bool = False,
-    schema_version: int = 4,
+    schema_version: int | None = None,
+    output_style: str | None = None,
 ) -> ArticleOutput | None:
     """Download and parse a single PMC article into normalized dictionary format.
 
@@ -148,25 +160,26 @@ def process_single_pmc(
         download: If True, cache raw XML locally in data/ directory for reuse.
         timeout: Maximum seconds to wait for network/parsing (default: 60).
         metadata_only: If True, allow metadata-only output without body sections.
-        schema_version: Output schema version. V4 is the default; V2 and V3
-            remain available for compatibility.
+        schema_version: Full-output schema version. Passing a schema version
+            without ``output_style`` selects the full output for compatibility.
+        output_style: ``"paper"`` for clean paper JSON (default), or
+            ``"full"`` for V2/V3/V4 metadata-rich output.
 
     Returns:
-        Normalized article dictionary. V4 grouped keys include:
-            - article: identifiers, title, contributors, publication, metadata
-            - content: Canonical abstract records and section tree
-            - assets: references, tables, figures, equations, and supplements
-            - relations: inline xrefs, contributor-affiliation links, and targets
-            - quality: status, diagnostics, and parse summary
+        Normalized article dictionary. The default clean paper output includes
+        ``identifiers``, ``paper`` (title, abstract, body), and ``assets``
+        (images and tables). Pass ``output_style="full"`` for the metadata-rich
+        V4/V3/V2 contracts.
         Returns None if processing fails or article has no usable content.
 
     Examples:
         >>> article_data = process_single_pmc("7181753")
         >>> if article_data:
-        ...     print(f"Title: {article_data['article']['title']['main']}")
-        ...     sections = article_data["content"]["sections"]
+        ...     print(f"Title: {article_data['paper']['title']}")
+        ...     sections = article_data["paper"]["body"]
         ...     print(f"Sections: {[section['title'] for section in sections]}")
     """
+    _validate_output_options(output_style, schema_version)
     try:
         normalized_pmc_id = (
             str(pmc_id) if isinstance(pmc_id, int) else normalize_id(str(pmc_id))
@@ -201,6 +214,7 @@ def process_single_pmc(
             metadata_only=metadata_only,
             _source="ncbi_entrez",
             schema_version=schema_version,
+            output_style=output_style,
         )
 
     except Exception:
@@ -216,7 +230,8 @@ def process_single_pmc(
 def process_single_local_xml(
     xml_path: str | Path,
     *,
-    schema_version: int = 4,
+    schema_version: int | None = None,
+    output_style: str | None = None,
 ) -> ArticleOutput | None:
     """Parse a single local JATS XML file into normalized dictionary format.
 
@@ -226,8 +241,10 @@ def process_single_local_xml(
 
     Args:
         xml_path: Path to a JATS XML file on disk.
-        schema_version: Output schema version. V4 is the default; V2 and V3
-            remain available for compatibility.
+        schema_version: Full-output schema version. Passing a schema version
+            without ``output_style`` selects the full output for compatibility.
+        output_style: ``"paper"`` for clean paper JSON (default), or
+            ``"full"`` for V2/V3/V4 metadata-rich output.
 
     Returns:
         Normalized article dictionary, or None if the file cannot be parsed or
@@ -236,9 +253,10 @@ def process_single_local_xml(
     Examples:
         >>> data = process_single_local_xml("path/to/PMC7181753.xml")
         >>> if data:
-        ...     print(f"Title: {data['article']['title']['main']}")
-        ...     print(f"Sections: {len(data['content']['sections'])}")
+        ...     print(f"Title: {data['paper']['title']}")
+        ...     print(f"Sections: {len(data['paper']['body'])}")
     """
+    _validate_output_options(output_style, schema_version)
     try:
         d = paper_dict_from_local_xml(
             str(xml_path),
@@ -260,6 +278,7 @@ def process_single_local_xml(
             _source="local_xml",
             _xml_path=str(xml_path),
             schema_version=schema_version,
+            output_style=output_style,
         )
     except Exception:
         _logger.exception("Error processing local XML: %s", xml_path)
@@ -276,7 +295,8 @@ def process_local_xml_dir(
     *,
     pattern: str = "*.xml",
     workers: int | None = None,
-    schema_version: int = 4,
+    schema_version: int | None = None,
+    output_style: str | None = None,
 ) -> dict[str, ArticleOutput | None]:
     """Batch-process a directory of local JATS XML files concurrently.
 
@@ -288,8 +308,10 @@ def process_local_xml_dir(
         directory: Path to a directory containing JATS XML files.
         pattern: Glob pattern for selecting files (default: ``"*.xml"``).
         workers: Number of concurrent worker threads (default: 16).
-        schema_version: Output schema version. V4 is the default; V2 and V3
-            remain available for compatibility.
+        schema_version: Full-output schema version. Passing a schema version
+            without ``output_style`` selects the full output for compatibility.
+        output_style: ``"paper"`` for clean paper JSON (default), or
+            ``"full"`` for V2/V3/V4 metadata-rich output.
 
     Returns:
         dict[str, dict | None]: Mapping from filename (stem, e.g. "PMC7181753")
@@ -300,6 +322,7 @@ def process_local_xml_dir(
         >>> successful = {k: v for k, v in results.items() if v is not None}
         >>> print(f"Parsed {len(successful)} / {len(results)} articles")
     """
+    _validate_output_options(output_style, schema_version)
     directory = Path(directory)
     xml_files = sorted(directory.glob(pattern))
     if workers is None:
@@ -312,6 +335,7 @@ def process_local_xml_dir(
                 process_single_local_xml,
                 fp,
                 schema_version=schema_version,
+                output_style=output_style,
             ): fp.stem
             for fp in xml_files
         }

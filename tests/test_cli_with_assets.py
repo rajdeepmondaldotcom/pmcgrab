@@ -112,7 +112,7 @@ def test_with_images_writes_folder_layout(tmp_path: Path) -> None:
     fetch_result = _fake_fetch_success()
 
     def fake_process_with_assets(
-        pmc_id: Any, out_dir: Any, *, policy: Any
+        pmc_id: Any, out_dir: Any, *, policy: Any, **kwargs: Any
     ) -> tuple[dict, AssetFetchResult]:
         # Mirror the orchestrator side-effect: write article.json + images/
         article_assembly.write_article_folder(
@@ -152,7 +152,9 @@ def test_with_images_and_include_supplementary(tmp_path: Path) -> None:
     article = _dummy_article()
     captured: dict[str, Any] = {}
 
-    def fake(pmc_id: Any, out_dir: Any, *, policy: Any) -> tuple[dict, None]:
+    def fake(
+        pmc_id: Any, out_dir: Any, *, policy: Any, **kwargs: Any
+    ) -> tuple[dict, None]:
         captured["policy"] = policy
         article_assembly.write_article_folder(Path(out_dir), pmc_id, article, None)
         return article, None
@@ -169,7 +171,9 @@ def test_with_images_and_include_raw_xml(tmp_path: Path) -> None:
     article = _dummy_article()
     captured: dict[str, Any] = {}
 
-    def fake(pmc_id: Any, out_dir: Any, *, policy: Any) -> tuple[dict, None]:
+    def fake(
+        pmc_id: Any, out_dir: Any, *, policy: Any, **kwargs: Any
+    ) -> tuple[dict, None]:
         captured["policy"] = policy
         article_assembly.write_article_folder(Path(out_dir), pmc_id, article, None)
         return article, None
@@ -183,7 +187,9 @@ def test_with_images_and_include_all_assets(tmp_path: Path) -> None:
     article = _dummy_article()
     captured: dict[str, Any] = {}
 
-    def fake(pmc_id: Any, out_dir: Any, *, policy: Any) -> tuple[dict, None]:
+    def fake(
+        pmc_id: Any, out_dir: Any, *, policy: Any, **kwargs: Any
+    ) -> tuple[dict, None]:
         captured["policy"] = policy
         article_assembly.write_article_folder(Path(out_dir), pmc_id, article, None)
         return article, None
@@ -205,7 +211,9 @@ def test_with_images_passes_max_asset_bytes(tmp_path: Path) -> None:
     article = _dummy_article()
     captured: dict[str, Any] = {}
 
-    def fake(pmc_id: Any, out_dir: Any, *, policy: Any) -> tuple[dict, None]:
+    def fake(
+        pmc_id: Any, out_dir: Any, *, policy: Any, **kwargs: Any
+    ) -> tuple[dict, None]:
         captured["policy"] = policy
         article_assembly.write_article_folder(Path(out_dir), pmc_id, article, None)
         return article, None

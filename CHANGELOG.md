@@ -7,7 +7,36 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [2.0.0] - 2026-05-19
+## [3.0.0] - 2026-05-19
+
+### Added
+- Added the clean paper output contract `pmcgrab.paper.v1`, now emitted by
+  default from the CLI, `Paper.to_dict()`, `Paper.to_json()`, and the high-level
+  processing helpers. The clean contract contains the paper itself:
+  identifiers, title, abstract, body, images, and tables.
+- Added `--full-json` and `output_style="full"` as the explicit escape hatch
+  for metadata-rich V4 output.
+
+### Changed
+- Rewrote the README and public package copy around the clean default contract,
+  image-enabled ingestion workflow, and full-JSON escape hatch.
+- The default output is now clean paper JSON instead of the full V4 parser
+  record. This is a breaking change for callers that read `article`, `content`,
+  `relations`, `quality`, or `provenance` from default output. Pass
+  `--full-json` or `output_style="full"` to keep using the V4 record.
+- `--schema-version` is now accepted only with `--full-json`. Schema V2/V3 are
+  compatibility modes for full output, not clean paper output.
+
+### Migration
+- If you want the new ingestion-friendly output, no migration is needed. Read
+  `paper.title`, `paper.abstract`, `paper.body`, `assets.images`, and
+  `assets.tables`.
+- If you want the old metadata-rich V4 structure, add `--full-json` on the CLI
+  or pass `output_style="full"` in Python.
+- Switch to `process_single_pmc_with_assets()` or `--with-images` when you want
+  image binaries on disk alongside the clean JSON.
+
+## [2.0.0] - 2026-05-18
 
 ### Added
 - Added opt-in figure-binary downloading for network-mode PMC fetches. Pass
@@ -43,16 +72,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   returns useful data for the first time.
 
 ### Changed
-- The default CLI output stays flat single-file (`out_dir/PMC{id}.json`) and
-  matches the 1.x behaviour bit-for-bit — fastest path, no image downloads,
-  no extra round trips. The folder layout and image fetching are entirely
-  opt-in via `--with-images`.
+- The default CLI output remains a flat single-file layout
+  (`out_dir/PMC{id}.json`) with no image downloads. The per-article folder
+  layout and image fetching are opt-in via `--with-images`.
 
 ### Migration
 - No CLI migration required for the fast default path; the 1.x command line
-  continues to behave the same way.
-- Programmatic callers of `process_single_pmc()` see no behavioural change.
-  Switch to `process_single_pmc_with_assets()` when you want images on disk.
+  continues to emit V4 JSON with no image downloads.
+- Programmatic callers of `process_single_pmc()` still receive the V4 parser
+  record in 2.0.0. Switch to `process_single_pmc_with_assets()` when you want
+  images on disk.
 
 ## [1.0.10] - 2026-05-18
 

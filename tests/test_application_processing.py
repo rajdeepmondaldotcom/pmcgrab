@@ -186,5 +186,5 @@ def test_process_single_pmc_accepts_prefixed_pmcid(monkeypatch):
 
     assert result is not None
     assert seen["pmcid"] == 123
-    assert result["schema_version"] == 4
-    assert result["article"]["identifiers"]["pmcid"] == "PMC123"
+    assert result["schema"] == "pmcgrab.paper.v1"
+    assert result["identifiers"]["pmcid"] == "PMC123"

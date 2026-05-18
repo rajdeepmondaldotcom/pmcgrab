@@ -1,6 +1,7 @@
 # Command Line Interface
 
-PMCGrab's CLI processes PMC IDs, PubMed IDs, DOIs, ID files, local XML files, and local XML directories into JSON or JSONL output.
+PMCGrab's CLI processes PMC IDs, PubMed IDs, DOIs, ID files, local XML files,
+and local XML directories into clean paper JSON by default.
 
 ## Quick Commands
 
@@ -22,6 +23,12 @@ uv run python -m pmcgrab --from-dir ./pmc_bulk_xml --output-dir ./results
 
 # Specific local XML files, no network.
 uv run python -m pmcgrab --from-file article1.xml article2.xml --output-dir ./results
+
+# Download figure image files alongside the default clean paper JSON.
+uv run python -m pmcgrab --pmcids 7181753 --with-images --output-dir ./results
+
+# Emit the metadata-rich full JSON instead of the clean paper view.
+uv run python -m pmcgrab --pmcids 7181753 --full-json --output-dir ./results
 ```
 
 ## Input Modes
@@ -45,6 +52,12 @@ uv run python -m pmcgrab --pmcids 7181753 --output-dir ./results --format json
 
 # One JSONL file containing all successful articles.
 uv run python -m pmcgrab --pmcids 7181753 3539614 --output-dir ./results --format jsonl
+
+# Full V4 metadata/debug JSON.
+uv run python -m pmcgrab --pmcids 7181753 --full-json --output-dir ./results
+
+# Full V2/V3 compatibility output.
+uv run python -m pmcgrab --pmcids 7181753 --full-json --schema-version 2
 ```
 
 Output files:
@@ -65,8 +78,10 @@ results/
 ```
 
 `summary.json` maps each input name or PMC ID to `true` or `false`.
-Article files and JSONL rows are strict JSON: missing table/author values are
-written as `null`, never as non-standard `NaN` literals.
+Article files and JSONL rows are strict JSON. By default, each article uses
+`schema: "pmcgrab.paper.v1"` with `paper.title`, `paper.abstract`,
+`paper.body`, `assets.images`, and `assets.tables`. Pass `--full-json` for the
+metadata-rich V4 shape.
 
 ## Exit Codes
 
@@ -120,5 +135,6 @@ usage: __main__.py [-h] (--pmcids PMCIDS [PMCIDS ...] |
                    --from-id-file FROM_ID_FILE | --from-dir FROM_DIR |
                    --from-file FROM_FILES [FROM_FILES ...])
                    [--output-dir OUTPUT_DIR] [--batch-size BATCH_SIZE]
-                   [--format {json,jsonl}] [--verbose] [--quiet] [--version]
+                   [--format {json,jsonl}] [--full-json] [--with-images]
+                   [--schema-version {2,3,4}] [--verbose] [--quiet] [--version]
 ```

@@ -8,6 +8,7 @@ from typing import TYPE_CHECKING, Any, cast
 
 import lxml.etree as _ET
 
+from pmcgrab.common.paper_view import to_paper_output
 from pmcgrab.common.serialization import normalize_value
 
 if TYPE_CHECKING:
@@ -97,14 +98,16 @@ def paper_to_output_dict(
     source: str | None = None,
     xml_path: str | None = None,
     require_body: bool = False,
-    schema_version: int = _DEFAULT_SCHEMA_VERSION,
+    schema_version: int | None = None,
+    output_style: str | None = None,
 ) -> ArticleOutput | None:
     """Return a public article dictionary for a parsed paper.
 
     ``Paper.to_dict()``, application processing helpers, and CLI output share
-    this function so each JSON contract has one owner. V4 is the default;
-    V2 and V3 remain available as compatibility adapters.
+    this function so each JSON contract has one owner. The default output style
+    is the clean paper view; pass ``output_style="full"`` for V2/V3/V4.
     """
+    output_style, schema_version = _resolve_output_options(output_style, schema_version)
     if schema_version not in {
         _SCHEMA_VERSION_V2,
         _SCHEMA_VERSION_V3,
@@ -121,6 +124,8 @@ def paper_to_output_dict(
             empty = _empty_output_v3()
         else:
             empty = _empty_output()
+        if output_style == "paper":
+            return cast(ArticleOutput, to_paper_output(empty))
         return cast(ArticleOutput, normalize_value(empty))
 
     registry = _AssetRegistry()
@@ -153,7 +158,26 @@ def paper_to_output_dict(
         )
     if require_body and not data["content"]["sections"]:
         return None
+    if output_style == "paper":
+        return cast(ArticleOutput, to_paper_output(data))
     return cast(ArticleOutput, normalize_value(data))
+
+
+def _resolve_output_options(
+    output_style: str | None, schema_version: int | None
+) -> tuple[str, int]:
+    """Resolve output-style defaults while preserving explicit schema calls."""
+    if output_style is None:
+        output_style = "full" if schema_version is not None else "paper"
+    if output_style not in {"paper", "full"}:
+        raise ValueError("output_style must be 'paper' or 'full'")
+    if output_style == "paper":
+        if schema_version not in (None, _SCHEMA_VERSION_V4):
+            raise ValueError(
+                "schema_version is only supported with output_style='full'"
+            )
+        return output_style, _SCHEMA_VERSION_V4
+    return output_style, schema_version or _DEFAULT_SCHEMA_VERSION
 
 
 def _article_output(

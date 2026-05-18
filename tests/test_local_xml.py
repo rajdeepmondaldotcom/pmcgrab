@@ -273,10 +273,10 @@ class TestProcessSingleLocalXml:
         fp = _write_xml(tmp_path, "PMC7181753.xml", SAMPLE_JATS_XML)
         result = process_single_local_xml(fp)
         assert result is not None
-        assert result["schema_version"] == 4
-        assert result["article"]["title"]["main"] == "Local XML Test Article"
-        assert result["article"]["identifiers"]["pmc_id"] == "7181753"
-        assert len(result["content"]["sections"]) >= 4
+        assert result["schema"] == "pmcgrab.paper.v1"
+        assert result["paper"]["title"] == "Local XML Test Article"
+        assert result["identifiers"]["pmcid"] == "PMC7181753"
+        assert len(result["paper"]["body"]) >= 4
         assert "body" not in result
         assert "body_nested" not in result
         assert "paragraphs" not in result
@@ -304,7 +304,7 @@ class TestProcessSingleLocalXml:
         fp = _write_xml(tmp_path, "test.xml", SAMPLE_JATS_XML)
         result = process_single_local_xml(fp)
         assert result is not None
-        section_titles = {section["title"] for section in result["content"]["sections"]}
+        section_titles = {section["title"] for section in result["paper"]["body"]}
         assert "Introduction" in section_titles
         assert "Methods" in section_titles
         assert "Results" in section_titles
@@ -378,8 +378,8 @@ class TestCLILocalFlags:
         json_file = out_dir / "PMC7181753.json"
         assert json_file.exists()
         data = json.loads(json_file.read_text(encoding="utf-8"))
-        assert data["schema_version"] == 4
-        assert data["article"]["title"]["main"] == "Local XML Test Article"
+        assert data["schema"] == "pmcgrab.paper.v1"
+        assert data["paper"]["title"] == "Local XML Test Article"
 
     def test_cli_from_dir(self, tmp_path):
         xml_dir = tmp_path / "xml_input"

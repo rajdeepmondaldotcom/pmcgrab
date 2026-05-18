@@ -65,14 +65,13 @@ class TestPaper:
         assert paper_with_data.has_data  # Has data now
 
     def test_empty_paper_to_dict(self):
-        """Test empty Paper serialization uses the V4 envelope by default."""
+        """Test empty Paper serialization uses the clean paper envelope by default."""
         data = Paper({}).to_dict()
 
-        assert data["schema_version"] == 4
+        assert data["schema"] == "pmcgrab.paper.v1"
         assert data["has_data"] is False
-        assert data["content"]["sections"] == []
+        assert data["paper"]["body"] == []
         assert data["assets"]["tables"] == []
-        assert data["provenance"]["pmcgrab_version"]
 
 
 class TestTextSection:

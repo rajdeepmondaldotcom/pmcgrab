@@ -118,38 +118,24 @@ Each JSON file contains structured data:
 
 ```json
 {
-  "schema_version": 4,
-  "article": {
-    "identifiers": {
-      "pmc_id": "7114487",
-      "pmcid": "PMC7114487"
-    },
-    "title": {
-      "main": "Article title",
-      "subtitle": "",
-      "translated": []
-    },
-    "contributors": {
-      "authors": [...]
-    },
-    "publication": {
-      "journal": { "title": "Journal Name" }
-    }
+  "schema": "pmcgrab.paper.v1",
+  "identifiers": {
+    "pmcid": "PMC7114487",
+    "doi": "10.1038/example"
   },
-  "content": {
-    "abstracts": [
+  "paper": {
+    "title": "Article title",
+    "abstract": [
       {
         "title": "Abstract",
-        "blocks": [
-          { "type": "paragraph", "text": "Structured abstract text" }
-        ]
+        "content": [{ "type": "paragraph", "text": "Structured abstract text" }],
+        "sections": []
       }
     ],
-    "sections": [...]
+    "body": [...]
   },
   "assets": {
-    "references": [...],
-    "figures": [...],
+    "images": [...],
     "tables": [...]
   }
 }

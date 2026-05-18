@@ -30,13 +30,13 @@ for pmcid in PMC_IDS:
         continue
 
     # Pretty-print a few key fields
-    title = data["article"]["title"]["main"]
-    abstract_blocks = data["content"]["abstracts"][0]["blocks"]
+    title = data["paper"]["title"]
+    abstract_blocks = data["paper"]["abstract"][0]["content"]
     abstract_preview = abstract_blocks[0]["text"] if abstract_blocks else ""
     print(
         f"  Title   : {title[:80]}{'…' if len(title) > 80 else ''}\n"
         f"  Abstract: {abstract_preview[:120]}{'…' if len(abstract_preview) > 120 else ''}\n"
-        f"  Authors : {len(data['article']['contributors']['authors'])}"
+        f"  PMCID   : {data['identifiers']['pmcid']}"
     )
 
     # Persist full JSON

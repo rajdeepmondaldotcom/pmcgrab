@@ -30,6 +30,7 @@ from typing import Any
 
 from pmcgrab.application.processing import process_single_pmc
 from pmcgrab.common.paper_output import ArticleOutput
+from pmcgrab.common.paper_view import to_paper_output
 from pmcgrab.idconvert import normalize_id
 from pmcgrab.infrastructure.asset_fetcher import (
     AssetFetchPolicy,
@@ -254,6 +255,8 @@ def process_single_pmc_with_assets(
     download: bool = False,
     timeout: int = NCBI_TIMEOUT,
     metadata_only: bool = False,
+    output_style: str | None = None,
+    schema_version: int | None = None,
 ) -> tuple[ArticleOutput | None, AssetFetchResult | None]:
     """Fetch a single PMC article, download its figure binaries, write the folder.
 
@@ -268,6 +271,10 @@ def process_single_pmc_with_assets(
         timeout: Network/parse timeout in seconds. Defaults to ``NCBI_TIMEOUT``.
         metadata_only: If ``True``, allow metadata-only output without body
             sections (passed through to :func:`process_single_pmc`).
+        output_style: ``"paper"`` for clean paper JSON (default), or
+            ``"full"`` for the metadata-rich V4 output.
+        schema_version: Full-output schema version. Asset fetching supports
+            schema V4 because local path injection needs V4 figure records.
 
     Returns:
         A tuple ``(article_dict_or_none, fetch_result_or_none)``.
@@ -282,11 +289,18 @@ def process_single_pmc_with_assets(
     """
     if policy is None:
         policy = AssetFetchPolicy()
+    if output_style not in (None, "paper", "full"):
+        raise ValueError("output_style must be 'paper' or 'full'")
+    if schema_version not in (None, 4):
+        raise ValueError("asset fetching only supports schema_version=4")
+    final_style = output_style or "paper"
+
     article = process_single_pmc(
         pmc_id,
         download=download,
         timeout=timeout,
         metadata_only=metadata_only,
+        output_style="full",
         schema_version=4,
     )
     if article is None:
@@ -324,5 +338,8 @@ def process_single_pmc_with_assets(
     if fetch_result is not None:
         inject_local_paths(article, fetch_result)
 
-    write_article_folder(target_dir.parent, pmc_id_num, article, fetch_result)
-    return article, fetch_result
+    output_article = article if final_style == "full" else to_paper_output(article)
+    if output_article is None:
+        return None, fetch_result
+    write_article_folder(target_dir.parent, pmc_id_num, output_article, fetch_result)
+    return output_article, fetch_result

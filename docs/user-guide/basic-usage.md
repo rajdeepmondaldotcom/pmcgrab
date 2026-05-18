@@ -214,47 +214,30 @@ PMCGrab creates structured JSON files:
 
 ```json
 {
-  "schema_version": 4,
-  "article": {
-    "identifiers": {
-      "pmc_id": "7114487",
-      "pmcid": "PMC7114487",
-      "doi": "10.1038/s41591-023-02345-6"
-    },
-    "title": {
-      "main": "Machine learning approaches in cancer research",
-      "subtitle": "",
-      "translated": []
-    },
-    "contributors": {
-      "authors": [
-        {
-          "First_Name": "John",
-          "Last_Name": "Doe",
-          "Affiliation": "Cancer Research Institute"
-        }
-      ]
-    },
-    "publication": {
-      "journal": { "title": "Nature Medicine" },
-      "dates": { "published": { "epub": { "date": "2023-05-15", "precision": "day" } } }
-    }
+  "schema": "pmcgrab.paper.v1",
+  "identifiers": {
+    "pmcid": "PMC7114487",
+    "doi": "10.1038/s41591-023-02345-6"
   },
-  "content": {
-    "abstracts": [
+  "paper": {
+    "title": "Machine learning approaches in cancer research",
+    "abstract": [
       {
         "title": "Abstract",
-        "blocks": [
-          { "type": "paragraph", "text": "Recent advances in machine learning have..." }
-        ]
+        "content": [
+          {
+            "type": "paragraph",
+            "text": "Recent advances in machine learning have..."
+          }
+        ],
+        "sections": []
       }
     ],
-    "sections": [...]
+    "body": [...]
   },
   "assets": {
-    "figures": [...],
-    "tables": [...],
-    "references": [...]
+    "images": [...],
+    "tables": [...]
   }
 }
 ```

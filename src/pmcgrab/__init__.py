@@ -1,14 +1,14 @@
-"""PMCGrab: clean, loss-aware article JSON from PMC and JATS XML.
+"""PMCGrab: clean paper JSON from PMC and JATS XML.
 
 PMCGrab retrieves PubMed Central (PMC) articles and parses local JATS XML into
-clean, section-aware Python objects and JSON for biomedical RAG, search,
-literature review, corpus, text-mining, and knowledge-graph pipelines.
+clean, section-aware Python objects and JSON for biomedical ingestion pipelines.
 
 Key Features:
     * **PMC Retrieval**: Fetch full-text articles with a single PMCID using NCBI Entrez
     * **Local JATS XML**: Parse pre-downloaded PMC XML without network calls
-    * **Loss-Aware JSON**: Preserve content blocks, assets, relations, quality, and provenance
-    * **No Raw XML Output**: Keep clean JSON with source metadata for traceability
+    * **Clean Paper JSON**: Emit title, abstract, body, images, and tables by default
+    * **Full JSON Escape Hatch**: Opt in to metadata, diagnostics, and provenance
+    * **Opt-In Images**: Download figure binaries next to article JSON when requested
     * **Batch Processing**: Process article IDs or local XML files with configurable workers
 
 Examples:
@@ -52,7 +52,7 @@ External Service Functions:
     oai_list_sets: List OAI-PMH sets
 """
 
-__version__ = "2.0.0"
+__version__ = "3.0.0"
 
 from pmcgrab.application.article_assembly import (
     AssetFetchPolicy,
@@ -67,6 +67,7 @@ from pmcgrab.application.processing import (
     process_single_pmc,
 )
 from pmcgrab.bioc import fetch_json as bioc_fetch
+from pmcgrab.common.paper_view import PAPER_SCHEMA, to_paper_output
 from pmcgrab.fetch import get_xml, parse_local_xml
 from pmcgrab.idconvert import convert as id_convert
 from pmcgrab.idconvert import (
@@ -95,6 +96,7 @@ from pmcgrab.processing import (
 )
 
 __all__ = [
+    "PAPER_SCHEMA",
     "AssetFetchPolicy",
     "AssetFetchResult",
     "Paper",
@@ -127,4 +129,5 @@ __all__ = [
     "process_single_pmc",
     "process_single_pmc_with_assets",
     "tgz_url_for",
+    "to_paper_output",
 ]

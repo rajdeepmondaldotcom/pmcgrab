@@ -177,7 +177,9 @@ class TestCLIComplete:
                 ) as mock_process:
                     mock_process.return_value = _DUMMY_ARTICLE
                     main()
-                    mock_process.assert_called_once_with("7114487")
+                    mock_process.assert_called_once_with(
+                        "7114487", output_style="paper"
+                    )
 
     def test_main_with_single_pmcid(self):
         """Test main function with single PMC ID."""
@@ -200,7 +202,9 @@ class TestCLIComplete:
                 ) as mock_process:
                     mock_process.return_value = _DUMMY_ARTICLE
                     main()
-                    mock_process.assert_called_once_with("7114487")
+                    mock_process.assert_called_once_with(
+                        "7114487", output_style="paper"
+                    )
 
     def test_main_with_multiple_pmcids(self):
         """Test main function with multiple PMC IDs."""
@@ -384,7 +388,7 @@ class TestCLIComplete:
                     mock_process.return_value = _DUMMY_ARTICLE
                     main()
 
-                mock_process.assert_called_once_with("7114487")
+                mock_process.assert_called_once_with("7114487", output_style="paper")
 
     def test_main_with_large_batch_size(self):
         """Test main function with very large batch size."""
@@ -508,7 +512,7 @@ class TestCLIComplete:
                     main()
 
         mock_normalize.assert_called_once_with("33087749")
-        mock_process.assert_called_once_with("7181753")
+        mock_process.assert_called_once_with("7181753", output_style="paper")
 
     def test_main_resolves_dois_before_processing(self, tmp_path):
         """Test DOI mode converts IDs before processing."""
@@ -531,7 +535,7 @@ class TestCLIComplete:
                     main()
 
         mock_normalize.assert_called_once_with("10.1234/example")
-        mock_process.assert_called_once_with("7181753")
+        mock_process.assert_called_once_with("7181753", output_style="paper")
 
     def test_main_reads_id_file_comments_and_skips_invalid_ids(self, tmp_path):
         """Test ID-file mode skips comments, blanks, and invalid PMC IDs."""
@@ -558,6 +562,48 @@ class TestCLIComplete:
             "7114487",
             "3084273",
         ]
+
+    def test_main_full_json_passes_full_output_style(self, tmp_path):
+        """--full-json selects the metadata-rich output contract."""
+        output_dir = tmp_path / "out"
+        test_args = [
+            "pmcgrab_cli.py",
+            "--pmcids",
+            "7114487",
+            "--full-json",
+            "--output-dir",
+            str(output_dir),
+        ]
+
+        with patch("sys.argv", test_args):
+            with patch("pmcgrab.cli.pmcgrab_cli.process_single_pmc") as mock_process:
+                mock_process.return_value = _DUMMY_ARTICLE
+                main()
+
+        mock_process.assert_called_once_with(
+            "7114487",
+            output_style="full",
+            schema_version=4,
+        )
+
+    def test_schema_version_requires_full_json(self, tmp_path):
+        """Schema compatibility flags are only valid for full JSON."""
+        output_dir = tmp_path / "out"
+        test_args = [
+            "pmcgrab_cli.py",
+            "--pmcids",
+            "7114487",
+            "--schema-version",
+            "2",
+            "--output-dir",
+            str(output_dir),
+        ]
+
+        with patch("sys.argv", test_args):
+            with pytest.raises(SystemExit) as exc_info:
+                main()
+
+        assert exc_info.value.code == 2
 
     def test_main_output_directory_handling(self):
         """Test output directory creation and handling."""

@@ -17,8 +17,8 @@ from pmcgrab import process_single_pmc
 
 article = process_single_pmc("7181753")
 
-print(article["article"]["title"]["main"])
-print([section["title"] for section in article["content"]["sections"]])
+print(article["paper"]["title"])
+print([section["title"] for section in article["paper"]["body"]])
 ```
 
 PMCGrab turns a PMC ID or local JATS XML file into loss-aware article data you

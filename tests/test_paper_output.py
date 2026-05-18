@@ -225,18 +225,10 @@ def test_body_assets_are_not_duplicated_by_flat_asset_lists():
 def test_empty_paper_uses_full_schema_defaults():
     data = Paper({}).to_dict()
 
-    assert data["schema_version"] == 4
-    assert data["article"]["identifiers"] == {
-        "pmc_id": "",
-        "pmcid": "",
-        "pmid": "",
-        "doi": "",
-        "publisher_id": "",
-        "other": {},
-        "all": [],
-    }
-    assert data["content"]["abstracts"] == []
-    assert data["content"]["sections"] == []
+    assert data["schema"] == "pmcgrab.paper.v1"
+    assert data["identifiers"] == {"pmcid": "", "pmid": "", "doi": ""}
+    assert data["paper"]["abstract"] == []
+    assert data["paper"]["body"] == []
 
 
 def test_figure_links_are_primary_plus_alternates_without_duplication():
@@ -253,7 +245,7 @@ def test_figure_links_are_primary_plus_alternates_without_duplication():
     body = _section(f"<sec><title>Results</title>{figure_xml}</sec>")
     paper = Paper({"PMCID": 12345, "Title": "Figure links", "Body": [body]})
 
-    figure = paper.to_dict()["assets"]["figures"][0]
+    figure = paper.to_dict(output_style="full")["assets"]["figures"][0]
 
     assert figure["link"] == "main.png"
     assert figure["alternate_links"] == ["alt.png"]
@@ -375,7 +367,7 @@ def test_v4_emits_canonical_records_sources_relations_and_quality():
     </article>
     """
     legacy = build_complete_paper_dict(12345, ET.fromstring(xml.encode()))
-    data = Paper(legacy).to_dict()
+    data = Paper(legacy).to_dict(output_style="full")
 
     assert data["schema_version"] == 4
     assert data["article"]["identifiers"]["doi"] == "10.1234/v4"
@@ -481,7 +473,7 @@ def test_v4_preserves_jats_blocks_without_raw_xml_or_synthetic_sources():
     </article>
     """
     legacy = build_complete_paper_dict(12345, ET.fromstring(xml.encode()))
-    data = Paper(legacy).to_dict()
+    data = Paper(legacy).to_dict(output_style="full")
     payload = json.dumps(data)
 
     section = data["content"]["sections"][0]
@@ -541,6 +533,68 @@ def test_v4_preserves_jats_blocks_without_raw_xml_or_synthetic_sources():
     assert "<mml" not in payload
 
 
+def test_default_output_is_clean_paper_view_without_trace_noise():
+    from pmcgrab.parser import build_complete_paper_dict
+
+    xml = """
+    <article xmlns:xlink="http://www.w3.org/1999/xlink">
+      <front>
+        <journal-meta><journal-title>Journal</journal-title></journal-meta>
+        <article-meta>
+          <article-id pub-id-type="pmc">PMC12345</article-id>
+          <article-id pub-id-type="doi">10.1234/clean</article-id>
+          <title-group><article-title>Clean Paper</article-title></title-group>
+          <abstract><p>Readable abstract.</p></abstract>
+        </article-meta>
+      </front>
+      <body>
+        <sec id="s1">
+          <title>Results</title>
+          <p>Readable paragraph.</p>
+          <list><list-item><p>Readable list item.</p></list-item></list>
+          <fig id="f1">
+            <label>Figure 1</label>
+            <caption><p>Figure caption.</p></caption>
+            <graphic xlink:href="fig1.jpg"/>
+          </fig>
+          <table-wrap id="t1">
+            <label>Table 1</label>
+            <caption><p>Table caption.</p></caption>
+            <table>
+              <thead><tr><th>A</th></tr></thead>
+              <tbody><tr><td>1</td></tr></tbody>
+            </table>
+          </table-wrap>
+        </sec>
+      </body>
+    </article>
+    """
+    legacy = build_complete_paper_dict(12345, ET.fromstring(xml.encode()))
+    data = Paper(legacy).to_dict()
+    payload = json.dumps(data)
+
+    assert data["schema"] == "pmcgrab.paper.v1"
+    assert data["identifiers"] == {
+        "pmcid": "PMC12345",
+        "pmid": "",
+        "doi": "10.1234/clean",
+    }
+    assert data["paper"]["title"] == "Clean Paper"
+    assert data["paper"]["abstract"][0]["content"][0]["text"] == "Readable abstract."
+    section = data["paper"]["body"][0]
+    assert section["title"] == "Results"
+    assert [block["type"] for block in section["content"]] == [
+        "paragraph",
+        "list",
+        "figure_ref",
+        "table_ref",
+    ]
+    assert data["assets"]["images"][0]["files"][0]["href"] == "fig1.jpg"
+    assert data["assets"]["tables"][0]["rows"] == [{"A": "1"}]
+    for forbidden in ("source", "quality", "relations", "references", "parse_status"):
+        assert forbidden not in payload
+
+
 def test_v4_structures_legacy_mathml_strings_instead_of_emitting_xml_markup():
     paper = Paper(
         {
@@ -556,7 +610,7 @@ def test_v4_structures_legacy_mathml_strings_instead_of_emitting_xml_markup():
         }
     )
 
-    data = paper.to_dict()
+    data = paper.to_dict(output_style="full")
     payload = json.dumps(data)
 
     assert data["assets"]["equations"]["mathml"][0]["tag"] == "math"

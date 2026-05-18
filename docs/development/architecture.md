@@ -100,9 +100,15 @@ data = process_single_pmc("7181753")
 local = process_single_local_xml("article.xml")
 ```
 
-The normalized processing dictionary uses the canonical V4 output schema by
-default. V2 and V3 remain available by passing `schema_version=2` or
+The normalized processing dictionary uses the clean paper output by default:
+`pmcgrab.paper.v1`. It contains identifiers, `paper.title`, `paper.abstract`,
+`paper.body`, `assets.images`, and `assets.tables`.
+
+Full output remains available with `output_style="full"` or `--full-json`. V2
+and V3 remain available only in full output by passing `schema_version=2` or
 `schema_version=3`.
+
+In full V4 output:
 
 - `article` contains identifiers, title, publication, compliance, and metadata.
 - `contributors` contains people, affiliations, and author notes.

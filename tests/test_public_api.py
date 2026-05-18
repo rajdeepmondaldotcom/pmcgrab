@@ -16,3 +16,4 @@ def test_top_level_process_single_pmc_exports_application_interface():
     assert "timeout" in signature.parameters
     assert "metadata_only" in signature.parameters
     assert "schema_version" in signature.parameters
+    assert "output_style" in signature.parameters

@@ -159,6 +159,14 @@ def _parse_args() -> argparse.Namespace:
             "article. 'jsonl' writes a single aggregate output.jsonl file."
         ),
     )
+    p.add_argument(
+        "--full-json",
+        dest="full_json",
+        action="store_true",
+        help=(
+            "Emit the metadata-rich full JSON instead of the default clean paper JSON."
+        ),
+    )
 
     # --- Asset fetching flags (only active with --with-images) ---
     p.add_argument(
@@ -214,8 +222,11 @@ def _parse_args() -> argparse.Namespace:
         dest="schema_version",
         choices=[2, 3, 4],
         type=int,
-        default=4,
-        help="Output schema version: 4 (default), 3, or 2 for compatibility",
+        default=None,
+        help=(
+            "Full JSON schema version: 4 (default with --full-json), 3, or 2. "
+            "Requires --full-json."
+        ),
     )
 
     # --- Verbosity ---
@@ -239,15 +250,22 @@ def _parse_args() -> argparse.Namespace:
         version=f"%(prog)s {__version__}",
     )
 
-    return p.parse_args()
+    args = p.parse_args()
+    if args.schema_version is not None and not args.full_json:
+        p.error("--schema-version requires --full-json")
+    if args.with_images and args.schema_version not in (None, 4):
+        p.error("--with-images only supports --schema-version 4")
+    return args
 
 
 def _schema_kwargs(args: argparse.Namespace) -> dict[str, Any]:
-    """Return processing kwargs for non-default schema options."""
-    kwargs: dict[str, Any] = {}
-    if args.schema_version != 4:
-        kwargs["schema_version"] = args.schema_version
-    return kwargs
+    """Return processing kwargs for the selected output contract."""
+    if args.full_json:
+        return {
+            "output_style": "full",
+            "schema_version": args.schema_version or 4,
+        }
+    return {"output_style": "paper"}
 
 
 def _resolve_ids_from_file(filepath: str) -> list[str]:
@@ -490,14 +508,16 @@ def _process_network_ids(
         disable=args.quiet,
     ) as bar:
         with ThreadPoolExecutor(max_workers=args.batch_size) as executor:
-            if args.with_images and args.output_format == "json":
+            if args.with_images:
                 policy = _policy_from_args(args)
+                kwargs = _schema_kwargs(args)
                 future_to_pid: dict[Any, str] = {
                     executor.submit(
                         process_single_pmc_with_assets,
                         pid,
                         out_dir,
                         policy=policy,
+                        **kwargs,
                     ): pid
                     for pid in pmc_ids
                 }
@@ -511,6 +531,19 @@ def _process_network_ids(
                     entry: dict[str, Any] = {"parsed": success}
                     entry.update(_asset_status_for_summary(fetch_result))
                     results[pid] = entry
+                    if (
+                        success
+                        and article is not None
+                        and args.output_format == "jsonl"
+                    ):
+                        _write_result(
+                            article,
+                            f"PMC{pid}",
+                            out_dir,
+                            args.output_format,
+                            jsonl_fh,
+                            with_images=False,
+                        )
                     bar.update(1)
             else:
                 kwargs = _schema_kwargs(args)

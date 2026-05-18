@@ -305,12 +305,16 @@ class Paper:
     # Serialization methods
     # -----------------------------------------------------------------
 
-    def to_dict(self, *, schema_version: int = 4) -> dict:
+    def to_dict(
+        self, *, schema_version: int | None = None, output_style: str | None = None
+    ) -> dict:
         """Return the Paper as a fully normalized, JSON-serializable dictionary.
 
         Args:
-            schema_version: Output schema version. V4 is the default; V2 and V3
-                remain available for compatibility.
+            schema_version: Full-output schema version. Passing a schema version
+                without ``output_style`` selects the full output for compatibility.
+            output_style: ``"paper"`` for clean paper JSON (default), or
+                ``"full"`` for V2/V3/V4 metadata-rich output.
 
         Returns:
             dict: Dictionary with all paper fields normalized for JSON.
@@ -318,30 +322,34 @@ class Paper:
         """
         from pmcgrab.common.paper_output import paper_to_output_dict
 
-        return paper_to_output_dict(self, schema_version=schema_version) or {
-            "has_data": False
-        }
+        return paper_to_output_dict(
+            self,
+            schema_version=schema_version,
+            output_style=output_style,
+        ) or {"has_data": False}
 
     def to_json(
         self,
         *,
         indent: int = 2,
         ensure_ascii: bool = False,
-        schema_version: int = 4,
+        schema_version: int | None = None,
+        output_style: str | None = None,
     ) -> str:
         """Return the Paper as a JSON string.
 
         Args:
             indent: Number of spaces for JSON indentation (default: 2)
             ensure_ascii: If True, escape non-ASCII characters (default: False)
-            schema_version: Output schema version. V4 is the default; V2 and V3
-                remain available for compatibility.
+            schema_version: Full-output schema version.
+            output_style: ``"paper"`` for clean paper JSON (default), or
+                ``"full"`` for V2/V3/V4 metadata-rich output.
 
         Returns:
             str: JSON representation of the paper
         """
         return json.dumps(
-            self.to_dict(schema_version=schema_version),
+            self.to_dict(schema_version=schema_version, output_style=output_style),
             indent=indent,
             ensure_ascii=ensure_ascii,
             allow_nan=False,

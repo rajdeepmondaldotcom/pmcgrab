@@ -280,6 +280,7 @@ def test_process_single_pmc_with_assets_writes_folder(tmp_path: Path) -> None:
             "7181753",
             tmp_path,
             policy=AssetFetchPolicy(),
+            output_style="full",
         )
 
     assert article_out is not None and fetch_result is not None
