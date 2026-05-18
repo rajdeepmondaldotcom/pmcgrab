@@ -47,6 +47,7 @@ __all__: list[str] = [
     "NCBI_API_KEY",
     "NCBI_RETRIES",
     "NCBI_TIMEOUT",
+    "PMCGRAB_MAX_ASSET_BYTES",
     "PMCGRAB_SSL_VERIFY",
     "next_email",
     "rate_limit_wait",
@@ -81,6 +82,14 @@ PMCGRAB_SSL_VERIFY: bool = os.getenv("PMCGRAB_SSL_VERIFY", "true").lower() not i
     "false",
     "0",
     "no",
+)
+
+# ---------------------------------------------------------------------------
+# Per-article asset (figure / supplementary) download ceiling
+# ---------------------------------------------------------------------------
+
+PMCGRAB_MAX_ASSET_BYTES: int = int(
+    os.getenv("PMCGRAB_MAX_ASSET_BYTES", str(256 * 1024 * 1024))
 )
 
 # ---------------------------------------------------------------------------

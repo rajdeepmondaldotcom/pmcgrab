@@ -52,8 +52,13 @@ External Service Functions:
     oai_list_sets: List OAI-PMH sets
 """
 
-__version__ = "1.0.10"
+__version__ = "2.0.0"
 
+from pmcgrab.application.article_assembly import (
+    AssetFetchPolicy,
+    AssetFetchResult,
+    process_single_pmc_with_assets,
+)
 from pmcgrab.application.processing import (
     async_process_pmc_ids,
     process_local_xml_dir,
@@ -73,6 +78,7 @@ from pmcgrab.idconvert import (
 from pmcgrab.litctxp import export as citation_export
 from pmcgrab.model import Paper
 from pmcgrab.oa_service import fetch as oa_fetch
+from pmcgrab.oa_service import list_oa_links, tgz_url_for
 from pmcgrab.oai import get_record as oai_get_record
 from pmcgrab.oai import list_identifiers as oai_list_identifiers
 from pmcgrab.oai import list_records as oai_list_records
@@ -89,6 +95,8 @@ from pmcgrab.processing import (
 )
 
 __all__ = [
+    "AssetFetchPolicy",
+    "AssetFetchResult",
     "Paper",
     "async_process_pmc_ids",
     "bioc_fetch",
@@ -96,6 +104,7 @@ __all__ = [
     "citation_export",
     "get_xml",
     "id_convert",
+    "list_oa_links",
     "normalize_id",
     "normalize_ids",
     "normalize_pmid",
@@ -116,4 +125,6 @@ __all__ = [
     "process_pmc_ids_in_batches",
     "process_single_local_xml",
     "process_single_pmc",
+    "process_single_pmc_with_assets",
+    "tgz_url_for",
 ]

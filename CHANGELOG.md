@@ -7,6 +7,53 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.0.0] - 2026-05-19
+
+### Added
+- Added opt-in figure-binary downloading for network-mode PMC fetches. Pass
+  `--with-images` on the CLI to switch from the default fast flat-file output
+  to a per-article folder layout (`PMC{id}/article.json` + `images/`).
+- Added `process_single_pmc_with_assets(pmc_id, out_dir, *, policy=...)` as a
+  top-level public API for fetching an article and its assets in one call.
+  Returns `(article_dict, AssetFetchResult)`.
+- Added `AssetFetchPolicy` and `AssetFetchResult` dataclasses.
+- Added two new helpers on `pmcgrab.oa_service`: `list_oa_links` (preserves
+  every `<link>` element from the OA Web Service response) and `tgz_url_for`
+  (HTTPS-rewritten URL of the OA tar.gz package).
+- Added CLI flags: `--with-images`, `--include-supplementary`,
+  `--include-raw-xml`, `--include-all-assets`, `--max-asset-bytes`. The
+  `--include-*` flags require `--with-images`.
+- Added `local_path`, `download_status`, and `download_source` fields to V4
+  figure records (and per-graphic entries within `graphics`). Supplementary
+  material records gain the same three fields. Defaults are empty
+  string / `"not_attempted"`, so the schema is additive for callers that
+  never opt in to image downloads.
+- Added `quality.diagnostics` entry with code `asset_fetch_summary` summarising
+  the per-article fetch outcome (only present when `--with-images` is used).
+- Added `PMCGRAB_MAX_ASSET_BYTES` environment variable for the per-article
+  asset size ceiling (default 256 MiB).
+- Added `scripts/test_images.py` for end-to-end validation across 10 random
+  PMC IDs sampled from a curated 50+ known-OA pool.
+
+### Fixed
+- `pmcgrab.oa_service.fetch()` was silently broken in 1.x — it sent the OA
+  Web Service a `pmcid=` parameter, which returns the catalog summary
+  instead of an individual record, so the helper always returned `None`.
+  The fix uses the documented `id=` parameter, which means `oa_fetch` now
+  returns useful data for the first time.
+
+### Changed
+- The default CLI output stays flat single-file (`out_dir/PMC{id}.json`) and
+  matches the 1.x behaviour bit-for-bit — fastest path, no image downloads,
+  no extra round trips. The folder layout and image fetching are entirely
+  opt-in via `--with-images`.
+
+### Migration
+- No CLI migration required for the fast default path; the 1.x command line
+  continues to behave the same way.
+- Programmatic callers of `process_single_pmc()` see no behavioural change.
+  Switch to `process_single_pmc_with_assets()` when you want images on disk.
+
 ## [1.0.10] - 2026-05-18
 
 ### Added

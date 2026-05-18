@@ -38,6 +38,25 @@ __all__: list[str] = [
 ]
 
 
+# ``process_single_pmc_with_assets`` and ``AssetFetchPolicy`` live in
+# :mod:`pmcgrab.application.article_assembly`, which depends on this module.
+# Importing them here at module top would create a circular import, so we
+# expose them lazily through ``__getattr__`` instead. Callers wanting the
+# orchestrator should import it directly from
+# :mod:`pmcgrab.application.article_assembly` or via the top-level
+# :mod:`pmcgrab` package.
+def __getattr__(name: str) -> Any:
+    if name == "process_single_pmc_with_assets":
+        from pmcgrab.application.article_assembly import process_single_pmc_with_assets
+
+        return process_single_pmc_with_assets
+    if name == "AssetFetchPolicy":
+        from pmcgrab.application.article_assembly import AssetFetchPolicy
+
+        return AssetFetchPolicy
+    raise AttributeError(name)
+
+
 def _extract_paper_dict(
     paper: Paper,
     pmc_id: str | int,

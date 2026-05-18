@@ -1229,6 +1229,15 @@ def _figure_record_v4(record: dict[str, Any]) -> dict[str, Any]:
     figure.setdefault("alternate_links", [])
     raw_text = figure.pop("raw_text", "")
     figure.setdefault("text_fallback", raw_text)
+    figure.setdefault("local_path", "")
+    figure.setdefault("download_status", "not_attempted")
+    figure.setdefault("download_source", "")
+    graphics = figure.get("graphics")
+    if isinstance(graphics, list):
+        for graphic in graphics:
+            if isinstance(graphic, dict):
+                graphic.setdefault("local_path", "")
+                graphic.setdefault("download_status", "not_attempted")
     return figure
 
 

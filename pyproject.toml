@@ -4,8 +4,8 @@ build-backend = "hatchling.build"
 
 [project]
 name = "pmcgrab"
-version = "1.0.10"
-description = "A PMC ID in. Clean, loss-aware article JSON out. Parse PubMed Central and JATS XML into structured data for biomedical AI."
+version = "2.0.0"
+description = "A PMC ID in. Clean, loss-aware article JSON out — now with figure binaries on disk. Parse PubMed Central and JATS XML into structured data for biomedical AI."
 readme = "README.md"
 license = "Apache-2.0"
 authors = [

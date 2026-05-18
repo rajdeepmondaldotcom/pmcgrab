@@ -11,6 +11,10 @@ from pathlib import Path
 import pytest
 
 import pmcgrab
+from pmcgrab.application.article_assembly import (
+    AssetFetchPolicy,
+    process_single_pmc_with_assets,
+)
 from pmcgrab.application.processing import process_single_pmc
 
 LOCAL_E2E_JATS_XML = """\
@@ -81,6 +85,7 @@ def test_cli_local_xml_e2e_writes_json_and_summary(tmp_path: Path) -> None:
     assert result.returncode == 0, result.stderr
     assert "Done: 1/1 succeeded" in result.stdout
 
+    # Default fast path: single flat JSON file (no folder, no images).
     output_path = output_dir / "PMC7181753.json"
     summary_path = output_dir / "summary.json"
     assert output_path.is_file()
@@ -124,3 +129,44 @@ def test_live_ncbi_process_single_pmc_e2e() -> None:
     assert data["provenance"]["source"] == "ncbi_entrez"
     assert data["provenance"]["pmcgrab_version"] == pmcgrab.__version__
     assert len(data["content"]["sections"]) >= 1
+
+
+@pytest.mark.e2e
+@pytest.mark.integration
+@pytest.mark.skipif(
+    os.environ.get("PMCGRAB_RUN_LIVE_E2E") != "1",
+    reason="set PMCGRAB_RUN_LIVE_E2E=1 to make a live NCBI request",
+)
+def test_live_ncbi_process_with_assets_e2e(tmp_path: Path) -> None:
+    """End-to-end test of the full asset-fetching pipeline.
+
+    Uses PMC7181753 (Nat Commun single-cell paper, known OA) and asserts:
+    - article.json is written to tmp_path/PMC7181753/article.json
+    - images/ subdir exists and contains at least one figure binary
+    - every figure record with a non-empty link gets a non-empty local_path
+      pointing to a file on disk
+    - the asset_fetch_summary diagnostic is present
+    """
+    article, fetch_result = process_single_pmc_with_assets(
+        "7181753",
+        tmp_path,
+        policy=AssetFetchPolicy(fetch_images=True),
+        timeout=120,
+    )
+    assert article is not None
+    assert fetch_result is not None
+
+    folder = tmp_path / "PMC7181753"
+    assert (folder / "article.json").is_file()
+    assert (folder / "images").is_dir()
+    # OA bundle should produce at least one figure.
+    images = list((folder / "images").iterdir())
+    assert images, "OA package should yield at least one figure binary"
+
+    for figure in article["assets"]["figures"]:
+        if figure["link"]:
+            assert figure["local_path"], f"missing local_path for figure {figure['id']}"
+            assert (folder / figure["local_path"]).is_file()
+
+    diag_codes = {d.get("code") for d in article["quality"]["diagnostics"]}
+    assert "asset_fetch_summary" in diag_codes

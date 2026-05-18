@@ -331,6 +331,8 @@ class _JatsRecordBuilder:
                     "mime_type": graphic.get("mimetype") or "",
                     "content_type": graphic.get("content-type") or "",
                     "source": self._source(graphic, ordinal=g_index),
+                    "local_path": "",
+                    "download_status": "not_attempted",
                 }
                 for g_index, graphic in enumerate(fig.xpath(".//graphic"), start=1)
             ]
@@ -366,6 +368,9 @@ class _JatsRecordBuilder:
                     "parse_status": (
                         "parsed" if caption["text"] or graphics else "partial"
                     ),
+                    "local_path": "",
+                    "download_status": "not_attempted",
+                    "download_source": "",
                 }
             )
         return records
@@ -403,6 +408,9 @@ class _JatsRecordBuilder:
                     "text": element_text(supp),
                     "source": self._source(supp, ordinal=index),
                     "parse_status": "parsed",
+                    "local_path": "",
+                    "download_status": "not_attempted",
+                    "download_source": "",
                 }
             )
         return records
