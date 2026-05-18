@@ -198,17 +198,15 @@ Sections contain ordered `content` blocks plus nested `sections`.
 
 Common block types:
 
-| Type                               | Fields                           |
-| ---------------------------------- | -------------------------------- |
-| `paragraph`                        | `text`                           |
-| `list`                             | `list_type`, `items`             |
-| `definition_list`                  | `title`, `items`                 |
-| `formula`                          | `label`, `text`, `tex`, `mathml` |
-| `figure_ref`                       | `target_id`, `label`             |
-| `table_ref`                        | `target_id`, `label`             |
-| `quote`, `statement`, `boxed_text` | `content`, `text`                |
-| `code`, `preformat`                | `language`, `text`               |
-| `unknown_block`                    | `jats_tag`, `text`, `children`   |
+- `paragraph`: `text`
+- `list`: `list_type`, `items`
+- `definition_list`: `title`, `items`
+- `formula`: `label`, `text`, `tex`, `mathml`
+- `figure_ref`: `target_id`, `label`
+- `table_ref`: `target_id`, `label`
+- `quote`, `statement`, `boxed_text`: `content`, `text`
+- `code`, `preformat`: `language`, `text`
+- `unknown_block`: `jats_tag`, `text`, `children`
 
 Unknown meaningful JATS blocks are preserved as readable fallback records
 instead of being dropped.
@@ -226,12 +224,10 @@ Image fetching is off by default. `--with-images` and
 
 Image file status values:
 
-| Status          | Meaning                                        |
-| --------------- | ---------------------------------------------- |
-| `not_attempted` | Image fetching was not enabled.                |
-| `not_available` | The figure has no usable file reference.       |
-| `missing`       | PMCGrab tried but could not download the file. |
-| `downloaded`    | The file was written to `local_path`.          |
+- `not_attempted`: image fetching was not enabled.
+- `not_available`: the figure has no usable file reference.
+- `missing`: PMCGrab tried but could not download the file.
+- `downloaded`: the file was written to `local_path`.
 
 Supplementary files are opt-in:
 
@@ -244,11 +240,9 @@ pmcgrab --pmcids 7181753 \
 
 Other asset flags:
 
-| Flag                   | Effect                                 |
-| ---------------------- | -------------------------------------- |
-| `--include-raw-xml`    | Save the source JATS XML as `raw.xml`. |
-| `--include-all-assets` | Extract every file in the OA bundle.   |
-| `--max-asset-bytes N`  | Set the per-article asset ceiling.     |
+- `--include-raw-xml`: save the source JATS XML as `raw.xml`.
+- `--include-all-assets`: extract every file in the OA bundle.
+- `--max-asset-bytes N`: set the per-article asset ceiling.
 
 Safety defaults:
 
@@ -356,14 +350,13 @@ from pmcgrab import (
 
 ## Configuration
 
-| Variable                  | Purpose                             | Default            |
-| ------------------------- | ----------------------------------- | ------------------ |
-| `PMCGRAB_EMAILS`          | Contact emails for NCBI requests.   | Maintainer contact |
-| `NCBI_API_KEY`            | Optional NCBI API key.              | unset              |
-| `PMCGRAB_TIMEOUT`         | Network timeout in seconds.         | `60`               |
-| `PMCGRAB_RETRIES`         | Retry count for Entrez calls.       | `3`                |
-| `PMCGRAB_SSL_VERIFY`      | Verify TLS certificates.            | `true`             |
-| `PMCGRAB_MAX_ASSET_BYTES` | Per-article asset download ceiling. | `268435456`        |
+- `PMCGRAB_EMAILS`: contact emails for NCBI requests. Default: maintainer contact.
+- `NCBI_API_KEY`: optional NCBI API key. Default: unset.
+- `PMCGRAB_TIMEOUT`: network timeout in seconds. Default: `60`.
+- `PMCGRAB_RETRIES`: retry count for Entrez calls. Default: `3`.
+- `PMCGRAB_SSL_VERIFY`: verify TLS certificates. Default: `true`.
+- `PMCGRAB_MAX_ASSET_BYTES`: per-article asset download ceiling. Default:
+  `268435456`.
 
 For serious network use:
 

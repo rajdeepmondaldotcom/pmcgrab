@@ -6,7 +6,7 @@ If you use PMCGrab in your research, please cite the exact version you used.
 
 ```
 Mondal, R. (2026). PMCGrab: Clean paper JSON from PMC and JATS XML
-(Version 3.0.0) [Computer software].
+(Version 3.0.1) [Computer software].
 https://github.com/rajdeepmondaldotcom/pmcgrab
 ```
 
@@ -14,7 +14,7 @@ https://github.com/rajdeepmondaldotcom/pmcgrab
 
 ```
 Mondal, Rajdeep. "PMCGrab: Clean paper JSON from PMC and JATS XML."
-GitHub, version 3.0.0, 2026,
+GitHub, version 3.0.1, 2026,
 https://github.com/rajdeepmondaldotcom/pmcgrab
 ```
 
@@ -22,7 +22,7 @@ https://github.com/rajdeepmondaldotcom/pmcgrab
 
 ```
 Mondal, Rajdeep. "PMCGrab: Clean paper JSON from PMC and JATS XML."
-Version 3.0.0. Computer software. GitHub, 2026.
+Version 3.0.1. Computer software. GitHub, 2026.
 https://github.com/rajdeepmondaldotcom/pmcgrab
 ```
 
@@ -33,7 +33,7 @@ https://github.com/rajdeepmondaldotcom/pmcgrab
   author = {Mondal, Rajdeep},
   title = {PMCGrab: Clean paper JSON from PMC and JATS XML},
   url = {https://github.com/rajdeepmondaldotcom/pmcgrab},
-  version = {3.0.0},
+  version = {3.0.1},
   year = {2026}
 }
 ```
@@ -62,7 +62,7 @@ Citing software in academic work:
 
 When citing PMCGrab, please include:
 
-- **Version number** (e.g., 3.0.0)
+- **Version number** (e.g., 3.0.1)
 - **Date accessed** if using the latest development version
 - **Specific commit hash** if using a development version
 - **DOI** if available for the specific version

@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "pmcgrab"
-version = "3.0.0"
+version = "3.0.1"
 description = "PMC ID in. Clean paper JSON out. Add figure images when you need them. Parse PubMed Central and JATS XML for biomedical ingestion pipelines."
 readme = "README.md"
 license = "Apache-2.0"

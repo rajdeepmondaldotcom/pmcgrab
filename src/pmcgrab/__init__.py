@@ -52,7 +52,7 @@ External Service Functions:
     oai_list_sets: List OAI-PMH sets
 """
 
-__version__ = "3.0.0"
+__version__ = "3.0.1"
 
 from pmcgrab.application.article_assembly import (
     AssetFetchPolicy,
