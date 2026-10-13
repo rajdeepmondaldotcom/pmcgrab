@@ -47,7 +47,7 @@ jobs:
         run: uv run mkdocs build
 
       - name: Upload docs artifacts
-        uses: actions/upload-artifact@v7.0.1
+        uses: actions/upload-artifact@v7.0.2
         if: github.event_name == 'pull_request'
         with:
           name: docs
